@@ -13,13 +13,9 @@ venv/
 .ruff_cache/
 .mypy_cache/
 
-# Data artifacts — regenerable, never commit
-data/*.duckdb
-data/*.duckdb.wal
-data/raw/
-data/interim/
+# Data artifacts, regenerable, never commit
+data/
 *.parquet
-!data/snapshots/*.parquet
 
 # Model weights / caches
 .cache/

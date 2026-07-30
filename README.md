@@ -75,11 +75,18 @@ converges on the latest published number instead of duplicating rows.
 Scoped to CISO (California ISO) and ERCO (ERCOT) rather than all ~60 balancing
 authorities.
 
-### Attribution
+### Attribution and terms
 
-Data courtesy of the U.S. Energy Information Administration
-([eia.gov/opendata](https://www.eia.gov/opendata/)), public domain, used under their
+Source: U.S. Energy Information Administration (EIA),
+[eia.gov/opendata](https://www.eia.gov/opendata/). Used under the
 [API Terms of Service](https://www.eia.gov/opendata/terms-of-service.php).
+
+This project is not affiliated with or endorsed by EIA. Forecasts and derived values are
+produced by this project, not by EIA, are stored separately from EIA observations, and are
+not authoritative.
+
+Every API-related decision here maps to a TOS clause. See
+[docs/EIA_COMPLIANCE.md](docs/EIA_COMPLIANCE.md).
 
 EIA's [FAQ](https://www.eia.gov/opendata/faqs.php) gives a burst ceiling under 5
 requests/second and a sustained ceiling under 9,000/hour, noting that real limits vary by

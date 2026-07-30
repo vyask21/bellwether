@@ -12,10 +12,14 @@ from pathlib import Path
 
 import duckdb
 
+from bellwether.attribution import DERIVED_DISCLAIMER, EIA_SOURCE
 from bellwether.config import SNAPSHOT_DIR, settings
 from bellwether.ingest.eia import ObservationRow
 
 SCHEMA = """
+-- Raw EIA content, stored exactly as returned. The API Terms of Service forbid modifying
+-- content and still claiming EIA as the source, so nothing derived is ever written here:
+-- no imputation, no gap filling, no rescaling. Model output goes in `forecasts`.
 CREATE TABLE IF NOT EXISTS observations (
     period       TIMESTAMPTZ NOT NULL,
     respondent   VARCHAR     NOT NULL,
@@ -24,6 +28,20 @@ CREATE TABLE IF NOT EXISTS observations (
     value_units  VARCHAR,
     ingested_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (period, respondent, series_type)
+);
+
+-- Derived data. Not EIA content and never attributed to EIA. Kept in its own table so a
+-- forecast can never be read back as an observation.
+CREATE TABLE IF NOT EXISTS forecasts (
+    origin       TIMESTAMPTZ NOT NULL,  -- when the forecast was made
+    period       TIMESTAMPTZ NOT NULL,  -- the hour being forecast
+    respondent   VARCHAR     NOT NULL,
+    series_type  VARCHAR     NOT NULL,
+    model_name   VARCHAR     NOT NULL,
+    quantile     DOUBLE      NOT NULL,
+    value        DOUBLE      NOT NULL,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (origin, period, respondent, series_type, model_name, quantile)
 );
 
 CREATE TABLE IF NOT EXISTS ingest_runs (
@@ -96,9 +114,32 @@ def upsert_observations(
     return written
 
 
-def export_snapshot(conn: duckdb.DuckDBPyConnection, name: str = "observations") -> Path:
-    """Write a Parquet snapshot readers can use without contending for the write lock."""
-    SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
-    target = SNAPSHOT_DIR / f"{name}.parquet"
-    conn.execute(f"COPY observations TO '{target.as_posix()}' (FORMAT PARQUET, COMPRESSION ZSTD)")
+EXPORTABLE_TABLES = frozenset({"observations", "forecasts"})
+
+
+def export_snapshot(
+    conn: duckdb.DuckDBPyConnection,
+    table: str = "observations",
+    directory: Path | None = None,
+) -> Path:
+    """Write a Parquet snapshot readers can use without contending for the write lock.
+
+    The table name is checked against an allowlist because DuckDB cannot parameterise an
+    identifier, so it has to be interpolated into the statement.
+
+    Exported EIA content leaves the database with an attribution file alongside it, since
+    the TOS attribution requirement follows the content rather than the process.
+    """
+    if table not in EXPORTABLE_TABLES:
+        raise ValueError(
+            f"Refusing to export unknown table {table!r}; expected {EXPORTABLE_TABLES}"
+        )
+
+    out_dir = directory or SNAPSHOT_DIR
+    out_dir.mkdir(parents=True, exist_ok=True)
+    target = out_dir / f"{table}.parquet"
+    conn.execute(f"COPY {table} TO '{target.as_posix()}' (FORMAT PARQUET, COMPRESSION ZSTD)")
+
+    notice = EIA_SOURCE if table == "observations" else DERIVED_DISCLAIMER
+    (out_dir / "ATTRIBUTION.txt").write_text(f"{notice}\n", encoding="utf-8")
     return target

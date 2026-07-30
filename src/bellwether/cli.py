@@ -9,6 +9,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from bellwether.attribution import DERIVED_DISCLAIMER, EIA_SOURCE
 from bellwether.config import settings
 from bellwether.eval.backtest import rolling_origin_backtest
 from bellwether.forecast.baseline import DailySeasonalNaive, WeeklySeasonalNaive
@@ -41,6 +42,7 @@ def ingest(
 
     console.print(f"[green]Wrote {written:,} rows[/green] for {respondent}/{series_type}")
     console.print(f"Snapshot: {snapshot}")
+    console.print(f"[dim]{EIA_SOURCE}[/dim]")
 
 
 @app.command()
@@ -66,6 +68,7 @@ def status() -> None:
             f"{row['null_values']:,}",
         )
     console.print(table)
+    console.print(f"[dim]{EIA_SOURCE}[/dim]")
 
 
 @app.command()
@@ -111,6 +114,8 @@ def backtest(
             f"{s['coverage_80']:.1%}",
         )
     console.print(table)
+    console.print(f"[dim]{EIA_SOURCE}[/dim]")
+    console.print(f"[dim]{DERIVED_DISCLAIMER}[/dim]")
 
 
 if __name__ == "__main__":
