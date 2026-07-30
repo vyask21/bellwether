@@ -121,3 +121,82 @@ redistributed in a way that misrepresents its source.
 > The EIA reserves the right, at its sole discretion, to modify or replace this Agreement.
 
 Hence the review date at the top of this file. Treat it as expiring.
+
+---
+
+# Copyrights and Reuse policy
+
+Canonical text: https://www.eia.gov/about/copyrights_reuse.php
+Reviewed against: 2026-07-30.
+
+Separate from the API Terms of Service, and it adds obligations the TOS does not state.
+
+## Public domain, with a dated acknowledgment
+
+> U.S. government publications are in the public domain and are not subject to copyright
+> protection. However, if you use or reproduce any of our information products, you should
+> use an acknowledgment, which includes the publication date, such as: "Source: U.S. Energy
+> Information Administration (Oct 2008)."
+
+Two consequences.
+
+First, redistribution is permitted. Committing derived artifacts, evaluation tables, and
+data snapshots to this repository is fine, which is what makes committed eval runs
+reproducible for anyone reading it.
+
+Second, acknowledgments must carry a date, and ours did not until this was reviewed.
+
+APIv2 does not expose a publication date. The FAQ states the update field was removed for
+performance and that data updates constantly rather than on a schedule, so there is no
+per-series publication timestamp to read. The acknowledgment therefore carries the
+retrieval date and labels it "retrieved", rather than presenting a date we do not have as a
+publication date. Snapshot exports date themselves from the stored `ingested_at` rather
+than from wall-clock time at export, so the acknowledgment describes the data rather than
+the moment the file was written.
+
+Implemented in `bellwether/attribution.py`.
+
+## Quoting and delineation
+
+> When quoting EIA text, the acknowledgment should clearly indicate which text is EIA
+> content and which is not.
+
+This binds the brief-generation layer, which is not yet built. A generated brief mixes EIA
+observations with model forecasts and model-written prose, and this clause requires the
+reader to be able to tell which is which. The brief format must attribute EIA values
+inline, distinctly from forecasts and narration. That constraint is the same one the
+project already imposes on itself for correctness reasons.
+
+## Translations
+
+> When translating EIA content into another language, please indicate the organization
+> responsible for the translation and provide a link back to the original EIA web page.
+
+Not applicable. This project does not translate EIA content. If a localized dashboard is
+ever added, this clause applies.
+
+## Protected materials
+
+> You may see on our website documents, illustrations, photographs, or other information
+> resources contributed or licensed by private individuals, companies, or organizations
+> that may be protected by U.S. and foreign copyright laws.
+> The photographs on our website are protected by private licensing agreements and may not
+> be reproduced without EIA's and/or the licensor's prior written consent.
+
+Important qualifier on "EIA content is public domain": it is not all public domain.
+Images, photographs, and illustrations on eia.gov may be privately licensed.
+
+This project uses the API only, and the API returns numeric time series, so nothing
+protected is reachable through the path we use. The rule is that no image, photograph, or
+illustration may be copied from eia.gov into this repository or any dashboard, regardless
+of how it is sourced.
+
+## Trademarks
+
+> The EIA logo is a registered trademark (Registration Number 4019501) of the U.S.
+> Department of Energy and may not be used without the expressed consent of the EIA.
+> "Energy Ant" is a registered servicemark of the U.S. Department of Energy.
+
+Neither the EIA logo nor Energy Ant appears in this repository, and neither may be added.
+Public domain status covers EIA's data, not its marks. A test guards against image assets
+that look like EIA branding, but the rule is broader than any test can check.

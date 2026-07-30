@@ -79,7 +79,14 @@ authorities.
 
 Source: U.S. Energy Information Administration (EIA),
 [eia.gov/opendata](https://www.eia.gov/opendata/). Used under the
-[API Terms of Service](https://www.eia.gov/opendata/terms-of-service.php).
+[API Terms of Service](https://www.eia.gov/opendata/terms-of-service.php) and the
+[Copyrights and Reuse policy](https://www.eia.gov/about/copyrights_reuse.php).
+
+EIA data is public domain, so derived artifacts and snapshots can be committed here. Its
+reuse policy asks acknowledgments to carry a date; APIv2 exposes no publication date, so
+acknowledgments carry the retrieval date and say so. EIA's logo and Energy Ant servicemark
+are trademarked and appear nowhere in this project, and site imagery may be privately
+licensed, so no eia.gov images are reproduced.
 
 This project is not affiliated with or endorsed by EIA. Forecasts and derived values are
 produced by this project, not by EIA, are stored separately from EIA observations, and are

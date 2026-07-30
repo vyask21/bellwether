@@ -6,12 +6,18 @@ docs/EIA_COMPLIANCE.md, and failing one means the project is out of compliance.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
 
-from bellwether.attribution import DERIVED_DISCLAIMER, EIA_SOURCE, attribution_block
+from bellwether.attribution import (
+    DERIVED_DISCLAIMER,
+    EIA_SOURCE,
+    NOT_AFFILIATED,
+    attribution_block,
+    eia_acknowledgment,
+)
 from bellwether.ingest.eia import MIN_REQUEST_INTERVAL_SECONDS, EIAClient, ObservationRow
 from bellwether.storage.db import connect, export_snapshot, upsert_observations
 
@@ -40,12 +46,55 @@ class TestAttribution:
 
     def test_block_covers_both_eia_and_derived_content(self):
         block = attribution_block()
-        assert EIA_SOURCE in block
+        assert "U.S. Energy Information Administration" in block
+        assert NOT_AFFILIATED in block
         assert DERIVED_DISCLAIMER in block
 
 
-class TestNoLogoUse:
-    """TOS: the EIA logo is trademarked and may not be used."""
+class TestDatedAcknowledgment:
+    """Reuse policy: acknowledgments should include a date."""
+
+    def test_acknowledgment_carries_a_date(self):
+        text = eia_acknowledgment(date(2026, 7, 30))
+        assert "U.S. Energy Information Administration" in text
+        assert "Jul 2026" in text
+
+    def test_date_is_labelled_as_retrieval_not_publication(self):
+        """APIv2 exposes no publication date, so claiming one would be a fabrication."""
+        assert "retrieved" in eia_acknowledgment(date(2026, 7, 30)).lower()
+
+    def test_accepts_a_datetime_as_well_as_a_date(self):
+        moment = datetime(2026, 7, 30, 18, 45, tzinfo=UTC)
+        assert "Jul 2026" in eia_acknowledgment(moment)
+
+    def test_defaults_to_today_when_no_date_given(self):
+        assert f"{datetime.now(UTC):%b %Y}" in eia_acknowledgment()
+
+    def test_observation_snapshot_dates_from_ingest_not_export_time(self, tmp_path: Path):
+        """The acknowledgment should describe the data, not when the file was written."""
+        rows = [
+            ObservationRow(datetime(2025, 1, 1, tzinfo=UTC), "CISO", "D", 10.0, "megawatthours")
+        ]
+        out = tmp_path / "snapshots"
+        with connect(tmp_path / "t.duckdb") as conn:
+            upsert_observations(conn, rows)
+            ingested = conn.execute(
+                "SELECT strftime(max(ingested_at) AT TIME ZONE 'UTC', '%b %Y') FROM observations"
+            ).fetchone()[0]
+            export_snapshot(conn, table="observations", directory=out)
+
+        notice = (out / "ATTRIBUTION.txt").read_text(encoding="utf-8")
+        assert ingested in notice
+        # Dated from the observation period (2025), not from when the export ran.
+        assert "2025" not in notice
+
+
+class TestProtectedMaterials:
+    """Reuse policy: EIA marks are trademarked, and site imagery may be privately licensed.
+
+    Public domain status covers EIA's data, not its logo, its Energy Ant servicemark, or
+    the photographs and illustrations on eia.gov.
+    """
 
     def test_no_image_assets_reference_an_eia_logo(self):
         tracked = [
@@ -56,8 +105,12 @@ class TestNoLogoUse:
             and ".venv" not in p.parts
             and p.suffix.lower() in {".png", ".jpg", ".jpeg", ".svg", ".gif", ".ico"}
         ]
-        offenders = [p.name for p in tracked if "eia" in p.name.lower()]
-        assert not offenders, f"possible EIA logo assets: {offenders}"
+        offenders = [
+            p.name
+            for p in tracked
+            if "eia" in p.name.lower() or "energy-ant" in p.name.lower().replace("_", "-")
+        ]
+        assert not offenders, f"possible EIA branding assets: {offenders}"
 
 
 class TestRateLimitCompliance:
@@ -133,7 +186,8 @@ class TestNoModificationOfEIAContent:
 
 
 class TestComplianceDocumentation:
-    def test_compliance_doc_exists_and_records_a_review_date(self):
+    def test_compliance_doc_covers_both_policies_with_review_dates(self):
         doc = (REPO_ROOT / "docs" / "EIA_COMPLIANCE.md").read_text(encoding="utf-8")
         assert "terms-of-service" in doc
-        assert "Reviewed against:" in doc
+        assert "copyrights_reuse" in doc
+        assert doc.count("Reviewed against:") >= 2

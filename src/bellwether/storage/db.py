@@ -12,7 +12,12 @@ from pathlib import Path
 
 import duckdb
 
-from bellwether.attribution import DERIVED_DISCLAIMER, EIA_SOURCE
+from bellwether.attribution import (
+    AGENCY,
+    DERIVED_DISCLAIMER,
+    NOT_AFFILIATED,
+    eia_acknowledgment,
+)
 from bellwether.config import SNAPSHOT_DIR, settings
 from bellwether.ingest.eia import ObservationRow
 
@@ -140,6 +145,25 @@ def export_snapshot(
     target = out_dir / f"{table}.parquet"
     conn.execute(f"COPY {table} TO '{target.as_posix()}' (FORMAT PARQUET, COMPRESSION ZSTD)")
 
-    notice = EIA_SOURCE if table == "observations" else DERIVED_DISCLAIMER
-    (out_dir / "ATTRIBUTION.txt").write_text(f"{notice}\n", encoding="utf-8")
+    _write_attribution(conn, out_dir, table)
     return target
+
+
+def _write_attribution(conn: duckdb.DuckDBPyConnection, out_dir: Path, table: str) -> None:
+    """Ship the acknowledgment alongside exported data.
+
+    EIA's reuse policy asks acknowledgments to carry a date, so observations are dated from
+    the most recent `ingested_at` rather than from wall-clock time at export.
+    """
+    if table == "observations":
+        # Formatted in SQL: handing a TIMESTAMPTZ back to Python makes DuckDB import pytz,
+        # and the month and year are all the acknowledgment needs.
+        stamp = conn.execute(
+            "SELECT strftime(max(ingested_at) AT TIME ZONE 'UTC', '%b %Y') FROM observations"
+        ).fetchone()[0]
+        acknowledgment = f"Source: {AGENCY} (retrieved {stamp})" if stamp else eia_acknowledgment()
+        notice = "\n".join([acknowledgment, NOT_AFFILIATED])
+    else:
+        notice = "\n".join([eia_acknowledgment(), NOT_AFFILIATED, DERIVED_DISCLAIMER])
+
+    (out_dir / "ATTRIBUTION.txt").write_text(f"{notice}\n", encoding="utf-8")
