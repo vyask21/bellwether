@@ -86,6 +86,20 @@ Scope is deliberately narrow — CISO (California ISO) and ERCO (ERCOT/Texas) ra
 all ~60 balancing authorities. They are the most volatile and best documented, and depth
 beats breadth for what this project is demonstrating.
 
+### Attribution and acceptable use
+
+Data courtesy of the **U.S. Energy Information Administration** ([eia.gov/opendata](https://www.eia.gov/opendata/)).
+As a federal statistical agency's output it is public domain, but use is subject to EIA's
+[API Terms of Service](https://www.eia.gov/opendata/terms-of-service.php), which prohibit
+excessive automated request loops. The client therefore throttles to a minimum interval
+between requests and identifies itself with a `User-Agent`. A two-year hourly backfill is
+only about four paginated requests per series, so this costs nothing in practice — it
+exists so a pagination bug cannot turn into a hammering loop against a public service.
+
+The API key is sent as an `X-Api-Key` header rather than an `api_key=` query parameter.
+Both are accepted by EIA; the header keeps the key out of request URLs, which are the
+thing that most often ends up in logs, traces, and error reports.
+
 ## Storage
 
 DuckDB, in-process. At this volume (hourly × 2 years × a handful of series ≈ 10⁵ rows) no
@@ -99,7 +113,7 @@ exports a Parquet snapshot; anything reading concurrently reads the snapshot.
 ## Development
 
 ```bash
-pytest              # 22 tests
+pytest              # 30 tests
 ruff check .
 ruff format .
 ```

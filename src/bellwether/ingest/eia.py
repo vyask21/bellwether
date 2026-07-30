@@ -8,6 +8,7 @@ authority. The API caps a single response at 5,000 rows, so every pull paginates
 from __future__ import annotations
 
 import logging
+import time
 from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -24,6 +25,11 @@ REGION_DATA_ROUTE = "electricity/rto/region-data/data/"
 
 # EIA caps a single response at 5,000 rows regardless of a larger `length`.
 MAX_PAGE_SIZE = 5000
+
+# EIA's Terms of Service prohibit "excessive automated server request loops". A two-year
+# hourly backfill is ~4 pages per series, so throttling costs us almost nothing and keeps
+# a bug that loops on pagination from hammering a public service.
+MIN_REQUEST_INTERVAL_SECONDS = 0.25
 
 # Series types published per balancing authority on the region-data route.
 SERIES_TYPES = {
@@ -58,12 +64,23 @@ class EIAClient:
     logs or exception messages that echo the request URL.
     """
 
-    def __init__(self, api_key: str | None = None, timeout: float = 30.0) -> None:
+    def __init__(
+        self,
+        api_key: str | None = None,
+        timeout: float = 30.0,
+        min_request_interval: float = MIN_REQUEST_INTERVAL_SECONDS,
+    ) -> None:
         self._api_key = api_key or settings.require_eia_key()
+        self._min_request_interval = min_request_interval
+        self._last_request_at: float | None = None
         self._client = httpx.Client(
             base_url=BASE_URL,
             timeout=timeout,
-            headers={"X-Api-Key": self._api_key},
+            headers={
+                "X-Api-Key": self._api_key,
+                # Identify the client so EIA can see who is calling, per their ToS.
+                "User-Agent": "bellwether/0.1 (https://github.com/vyask21/bellwether)",
+            },
         )
 
     def __enter__(self) -> EIAClient:
@@ -82,9 +99,18 @@ class EIAClient:
         reraise=True,
     )
     def _get(self, route: str, params: list[tuple[str, str]]) -> dict:
+        self._throttle()
         response = self._client.get(route, params=params)
         response.raise_for_status()
         return response.json()
+
+    def _throttle(self) -> None:
+        """Space requests out to stay well inside EIA's acceptable-use terms."""
+        if self._last_request_at is not None:
+            elapsed = time.monotonic() - self._last_request_at
+            if elapsed < self._min_request_interval:
+                time.sleep(self._min_request_interval - elapsed)
+        self._last_request_at = time.monotonic()
 
     def fetch_region_data(
         self,
