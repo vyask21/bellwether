@@ -1,0 +1,34 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Data artifacts — regenerable, never commit
+data/*.duckdb
+data/*.duckdb.wal
+data/raw/
+data/interim/
+*.parquet
+!data/snapshots/*.parquet
+
+# Model weights / caches
+.cache/
+models/
+*.safetensors
+
+# Notebooks
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
