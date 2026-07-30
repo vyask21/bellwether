@@ -1,4 +1,4 @@
-"""Client for the EIA v2 API — hourly electricity demand, generation, and interchange.
+"""Client for the EIA v2 API: hourly electricity demand, generation, and interchange.
 
 Docs: https://www.eia.gov/opendata/documentation.php
 The `electricity/rto/region-data` route reports UTC-stamped hourly values per balancing
@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 import httpx
-from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 from bellwether.config import settings
 
@@ -26,10 +26,16 @@ REGION_DATA_ROUTE = "electricity/rto/region-data/data/"
 # EIA caps a single response at 5,000 rows regardless of a larger `length`.
 MAX_PAGE_SIZE = 5000
 
-# EIA's Terms of Service prohibit "excessive automated server request loops". A two-year
-# hourly backfill is ~4 pages per series, so throttling costs us almost nothing and keeps
-# a bug that loops on pagination from hammering a public service.
-MIN_REQUEST_INTERVAL_SECONDS = 0.25
+# EIA's published guidance (opendata/faqs.php) is a burst rate under 5 requests/second and
+# a sustained rate under 9,000/hour, with the caveat that actual limits vary by key usage,
+# demand on the series, and originating IP, and that some routes are stricter. One second
+# is EIA's own conservative suggestion. A two-year backfill is about 4 requests per series,
+# so pacing well below the ceiling costs seconds and removes any chance of a key ban.
+MIN_REQUEST_INTERVAL_SECONDS = 1.0
+
+# Statuses worth retrying: throttling, and transient server faults. A 403 (bad or missing
+# key) is permanent, so retrying it just delays a clear error by the full backoff budget.
+RETRYABLE_STATUS_CODES = frozenset({429, 500, 502, 503, 504})
 
 # Series types published per balancing authority on the region-data route.
 SERIES_TYPES = {
@@ -93,7 +99,7 @@ class EIAClient:
         self._client.close()
 
     @retry(
-        retry=retry_if_exception_type((httpx.TransportError, httpx.HTTPStatusError)),
+        retry=retry_if_exception(lambda exc: _is_retryable(exc)),
         wait=wait_exponential(multiplier=1, min=2, max=30),
         stop=stop_after_attempt(5),
         reraise=True,
@@ -165,6 +171,19 @@ class EIAClient:
                 yield _parse_row(row)
 
             offset += len(rows)
+
+
+def _is_retryable(exc: BaseException) -> bool:
+    """Retry network faults and throttling, but fail fast on permanent errors.
+
+    A throttled key recovers on its own within seconds to minutes, so backing off is the
+    right response. An invalid key never will.
+    """
+    if isinstance(exc, httpx.TransportError):
+        return True
+    if isinstance(exc, httpx.HTTPStatusError):
+        return exc.response.status_code in RETRYABLE_STATUS_CODES
+    return False
 
 
 def _to_eia_hour(moment: datetime) -> str:

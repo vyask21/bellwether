@@ -109,6 +109,37 @@ def test_retries_transient_server_errors(client: EIAClient):
     assert len(list(client.fetch_region_data("CISO", "D", START, END))) == 1
 
 
+@respx.mock
+def test_retries_throttling_responses(client: EIAClient):
+    """A throttled key recovers on its own, so 429 is worth backing off on."""
+    respx.get(ENDPOINT).mock(
+        side_effect=[
+            httpx.Response(429),
+            httpx.Response(200, json=_page([_row(0)], total=1)),
+        ]
+    )
+
+    assert len(list(client.fetch_region_data("CISO", "D", START, END))) == 1
+
+
+@respx.mock
+def test_does_not_retry_an_invalid_key(client: EIAClient):
+    """403 is permanent. Retrying it only delays a clear error by the whole backoff budget."""
+    route = respx.get(ENDPOINT).mock(
+        return_value=httpx.Response(403, json={"error": {"code": "API_KEY_INVALID"}})
+    )
+
+    with pytest.raises(httpx.HTTPStatusError):
+        list(client.fetch_region_data("CISO", "D", START, END))
+
+    assert route.call_count == 1
+
+
+def test_default_throttle_stays_well_under_the_published_burst_limit():
+    """EIA publishes a burst ceiling under 5 req/s; we pace an order of magnitude below."""
+    assert EIAClient(api_key="k")._min_request_interval >= 1.0
+
+
 def test_rejects_unknown_series_type(client: EIAClient):
     with pytest.raises(ValueError, match="Unknown series type"):
         list(client.fetch_region_data("CISO", "NOT_A_TYPE", START, END))

@@ -81,10 +81,19 @@ Data courtesy of the U.S. Energy Information Administration
 ([eia.gov/opendata](https://www.eia.gov/opendata/)), public domain, used under their
 [API Terms of Service](https://www.eia.gov/opendata/terms-of-service.php).
 
-The client throttles to 0.25s between requests and sends an identifying `User-Agent`, per
-the ToS prohibition on excessive automated request loops. A two-year backfill is about 4
-requests per series, so the throttle costs nothing and bounds the blast radius of a
-pagination bug.
+EIA's [FAQ](https://www.eia.gov/opendata/faqs.php) gives a burst ceiling under 5
+requests/second and a sustained ceiling under 9,000/hour, noting that real limits vary by
+key usage, series demand, and IP, and that some routes are stricter. The client paces at
+1.0s between requests, EIA's own conservative suggestion, and sends an identifying
+`User-Agent`. A two-year backfill is about 4 requests per series, so pacing an order of
+magnitude below the ceiling costs seconds and removes any chance of a key ban.
+
+Retries cover 429 and 5xx with exponential backoff. A 403 fails immediately, since a bad
+key never recovers.
+
+If this ever scales past a couple of balancing authorities, the
+[bulk download facility](https://www.eia.gov/opendata/bulkfiles.php) is the right tool for
+large historical pulls rather than sequential API calls.
 
 The API key goes in an `X-Api-Key` header rather than an `api_key=` query parameter. Both
 work; the header keeps the key out of request URLs, which are what tends to reach logs.
