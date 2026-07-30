@@ -21,7 +21,7 @@ value.
 | Seasonal-naive baselines | done |
 | Chronos-Bolt and TimesFM comparison | todo |
 | Weather features (NOAA/NWS) | todo |
-| Nuclear outage ingestion | todo |
+| Nuclear outage and energy disruption ingestion | todo |
 | Anomaly detection and brief generation | todo |
 | Scheduled refresh and dashboard | todo |
 
@@ -70,10 +70,12 @@ converges on the latest published number instead of duplicating rows.
 |---|---|
 | [EIA v2 API](https://www.eia.gov/opendata/) | Hourly demand, day-ahead forecast, net generation, interchange |
 | [NOAA/NWS API](https://www.weather.gov/documentation/services-web-api) | Temperature forecasts, weather alerts (planned) |
-| EIA nuclear outages | Generator outage evidence for briefs (planned) |
+| EIA nuclear outages, energy disruptions | Evidence for briefs (planned) |
 
 Scoped to CISO (California ISO) and ERCO (ERCOT) rather than all ~60 balancing
-authorities.
+authorities, and to four EIA routes rather than the full catalog. Most EIA data is monthly
+or annual and carries no signal at the hourly resolution we forecast. What was evaluated
+and rejected, and why, is in [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md).
 
 ### Attribution and terms
 
