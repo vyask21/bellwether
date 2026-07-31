@@ -21,7 +21,7 @@ value.
 | Seasonal-naive baselines | done, see [results](docs/RESULTS.md) |
 | Chronos-Bolt vs baselines | done, [wins on all metrics](docs/RESULTS.md) |
 | TimesFM comparison | todo |
-| Operator baseline (EIA `DF` series) | todo |
+| Operator baseline (EIA `DF` series) | done, [splits by market](docs/RESULTS.md) |
 | Weather features (NOAA/NWS) | todo |
 | Nuclear outage and energy disruption ingestion | todo |
 | Anomaly detection and brief generation | todo |

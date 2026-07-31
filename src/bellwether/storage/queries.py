@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC
 
@@ -71,6 +72,72 @@ def load_series(
     values = np.array([np.nan if r[1] is None else float(r[1]) for r in rows], dtype=float)
 
     return Series(series_id=f"{respondent}:{series_type}", timestamps=timestamps, values=values)
+
+
+def load_aligned_series(
+    conn: duckdb.DuckDBPyConnection,
+    respondent: str,
+    series_types: Sequence[str],
+) -> tuple[np.ndarray, dict[str, np.ndarray]]:
+    """Load several series types for one respondent onto a single shared time grid.
+
+    Returns the shared timestamps and a value array per series type, all the same length
+    and aligned index for index.
+
+    `load_series` derives its grid from the bounds of the series it is loading, so two
+    types whose first or last observation differ land on grids offset from each other.
+    Comparing those positionally silently misaligns every value. Anything that compares
+    two series must use this function, which builds one grid from the union of bounds and
+    joins each type onto it by timestamp.
+    """
+    if not series_types:
+        raise ValueError("Need at least one series type")
+
+    placeholders = ", ".join("?" for _ in series_types)
+    params: list = [respondent, *series_types]
+
+    grid_rows = conn.execute(
+        f"""
+        WITH bounds AS (
+            SELECT min(period) AS lo, max(period) AS hi
+            FROM observations
+            WHERE respondent = ? AND series_type IN ({placeholders})
+        )
+        SELECT unnest(generate_series(lo, hi, INTERVAL 1 HOUR)) AS period
+        FROM bounds
+        ORDER BY 1
+        """,
+        params,
+    ).fetchall()
+
+    if not grid_rows or grid_rows[0][0] is None:
+        raise ValueError(f"No observations for respondent={respondent!r} types={series_types}")
+
+    timestamps = np.array(
+        [r[0].astimezone(UTC).replace(tzinfo=None) for r in grid_rows], dtype="datetime64[ns]"
+    )
+    index = {ts: i for i, ts in enumerate(timestamps)}
+
+    values: dict[str, np.ndarray] = {}
+    for series_type in series_types:
+        column = np.full(timestamps.size, np.nan, dtype=float)
+        rows = conn.execute(
+            """
+            SELECT period, value
+            FROM observations
+            WHERE respondent = ? AND series_type = ? AND value IS NOT NULL
+            """,
+            [respondent, series_type],
+        ).fetchall()
+
+        for period, value in rows:
+            key = np.datetime64(period.astimezone(UTC).replace(tzinfo=None), "ns")
+            position = index.get(key)
+            if position is not None:
+                column[position] = float(value)
+        values[series_type] = column
+
+    return timestamps, values
 
 
 def coverage_report(conn: duckdb.DuckDBPyConnection) -> list[dict]:

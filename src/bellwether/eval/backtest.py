@@ -8,6 +8,7 @@ production, and the only one that cannot leak the future into the training windo
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -76,6 +77,7 @@ def rolling_origin_backtest(
     season_length: int = 168,
     quantile_levels: tuple[float, ...] = DEFAULT_QUANTILES,
     max_windows: int | None = None,
+    origins: Sequence[int] | None = None,
 ) -> BacktestResult:
     """Evaluate `forecaster` by advancing the origin through `series`.
 
@@ -86,6 +88,9 @@ def rolling_origin_backtest(
         initial_train_size: history before the first origin. Defaults to four seasons.
         season_length: seasonal period, used to scale MASE.
         max_windows: cap for quick runs during development.
+        origins: explicit forecast origins, overriding the regular stride. Used to score
+            a model over exactly the windows an external forecast covers, so the
+            comparison is not confounded by different window placement.
 
     Windows containing non-finite actuals are skipped rather than imputed: a gap in EIA
     data is a real gap, and filling it would invent accuracy the model never earned.
@@ -106,10 +111,12 @@ def rolling_origin_backtest(
         n_windows=0,
     )
 
-    origins = range(train_size, series.size - horizon + 1, step)
+    window_origins: Sequence[int] = (
+        origins if origins is not None else range(train_size, series.size - horizon + 1, step)
+    )
     skipped = 0
 
-    for origin in origins:
+    for origin in window_origins:
         if max_windows is not None and result.n_windows >= max_windows:
             break
 
