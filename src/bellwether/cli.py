@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from datetime import UTC, datetime, timedelta
 
 import typer
@@ -77,8 +78,11 @@ def backtest(
     series_type: str = typer.Option("D"),
     horizon: int = typer.Option(24, help="Forecast horizon in hours."),
     max_windows: int = typer.Option(60, help="Cap windows for a fast run; 0 means no cap."),
+    chronos: bool = typer.Option(
+        False, "--chronos", help="Include Chronos-Bolt. Roughly 0.6s per window on CPU."
+    ),
 ) -> None:
-    """Run the rolling-origin backtest for the statistical baselines."""
+    """Run the rolling-origin backtest across the configured models."""
     with connect(read_only=True) as conn:
         series = load_series(conn, respondent, series_type)
 
@@ -87,17 +91,25 @@ def backtest(
         f"{series.missing_fraction:.2%} missing"
     )
 
-    models = [WeeklySeasonalNaive(), DailySeasonalNaive()]
-    results = [
-        rolling_origin_backtest(
-            model,
-            series.values,
-            series_id=series.series_id,
-            horizon=horizon,
-            max_windows=max_windows or None,
+    models: list = [WeeklySeasonalNaive(), DailySeasonalNaive()]
+    if chronos:
+        from bellwether.forecast.chronos import ChronosBolt
+
+        models.append(ChronosBolt())
+
+    results = []
+    for model in models:
+        started = time.perf_counter()
+        results.append(
+            rolling_origin_backtest(
+                model,
+                series.values,
+                series_id=series.series_id,
+                horizon=horizon,
+                max_windows=max_windows or None,
+            )
         )
-        for model in models
-    ]
+        console.print(f"[dim]{model.name}: {time.perf_counter() - started:.1f}s[/dim]")
 
     table = Table(title=f"Backtest: {series.series_id}, h={horizon}")
     for column in ("Model", "Windows", "MASE", "WQL", "sMAPE %", "80% coverage"):
