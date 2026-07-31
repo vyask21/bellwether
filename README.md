@@ -25,6 +25,10 @@ value.
 | Anomaly detection and brief generation | todo |
 | Scheduled refresh and dashboard | todo |
 
+A companion project is sketched but not started: an MCP server exposing EIA data to LLM
+agents, reusing this project's compliant API client. See
+[docs/COMPANION_MCP_SERVER.md](docs/COMPANION_MCP_SERVER.md).
+
 ## Metrics
 
 Every model emits quantiles and is scored on three axes:
