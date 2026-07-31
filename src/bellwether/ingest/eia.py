@@ -45,7 +45,7 @@ SERIES_TYPES = {
     "TI": "total_interchange",
 }
 
-# Balancing authorities we track. Scoped deliberately small — depth over breadth.
+# Balancing authorities we track. Scoped deliberately small: depth over breadth.
 BALANCING_AUTHORITIES = {
     "CISO": "California ISO",
     "ERCO": "ERCOT (Texas)",

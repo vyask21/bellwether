@@ -16,9 +16,9 @@ value.
 
 | Phase | Status |
 |---|---|
-| EIA ingestion into DuckDB | done, not yet run on live data |
+| EIA ingestion into DuckDB | done, 2 years of CISO demand loaded |
 | Rolling-origin backtest (MASE, WQL, coverage) | done |
-| Seasonal-naive baselines | done |
+| Seasonal-naive baselines | done, see [results](docs/RESULTS.md) |
 | Chronos-Bolt and TimesFM comparison | todo |
 | Weather features (NOAA/NWS) | todo |
 | Nuclear outage and energy disruption ingestion | todo |

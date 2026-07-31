@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC
 
 import duckdb
 import numpy as np
@@ -61,14 +62,19 @@ def load_series(
             f"No observations stored for respondent={respondent!r} series_type={series_type!r}"
         )
 
-    timestamps = np.array([r[0] for r in rows], dtype="datetime64[ns]")
+    # DuckDB returns TIMESTAMPTZ as tz-aware datetimes, which numpy cannot represent.
+    # Normalise to UTC and drop the tzinfo so the conversion is explicit rather than a
+    # warning, and so every series sits on the same clock regardless of machine locale.
+    timestamps = np.array(
+        [r[0].astimezone(UTC).replace(tzinfo=None) for r in rows], dtype="datetime64[ns]"
+    )
     values = np.array([np.nan if r[1] is None else float(r[1]) for r in rows], dtype=float)
 
     return Series(series_id=f"{respondent}:{series_type}", timestamps=timestamps, values=values)
 
 
 def coverage_report(conn: duckdb.DuckDBPyConnection) -> list[dict]:
-    """Per-series row counts, time span, and null rate — the first thing to check
+    """Per-series row counts, time span, and null rate: the first thing to check
     after a backfill, before trusting any metric computed on top of it."""
     rows = conn.execute(
         """

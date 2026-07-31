@@ -21,7 +21,7 @@ def rmse(actual: np.ndarray, predicted: np.ndarray) -> float:
 
 
 def seasonal_naive_mae(train: np.ndarray, season_length: int) -> float:
-    """In-sample MAE of a seasonal-naive forecast — the MASE denominator.
+    """In-sample MAE of a seasonal-naive forecast: the MASE denominator.
 
     Computed on the training window only, so it is never contaminated by the test period.
     """
@@ -79,7 +79,7 @@ def weighted_quantile_loss(
     quantile_forecasts: np.ndarray,
     quantile_levels: tuple[float, ...] = DEFAULT_QUANTILES,
 ) -> float:
-    """Mean weighted quantile loss (WQL) — a discrete approximation of CRPS.
+    """Mean weighted quantile loss (WQL): a discrete approximation of CRPS.
 
     `quantile_forecasts` has shape (horizon, n_quantiles), aligned to `quantile_levels`.
     Normalising by the sum of absolute actuals makes the score scale-free, so a 30 GW

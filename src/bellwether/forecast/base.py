@@ -1,7 +1,7 @@
 """The forecaster interface every model implements.
 
 Keeping statistical baselines and foundation models behind one protocol is what makes the
-champion/challenger comparison honest — the backtest harness cannot tell them apart, so
+champion/challenger comparison honest: the backtest harness cannot tell them apart, so
 no model gets an accidental advantage from a different evaluation path.
 """
 
@@ -29,6 +29,6 @@ class Forecaster(Protocol):
         """Return a (horizon, n_quantiles) array of forecasts.
 
         `history` is the observed series up to the forecast origin, oldest first.
-        Implementations must not look beyond it — that would leak the test period.
+        Implementations must not look beyond it: that would leak the test period.
         """
         ...

@@ -17,7 +17,7 @@ from bellwether.ingest.eia import BALANCING_AUTHORITIES, EIAClient
 from bellwether.storage.db import connect, export_snapshot, upsert_observations
 from bellwether.storage.queries import coverage_report, load_series
 
-app = typer.Typer(help="Bellwether — probabilistic grid load forecasting.", no_args_is_help=True)
+app = typer.Typer(help="Bellwether: probabilistic grid load forecasting.", no_args_is_help=True)
 console = Console()
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
@@ -49,7 +49,7 @@ def ingest(
 def status() -> None:
     """Show what is stored, and how complete it is."""
     if not settings.duckdb_path.exists():
-        console.print("[yellow]No database yet — run `bellwether ingest` first.[/yellow]")
+        console.print("[yellow]No database yet: run `bellwether ingest` first.[/yellow]")
         raise typer.Exit(code=1)
 
     with connect(read_only=True) as conn:
@@ -99,7 +99,7 @@ def backtest(
         for model in models
     ]
 
-    table = Table(title=f"Backtest — {series.series_id}, h={horizon}")
+    table = Table(title=f"Backtest: {series.series_id}, h={horizon}")
     for column in ("Model", "Windows", "MASE", "WQL", "sMAPE %", "80% coverage"):
         table.add_column(column)
 

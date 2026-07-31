@@ -87,7 +87,7 @@ def rolling_origin_backtest(
         season_length: seasonal period, used to scale MASE.
         max_windows: cap for quick runs during development.
 
-    Windows containing non-finite actuals are skipped rather than imputed — a gap in EIA
+    Windows containing non-finite actuals are skipped rather than imputed: a gap in EIA
     data is a real gap, and filling it would invent accuracy the model never earned.
     """
     series = np.asarray(series, dtype=float)
