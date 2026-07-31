@@ -16,7 +16,7 @@ value.
 
 | Phase | Status |
 |---|---|
-| EIA ingestion into DuckDB | done, 2 years of CISO demand loaded |
+| EIA ingestion into DuckDB | done, 3 markets, 2 years hourly |
 | Rolling-origin backtest (MASE, WQL, coverage) | done |
 | Seasonal-naive baselines | done, see [results](docs/RESULTS.md) |
 | Chronos-Bolt vs baselines | done, [wins on all metrics](docs/RESULTS.md) |
@@ -30,6 +30,8 @@ value.
 A companion project is sketched but not started: an MCP server exposing EIA data to LLM
 agents, reusing this project's compliant API client. See
 [docs/COMPANION_MCP_SERVER.md](docs/COMPANION_MCP_SERVER.md).
+
+Current status, decisions, and next steps: [docs/STATE.md](docs/STATE.md).
 
 ## Metrics
 
