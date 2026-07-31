@@ -1,0 +1,79 @@
+"""Run the full backtest for one market and append the result to a JSON file.
+
+Split per market and written incrementally so a long run can be resumed rather than
+restarted, and so a partial run still leaves usable results on disk.
+
+Usage: python scripts/run_backtest.py CISO [--chronos] [--out docs/backtest_results.json]
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import logging
+import time
+from pathlib import Path
+
+from bellwether.eval.backtest import rolling_origin_backtest
+from bellwether.forecast.baseline import DailySeasonalNaive, WeeklySeasonalNaive
+from bellwether.storage.db import connect
+from bellwether.storage.queries import load_series
+
+logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(message)s")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("respondent")
+    parser.add_argument("--series-type", default="D")
+    parser.add_argument("--horizon", type=int, default=24)
+    parser.add_argument("--chronos", action="store_true")
+    parser.add_argument("--out", default="docs/backtest_results.json")
+    args = parser.parse_args()
+
+    with connect(read_only=True) as conn:
+        series = load_series(conn, args.respondent, args.series_type)
+
+    models: list = [WeeklySeasonalNaive(), DailySeasonalNaive()]
+    if args.chronos:
+        from bellwether.forecast.chronos import ChronosBolt
+
+        models.append(ChronosBolt())
+
+    out_path = Path(args.out)
+    existing = json.loads(out_path.read_text()) if out_path.exists() else {}
+    market = existing.setdefault(series.series_id, {})
+
+    for model in models:
+        if model.name in market:
+            print(f"  {model.name}: already recorded, skipping")
+            continue
+
+        started = time.perf_counter()
+        result = rolling_origin_backtest(
+            model,
+            series.values,
+            series_id=series.series_id,
+            horizon=args.horizon,
+            max_windows=None,
+        )
+        elapsed = time.perf_counter() - started
+
+        summary = result.summary()
+        summary["windows"] = result.n_windows
+        summary["seconds"] = round(elapsed, 1)
+        market[model.name] = summary
+
+        # Written after each model so an interrupted run keeps what it finished.
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(json.dumps(existing, indent=2, sort_keys=True))
+
+        print(
+            f"  {model.name:<22} MASE {summary['mase']:.3f}  "
+            f"WQL {summary['wql']:.4f}  sMAPE {summary['smape']:.2f}%  "
+            f"cov {summary['coverage_80']:.1%}  ({elapsed:.0f}s)"
+        )
+
+
+if __name__ == "__main__":
+    main()
