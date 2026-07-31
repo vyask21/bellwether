@@ -76,10 +76,11 @@ converges on the latest published number instead of duplicating rows.
 | [NOAA/NWS API](https://www.weather.gov/documentation/services-web-api) | Temperature forecasts, weather alerts (planned) |
 | EIA nuclear outages, energy disruptions | Evidence for briefs (planned) |
 
-Scoped to CISO (California ISO) and ERCO (ERCOT) rather than all ~60 balancing
-authorities, and to four EIA routes rather than the full catalog. Most EIA data is monthly
-or annual and carries no signal at the hourly resolution we forecast. What was evaluated
-and rejected, and why, is in [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md).
+Scoped to three balancing authorities out of the 83 the API lists: CISO (California ISO),
+ERCO (ERCOT), and PACE (PacifiCorp East). No state is a unit in this data. Also scoped to
+a handful of EIA routes rather than the full catalog, since most EIA data is monthly or
+annual and carries no signal at hourly resolution. What was evaluated and rejected, and
+why, is in [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md).
 
 ### Attribution and terms
 
