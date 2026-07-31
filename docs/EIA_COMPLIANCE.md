@@ -191,6 +191,18 @@ protected is reachable through the path we use. The rule is that no image, photo
 illustration may be copied from eia.gov into this repository or any dashboard, regardless
 of how it is sourced.
 
+## EIA source code is licensed, not public domain
+
+EIA publishes code at https://github.com/EIAgov under Apache 2.0 (NEMS, BlueSky,
+dash-benchmark). Public domain status covers EIA's data. It does not cover their code.
+
+This project uses none of it, and currently has no reason to. If that changes, Apache 2.0
+obligations attach to the copied portions even inside an MIT project: retain the copyright
+and license notice, state what was modified, and preserve any NOTICE file. Do not paste
+code from those repositories without doing that.
+
+Referencing their work in prose or citing it as prior art carries no such obligation.
+
 ## Trademarks
 
 > The EIA logo is a registered trademark (Registration Number 4019501) of the U.S.
