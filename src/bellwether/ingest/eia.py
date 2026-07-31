@@ -49,6 +49,7 @@ SERIES_TYPES = {
 BALANCING_AUTHORITIES = {
     "CISO": "California ISO",
     "ERCO": "ERCOT (Texas)",
+    "PACE": "PacifiCorp East (Utah, Wyoming, SE Idaho)",
 }
 
 
