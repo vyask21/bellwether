@@ -23,8 +23,8 @@ value.
 | TimesFM comparison | todo |
 | Operator baseline (EIA `DF` series) | done, [splits by market](docs/RESULTS.md) |
 | NOAA weather ingestion | done, 14 stations, hourly temperature |
-| Weather ablation vs a calendar control | done, [prediction half failed](docs/RESULTS.md) |
-| Breach detection and error decomposition | done, [miscoverage is seasonal](docs/RESULTS.md) |
+| Corrector ablation: weather and volatility | done, [both predictions failed usefully](docs/RESULTS.md) |
+| Breach detection and error decomposition | done, [where the forecast fails](docs/RESULTS.md) |
 | Nuclear outage and energy disruption ingestion | todo |
 | Brief generation from retrieved evidence | todo |
 | Scheduled refresh and dashboard | todo |

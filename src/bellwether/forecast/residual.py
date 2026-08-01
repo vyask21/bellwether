@@ -104,16 +104,24 @@ def fit_quantile_regression(
     return beta
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True)
 class FeatureSpec:
     """Which columns a corrector builds, and what to call the resulting arm."""
 
     name: str
-    use_weather: bool
+    use_weather: bool = False
+    use_volatility: bool = False
 
 
-CALENDAR_ONLY = FeatureSpec(name="calendar", use_weather=False)
+# The four corrector arms form a 2x2: weather against volatility. Weather columns describe
+# where the residual sits, volatility columns describe how far it can stray, and the
+# calendar arm holds neither so it can price the recalibration that all of them include.
+CALENDAR_ONLY = FeatureSpec(name="calendar")
 WEATHER = FeatureSpec(name="weather", use_weather=True)
+VOLATILITY = FeatureSpec(name="volatility", use_volatility=True)
+WEATHER_VOLATILITY = FeatureSpec(name="weather+volatility", use_weather=True, use_volatility=True)
+
+ALL_SPECS = (CALENDAR_ONLY, WEATHER, VOLATILITY, WEATHER_VOLATILITY)
 
 
 def build_features(
@@ -123,6 +131,8 @@ def build_features(
     is_weekend: np.ndarray,
     temperature: np.ndarray | None = None,
     temperature_yesterday: np.ndarray | None = None,
+    volatility_24: np.ndarray | None = None,
+    volatility_168: np.ndarray | None = None,
 ) -> np.ndarray:
     """Assemble the design matrix, one row per forecast hour.
 
@@ -144,6 +154,22 @@ def build_features(
     * cooling and heating degrees, which carry the nonlinearity. Load responds to 35 C far
       more steeply than to 20 C, and a linear term in temperature cannot express that.
     * the day-over-day change in each, which is the nonlinearity in increment form.
+
+    Volatility columns, in the volatility arm only. These describe how far the residual can
+    stray rather than where it sits, which is the thing every other column here is silent
+    about and the thing the interval is made of:
+
+    * `volatility_168`, the recent realised volatility of demand over a week. The market's
+      current regime.
+    * `volatility_24`, the same over a day, so an unusually turbulent yesterday can widen
+      today independently of the weekly level.
+    * `volatility_24 * sqrt(horizon_step)`, because forecast uncertainty accumulates with
+      distance at a rate set by how volatile the series currently is. Without the
+      interaction the model can widen for lead time and widen for volatility but cannot
+      widen faster with lead time *because* volatility is high.
+
+    All three are measured strictly before the forecast origin and are constant across the
+    window, so they scale its whole spread rather than reshaping it hour by hour.
     """
     columns = [
         np.ones_like(horizon_steps, dtype=float),
@@ -169,6 +195,18 @@ def build_features(
                 heating,
                 cooling - cooling_yesterday,
                 heating - heating_yesterday,
+            ]
+        )
+
+    # Appended last so the weather column positions never shift when this arm is off.
+    if spec.use_volatility:
+        if volatility_24 is None or volatility_168 is None:
+            raise ValueError(f"Feature spec {spec.name!r} needs volatility columns")
+        columns.extend(
+            [
+                volatility_168,
+                volatility_24,
+                volatility_24 * np.sqrt(horizon_steps.astype(float)),
             ]
         )
 

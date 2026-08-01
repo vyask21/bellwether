@@ -1,6 +1,6 @@
 """Run the weather ablation for one market and append the result to a JSON file.
 
-Usage: python scripts/run_weather_ablation.py ERCO [--out docs/weather_ablation.json]
+Usage: python scripts/run_corrector_ablation.py ERCO [--out docs/weather_ablation.json]
 
 Written incrementally, one market per invocation, so a long run can be resumed rather
 than restarted. Roughly 5 minutes per market on CPU: the base model forecasts once over
@@ -21,7 +21,7 @@ from pathlib import Path
 
 import numpy as np
 
-from bellwether.eval.ablation import cache_base_forecasts, run_weather_ablation, usable_origins
+from bellwether.eval.ablation import cache_base_forecasts, run_corrector_ablation, usable_origins
 from bellwether.eval.operator import BA_TIMEZONES
 from bellwether.storage.db import connect
 from bellwether.storage.queries import load_market_temperature, load_series
@@ -56,7 +56,7 @@ def main() -> None:
     print(f"  base forecasts cached in {time.perf_counter() - started:.0f}s")
 
     started = time.perf_counter()
-    output = run_weather_ablation(
+    output = run_corrector_ablation(
         base,
         series.values,
         series.timestamps,

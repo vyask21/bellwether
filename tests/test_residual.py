@@ -13,13 +13,16 @@ import pytest
 from bellwether.eval.ablation import (
     LAG_HOURS,
     CachedForecast,
-    run_weather_ablation,
+    realised_volatility,
+    run_corrector_ablation,
     usable_origins,
 )
 from bellwether.eval.metrics import DEFAULT_QUANTILES
 from bellwether.forecast.residual import (
     CALENDAR_ONLY,
+    VOLATILITY,
     WEATHER,
+    WEATHER_VOLATILITY,
     ResidualQuantileCorrector,
     apply_correction,
     build_features,
@@ -141,6 +144,49 @@ class TestFeatures:
         with pytest.raises(ValueError, match="needs temperature"):
             build_features(WEATHER, **self._calendar_args())
 
+    def test_volatility_spec_without_volatility_is_rejected(self):
+        with pytest.raises(ValueError, match="needs volatility"):
+            build_features(VOLATILITY, **self._calendar_args())
+
+    def test_volatility_columns_are_appended_after_weather_columns(self):
+        """Weather column positions must not shift when volatility is switched on.
+
+        Several tests here index weather columns by number, and more importantly the two
+        arms have to stay comparable across runs.
+        """
+        args = self._calendar_args()
+        weather = build_features(
+            WEATHER,
+            **args,
+            temperature=np.full(24, 20.0),
+            temperature_yesterday=np.full(24, 15.0),
+        )
+        both = build_features(
+            WEATHER_VOLATILITY,
+            **args,
+            temperature=np.full(24, 20.0),
+            temperature_yesterday=np.full(24, 15.0),
+            volatility_24=np.full(24, 100.0),
+            volatility_168=np.full(24, 200.0),
+        )
+        assert both.shape[1] == weather.shape[1] + 3
+        assert np.array_equal(both[:, : weather.shape[1]], weather)
+
+    def test_volatility_interaction_grows_with_horizon(self):
+        """Uncertainty accumulates with lead time at a rate set by current volatility."""
+        features = build_features(
+            VOLATILITY,
+            horizon_steps=np.array([1, 4, 16]),
+            local_hours=np.array([12, 12, 12]),
+            is_weekend=np.zeros(3, dtype=bool),
+            volatility_24=np.full(3, 10.0),
+            volatility_168=np.full(3, 20.0),
+        )
+        # Columns after the 5 calendar ones: vol_168, vol_24, vol_24 * sqrt(step).
+        assert features[:, 5].tolist() == [20.0, 20.0, 20.0]
+        assert features[:, 6].tolist() == [10.0, 10.0, 10.0]
+        assert features[:, 7].tolist() == [10.0, 20.0, 40.0]
+
 
 class TestCorrector:
     def _fit(self, n: int = 500, seed: int = 3):
@@ -220,6 +266,45 @@ class TestCorrector:
         assert corrected[1].tolist() == [199.0, 200.0, 201.0]
 
 
+class TestRealisedVolatility:
+    """The one feature computed from the target series itself, so leakage is the risk."""
+
+    def test_reads_only_history_before_the_origin(self):
+        """The whole point: a forecaster at the origin has not seen what comes after it."""
+        series = np.concatenate([np.full(100, 10.0), np.full(100, 10.0)])
+        calm = realised_volatility(series, origin=100, lookback=24)
+
+        # Make everything from the origin onward violently volatile.
+        series[100:] = np.tile([0.0, 1000.0], 50)
+        assert realised_volatility(series, origin=100, lookback=24) == calm == 0.0
+
+    def test_rises_with_a_more_volatile_history(self):
+        steady = np.arange(200, dtype=float)
+        jumpy = np.arange(200, dtype=float) + np.tile([0.0, 50.0], 100)
+
+        assert realised_volatility(jumpy, 150, 24) > realised_volatility(steady, 150, 24)
+
+    def test_measures_changes_not_levels(self):
+        """A hundredfold bigger market with the same swings is not more volatile.
+
+        The corrector is fitted per market and its columns are standardised, so absolute
+        scale is handled elsewhere. What this column has to carry is movement.
+        """
+        small = np.tile([100.0, 110.0], 100)
+        large = np.tile([10_000.0, 10_010.0], 100)
+
+        assert realised_volatility(large, 150, 24) == pytest.approx(
+            realised_volatility(small, 150, 24)
+        )
+
+    def test_a_lookback_longer_than_history_is_clipped(self):
+        assert realised_volatility(np.arange(10, dtype=float), origin=5, lookback=168) >= 0.0
+
+    def test_too_little_history_is_zero_rather_than_nan(self):
+        """NaN here would silently void every quantile fitted on the column."""
+        assert realised_volatility(np.arange(10, dtype=float), origin=1, lookback=24) == 0.0
+
+
 class TestUsableOrigins:
     def _series(self, n: int = 2000) -> np.ndarray:
         return np.sin(np.arange(n) * 2 * np.pi / 24) * 100.0 + 1000.0
@@ -293,7 +378,7 @@ class TestAblation:
         """Comparing arms scored on different window sets compares window sets."""
         series, timestamps, temperature = self._inputs()
 
-        output = run_weather_ablation(
+        output = run_corrector_ablation(
             _ConstantForecaster(),
             series,
             timestamps,
@@ -304,7 +389,13 @@ class TestAblation:
         )
 
         results = output.results
-        assert set(results) == {"constant", "constant+calendar", "constant+weather"}
+        assert set(results) == {
+            "constant",
+            "constant+calendar",
+            "constant+weather",
+            "constant+volatility",
+            "constant+weather+volatility",
+        }
         counts = {name: r.n_windows for name, r in results.items()}
         assert len(set(counts.values())) == 1, counts
         origins = [tuple(w.origin_index for w in r.windows) for r in results.values()]
@@ -325,7 +416,7 @@ class TestAblation:
         """
         series, timestamps, temperature = self._inputs()
 
-        results = run_weather_ablation(
+        results = run_corrector_ablation(
             _ConstantForecaster(),
             series,
             timestamps,
@@ -348,7 +439,7 @@ class TestAblation:
         """
         series, timestamps, temperature = self._inputs()
 
-        clean = run_weather_ablation(
+        clean = run_corrector_ablation(
             _ConstantForecaster(),
             series,
             timestamps,
@@ -362,7 +453,7 @@ class TestAblation:
         # windows and the assertion below would flag the second one as a false positive.
         tampered_series = series.copy()
         tampered_series[-24:] += 50_000.0
-        tampered = run_weather_ablation(
+        tampered = run_corrector_ablation(
             _ConstantForecaster(),
             tampered_series,
             timestamps,
@@ -387,7 +478,7 @@ class TestAblation:
         series, timestamps, temperature = self._inputs(n=800)
 
         with pytest.raises(ValueError, match="warmup"):
-            run_weather_ablation(
+            run_corrector_ablation(
                 _ConstantForecaster(),
                 series,
                 timestamps,
@@ -412,7 +503,7 @@ class TestAblation:
             CachedForecast(origin=o, quantiles=_ConstantForecaster().predict(series[:o], 24))
             for o in origins
         ]
-        run_weather_ablation(
+        run_corrector_ablation(
             _Counting(),
             series,
             timestamps,

@@ -37,7 +37,7 @@ from pathlib import Path
 
 import numpy as np
 
-from bellwether.eval.ablation import cache_base_forecasts, run_weather_ablation, usable_origins
+from bellwether.eval.ablation import cache_base_forecasts, run_corrector_ablation, usable_origins
 from bellwether.eval.breaches import (
     HourlyRecords,
     episode_summary,
@@ -90,7 +90,10 @@ def main() -> None:
     base = ChronosBolt()
     timezone = BA_TIMEZONES[args.respondent]
 
-    pooled: list[HourlyRecords] = []
+    # Every arm is profiled from the same ablation pass. The base model is the expensive
+    # part and it is already shared across arms, so covering all of them costs arithmetic
+    # and makes the seasonal comparison a single run rather than one run per arm.
+    pooled: dict[str, list[HourlyRecords]] = {}
     episodes = None
     summary = None
 
@@ -100,7 +103,7 @@ def main() -> None:
         print(f"{series.series_id}: offset +{offset}h, {len(origins)} usable origins")
 
         cached = cache_base_forecasts(base, series.values, origins, 24)
-        output = run_weather_ablation(
+        output = run_corrector_ablation(
             base,
             series.values,
             series.timestamps,
@@ -113,46 +116,81 @@ def main() -> None:
         if args.arm not in output.forecasts:
             raise SystemExit(f"Unknown arm {args.arm!r}; have {sorted(output.forecasts)}")
 
-        records = hourly_records(
-            series.values,
-            series.timestamps,
-            output.scored_origins,
-            output.forecasts[args.arm],
-            timezone,
-        )
-        pooled.append(records)
+        for arm, windows in output.forecasts.items():
+            records = hourly_records(
+                series.values, series.timestamps, output.scored_origins, windows, timezone
+            )
+            pooled.setdefault(arm, []).append(records)
 
-        # Episodes come from one non-overlapping run. Pooled runs cover the same hour
-        # several times over, which is what makes the profile crossing work and what would
-        # make an episode count fiction.
-        if offset == 0:
-            episodes = find_episodes(records)
-            summary = episode_summary(episodes, total_hours=len(records))
+            # Episodes come from one non-overlapping run of the selected arm. Pooled runs
+            # cover the same hour several times over, which is what makes the profile
+            # crossing work and what would make an episode count fiction.
+            if offset == 0 and arm == args.arm:
+                episodes = find_episodes(records)
+                summary = episode_summary(episodes, total_hours=len(records))
 
-    records = pool_records(pooled)
-    hours = profile_by_local_hour(records)
-    months = profile_by_month(records)
-    steps = profile_by_horizon_step(records)
+    profiles = {
+        arm: {
+            "hours_pooled": len(pool_records(runs)),
+            "stagger": args.stagger,
+            "by_local_hour": profile_by_local_hour(pool_records(runs)),
+            "by_month": profile_by_month(pool_records(runs)),
+            "by_horizon_step": profile_by_horizon_step(pool_records(runs)),
+        }
+        for arm, runs in pooled.items()
+    }
 
+    records = pool_records(pooled[args.arm])
+    selected = profiles[args.arm]
     _print_report(
-        series.series_id, args.arm, records, summary, hours, months, steps, episodes, args.stagger
+        series.series_id,
+        args.arm,
+        records,
+        summary,
+        selected["by_local_hour"],
+        selected["by_month"],
+        selected["by_horizon_step"],
+        episodes,
+        args.stagger,
     )
+    _print_seasonal_comparison(profiles)
 
     worst = sorted(episodes, key=lambda e: e.total_exceedance, reverse=True)[: args.top_episodes]
+    profiles[args.arm]["episodes"] = summary
+    profiles[args.arm]["worst_episodes"] = [e.as_dict() for e in worst]
+
     out_path = Path(args.out)
     existing = json.loads(out_path.read_text()) if out_path.exists() else {}
-    existing.setdefault(series.series_id, {})[args.arm] = {
-        "hours_pooled": len(records),
-        "stagger": args.stagger,
-        "episodes": summary,
-        "by_local_hour": hours,
-        "by_month": months,
-        "by_horizon_step": steps,
-        "worst_episodes": [e.as_dict() for e in worst],
-    }
+    existing.setdefault(series.series_id, {}).update(profiles)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(existing, indent=2, sort_keys=True))
     print(f"\nwritten to {out_path}")
+
+
+# Months holding fewer hours than this are the ragged ends of the scored period and are
+# excluded from the spread, where a handful of hours would otherwise set the range.
+MIN_MONTH_HOURS = 1000
+
+
+def _print_seasonal_comparison(profiles: dict) -> None:
+    """The direct test of whether conditioning the interval flattens its seasonal error.
+
+    Coverage spread is the quantity the whole exercise is about: an interval that adapts to
+    the season should hold roughly nominal coverage in every month rather than under-cover
+    in one and over-cover in another.
+    """
+    print(f"\n{'arm':<38} {'coverage range':>20} {'spread':>8} {'width spread':>13}")
+    for arm, profile in profiles.items():
+        full = [row for row in profile["by_month"] if row["hours"] >= MIN_MONTH_HOURS]
+        if not full:
+            continue
+        coverage = [row["coverage"] for row in full]
+        widths = [row["mean_width"] for row in full]
+        print(
+            f"{arm:<38} {min(coverage):>9.1%}..{max(coverage):<9.1%} "
+            f"{100 * (max(coverage) - min(coverage)):>6.0f}pt "
+            f"{100 * (max(widths) / min(widths) - 1):>12.0f}%"
+        )
 
 
 def _print_report(

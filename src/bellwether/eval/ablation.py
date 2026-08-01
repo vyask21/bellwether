@@ -1,14 +1,18 @@
-"""Weather ablation: does temperature explain what a foundation model gets wrong.
+"""Corrector ablation: what explains the errors a foundation model makes.
 
-Three arms, scored on an identical origin set:
+Five arms, scored on an identical origin set. The four corrected ones are a 2x2 of weather
+against volatility, which exists because the two answer different questions: weather
+columns describe *where* the residual sits, volatility columns describe *how far* it can
+stray, and only the second is what an interval is made of.
 
 1. **base**, the uncorrected foundation model.
-2. **base + calendar**, corrected by a residual quantile regression on calendar features
-   alone. The control. Rebuilding a predictive distribution from residual quantiles is a
-   recalibration, and recalibration alone can move coverage without any weather in it. An
-   arm that beats `base` here has demonstrated nothing about temperature.
-3. **base + weather**, the same corrector with temperature columns added. Only the gap
-   between this and the calendar arm is attributable to weather.
+2. **base + calendar**, a residual quantile regression on calendar features alone. The
+   control. Rebuilding a predictive distribution from residual quantiles is itself a
+   recalibration, and recalibration alone moves coverage with no covariate in it, so an arm
+   that beats `base` has demonstrated nothing until it also beats this.
+3. **base + weather**, adding temperature. Cut point error and left calibration alone.
+4. **base + volatility**, adding the recent realised volatility of demand.
+5. **base + weather+volatility**, both.
 
 Two properties this file exists to guarantee:
 
@@ -21,12 +25,13 @@ Two properties this file exists to guarantee:
 
 The base model's forecasts are computed once and cached across arms. Refitting the
 corrector is cheap; re-running a foundation model over hundreds of origins is not, and
-running it three times would change nothing about the result except the wall clock.
+running it five times would change nothing about the result except the wall clock.
 """
 
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 import numpy as np
@@ -45,9 +50,8 @@ from bellwether.eval.metrics import (
 )
 from bellwether.forecast.base import Forecaster
 from bellwether.forecast.residual import (
-    CALENDAR_ONLY,
+    ALL_SPECS,
     DEFAULT_MIN_TRAIN_ORIGINS,
-    WEATHER,
     FeatureSpec,
     ResidualQuantileCorrector,
     apply_correction,
@@ -149,7 +153,7 @@ def _calendar_columns(timestamps: np.ndarray, timezone: str) -> tuple[np.ndarray
     return local.hour.to_numpy(), (local.dayofweek.to_numpy() >= 5)
 
 
-def run_weather_ablation(
+def run_corrector_ablation(
     forecaster: Forecaster,
     series: np.ndarray,
     timestamps: np.ndarray,
@@ -162,9 +166,10 @@ def run_weather_ablation(
     season_length: int = 168,
     quantile_levels: tuple[float, ...] = DEFAULT_QUANTILES,
     min_train_origins: int = DEFAULT_MIN_TRAIN_ORIGINS,
+    specs: Sequence[FeatureSpec] = ALL_SPECS,
     cached: list[CachedForecast] | None = None,
 ) -> AblationOutput:
-    """Score the base model and both corrected arms over one series.
+    """Score the base model and every corrected arm over one series.
 
     Returns the per-arm scores alongside the forecasts they were computed from. The
     forecasts are kept because a summary metric cannot answer where a model fails, only
@@ -190,10 +195,10 @@ def run_weather_ablation(
     # corrector never sees more of this than the origins before the one it is forecasting.
     per_origin_features = {
         spec.name: [
-            _features_for(spec, origin, horizon, local_hours, is_weekend, temperature)
+            _features_for(spec, origin, horizon, local_hours, is_weekend, temperature, series)
             for origin in origins
         ]
-        for spec in (CALENDAR_ONLY, WEATHER)
+        for spec in specs
     }
     per_origin_residuals = [
         series[c.origin : c.origin + horizon] - c.quantiles[:, median_index] for c in cached
@@ -210,11 +215,7 @@ def run_weather_ablation(
         min_train_origins,
     )
 
-    arm_names = [
-        forecaster.name,
-        f"{forecaster.name}+{CALENDAR_ONLY.name}",
-        f"{forecaster.name}+{WEATHER.name}",
-    ]
+    arm_names = [forecaster.name, *(f"{forecaster.name}+{spec.name}" for spec in specs)]
     results = {name: BacktestResult(name, series_id, horizon, 0) for name in arm_names}
     forecasts: dict[str, list[np.ndarray]] = {name: [] for name in arm_names}
 
@@ -237,7 +238,7 @@ def run_weather_ablation(
         forecasts[forecaster.name].append(base)
 
         train_residuals = np.concatenate(per_origin_residuals[:position])
-        for spec in (CALENDAR_ONLY, WEATHER):
+        for spec in specs:
             rows = per_origin_features[spec.name]
             corrector = ResidualQuantileCorrector(spec, quantile_levels).fit(
                 np.vstack(rows[:position]), train_residuals
@@ -262,6 +263,19 @@ def run_weather_ablation(
     )
 
 
+def realised_volatility(series: np.ndarray, origin: int, lookback: int) -> float:
+    """Standard deviation of hourly changes over the `lookback` hours before `origin`.
+
+    Differences rather than levels: the level of demand says how big the market is, and
+    the interval needs to know how much it moves. Strictly `[:origin]`, so this is
+    information a forecaster standing at the origin genuinely has.
+    """
+    window = series[max(0, origin - lookback) : origin]
+    if window.size < 2:
+        return 0.0
+    return float(np.std(np.diff(window)))
+
+
 def _features_for(
     spec: FeatureSpec,
     origin: int,
@@ -269,9 +283,18 @@ def _features_for(
     local_hours: np.ndarray,
     is_weekend: np.ndarray,
     temperature: np.ndarray,
+    series: np.ndarray,
 ) -> np.ndarray:
     target = slice(origin, origin + horizon)
     lagged = slice(origin - LAG_HOURS, origin + horizon - LAG_HOURS)
+
+    volatility_24 = volatility_168 = None
+    if spec.use_volatility:
+        # Constant across the window: one number describing the regime the forecast is
+        # being made in, broadcast so it lines up with the per-hour columns.
+        volatility_24 = np.full(horizon, realised_volatility(series, origin, 24))
+        volatility_168 = np.full(horizon, realised_volatility(series, origin, 168))
+
     return build_features(
         spec,
         horizon_steps=np.arange(1, horizon + 1),
@@ -279,6 +302,8 @@ def _features_for(
         is_weekend=is_weekend[target],
         temperature=temperature[target] if spec.use_weather else None,
         temperature_yesterday=temperature[lagged] if spec.use_weather else None,
+        volatility_24=volatility_24,
+        volatility_168=volatility_168,
     )
 
 
