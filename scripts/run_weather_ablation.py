@@ -56,7 +56,7 @@ def main() -> None:
     print(f"  base forecasts cached in {time.perf_counter() - started:.0f}s")
 
     started = time.perf_counter()
-    results = run_weather_ablation(
+    output = run_weather_ablation(
         base,
         series.values,
         series.timestamps,
@@ -72,7 +72,7 @@ def main() -> None:
     existing = json.loads(out_path.read_text()) if out_path.exists() else {}
     market = existing.setdefault(series.series_id, {})
 
-    for name, result in results.items():
+    for name, result in output.results.items():
         summary = result.summary()
         summary["windows"] = result.n_windows
         market[name] = summary
@@ -84,7 +84,7 @@ def main() -> None:
 
     market["_meta"] = {
         "origins": len(origins),
-        "scored_windows": next(iter(results.values())).n_windows,
+        "scored_windows": len(output.scored_origins),
         "correction_seconds": round(elapsed, 1),
     }
 

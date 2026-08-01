@@ -293,7 +293,7 @@ class TestAblation:
         """Comparing arms scored on different window sets compares window sets."""
         series, timestamps, temperature = self._inputs()
 
-        results = run_weather_ablation(
+        output = run_weather_ablation(
             _ConstantForecaster(),
             series,
             timestamps,
@@ -303,11 +303,19 @@ class TestAblation:
             min_train_origins=20,
         )
 
+        results = output.results
         assert set(results) == {"constant", "constant+calendar", "constant+weather"}
         counts = {name: r.n_windows for name, r in results.items()}
         assert len(set(counts.values())) == 1, counts
         origins = [tuple(w.origin_index for w in r.windows) for r in results.values()]
         assert origins[0] == origins[1] == origins[2]
+
+        # The retained forecasts must line up with the origins they were scored on, since
+        # the breach analysis pairs them positionally.
+        assert len(output.scored_origins) == results["constant"].n_windows
+        for name, windows in output.forecasts.items():
+            assert len(windows) == len(output.scored_origins), name
+        assert list(output.scored_origins) == list(origins[0])
 
     def test_weather_beats_the_calendar_control_when_demand_is_weather_driven(self):
         """On data built so temperature drives demand, the weather arm must win.
@@ -325,7 +333,7 @@ class TestAblation:
             series_id="TEST:D",
             timezone="UTC",
             min_train_origins=20,
-        )
+        ).results
 
         weather = results["constant+weather"].summary()
         calendar = results["constant+calendar"].summary()
@@ -348,7 +356,7 @@ class TestAblation:
             series_id="TEST:D",
             timezone="UTC",
             min_train_origins=20,
-        )["constant+weather"]
+        ).results["constant+weather"]
 
         # Exactly the final window: origins step 24, so a wider slice would corrupt two
         # windows and the assertion below would flag the second one as a false positive.
@@ -362,7 +370,7 @@ class TestAblation:
             series_id="TEST:D",
             timezone="UTC",
             min_train_origins=20,
-        )["constant+weather"]
+        ).results["constant+weather"]
 
         clean_by_origin = {w.origin_index: w.mae for w in clean.windows}
         tampered_by_origin = {w.origin_index: w.mae for w in tampered.windows}

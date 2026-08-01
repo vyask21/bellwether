@@ -24,8 +24,9 @@ value.
 | Operator baseline (EIA `DF` series) | done, [splits by market](docs/RESULTS.md) |
 | NOAA weather ingestion | done, 14 stations, hourly temperature |
 | Weather ablation vs a calendar control | done, [prediction half failed](docs/RESULTS.md) |
+| Breach detection and error decomposition | done, [miscoverage is seasonal](docs/RESULTS.md) |
 | Nuclear outage and energy disruption ingestion | todo |
-| Anomaly detection and brief generation | todo |
+| Brief generation from retrieved evidence | todo |
 | Scheduled refresh and dashboard | todo |
 
 A companion project is sketched but not started: an MCP server exposing EIA data to LLM
@@ -71,11 +72,20 @@ bellwether ingest --respondent CISO --days 730
 bellwether ingest-weather --respondent CISO --days 730
 bellwether status
 bellwether backtest --respondent CISO --horizon 24
+
+python scripts/run_weather_ablation.py ERCO          # weather vs a calendar control
+python scripts/analyze_breaches.py ERCO --stagger 4  # where the forecast fails
 ```
 
 Both ingest commands are idempotent. EIA restates recent values and NCEI revises its
 archive as late reports and quality control land, so re-running an overlapping window
 converges on the latest published number instead of duplicating rows.
+
+`--stagger` is not optional detail. Origins advance by exactly the horizon, so within one
+run every local hour is always forecast at the same lead time, which makes hour of day and
+horizon step the same variable under two names. Pooling offset origin sets is what
+separates them, and skipping it produces a diurnal profile that is really a horizon
+profile and names the wrong hours.
 
 ## Data sources
 
@@ -186,6 +196,7 @@ src/bellwether/
   eval/metrics.py       MASE, WQL, pinball loss, coverage, sharpness
   eval/backtest.py      Rolling-origin evaluation
   eval/ablation.py      Weather ablation against a calendar-only control
+  eval/breaches.py      Interval breaches as episodes, error by hour and season
 ```
 
 Baselines and foundation models share one `Forecaster` protocol, so the backtest harness

@@ -69,6 +69,20 @@ class CachedForecast:
     quantiles: np.ndarray  # (horizon, n_quantiles)
 
 
+@dataclass(slots=True)
+class AblationOutput:
+    """Scores per arm, plus the forecasts behind them.
+
+    `scored_origins` and every list in `forecasts` are index-aligned, so position *i* of
+    any arm's forecast list belongs to `scored_origins[i]`. Warmup origins appear in
+    neither.
+    """
+
+    results: dict[str, BacktestResult]
+    scored_origins: list[int]
+    forecasts: dict[str, list[np.ndarray]]
+
+
 def cache_base_forecasts(
     forecaster: Forecaster,
     series: np.ndarray,
@@ -149,10 +163,13 @@ def run_weather_ablation(
     quantile_levels: tuple[float, ...] = DEFAULT_QUANTILES,
     min_train_origins: int = DEFAULT_MIN_TRAIN_ORIGINS,
     cached: list[CachedForecast] | None = None,
-) -> dict[str, BacktestResult]:
+) -> AblationOutput:
     """Score the base model and both corrected arms over one series.
 
-    Returns a result per arm, keyed by model name, all covering the same origins.
+    Returns the per-arm scores alongside the forecasts they were computed from. The
+    forecasts are kept because a summary metric cannot answer where a model fails, only
+    whether it does, and the interval breaches that the explanation layer works from live
+    in the individual hours rather than in the aggregate.
     """
     origins = usable_origins(
         series, temperature, horizon, initial_train_size, season_length=season_length
@@ -193,15 +210,13 @@ def run_weather_ablation(
         min_train_origins,
     )
 
-    results = {
-        forecaster.name: BacktestResult(forecaster.name, series_id, horizon, 0),
-        f"{forecaster.name}+calendar": BacktestResult(
-            f"{forecaster.name}+calendar", series_id, horizon, 0
-        ),
-        f"{forecaster.name}+weather": BacktestResult(
-            f"{forecaster.name}+weather", series_id, horizon, 0
-        ),
-    }
+    arm_names = [
+        forecaster.name,
+        f"{forecaster.name}+{CALENDAR_ONLY.name}",
+        f"{forecaster.name}+{WEATHER.name}",
+    ]
+    results = {name: BacktestResult(name, series_id, horizon, 0) for name in arm_names}
+    forecasts: dict[str, list[np.ndarray]] = {name: [] for name in arm_names}
 
     for position in scored:
         origin = origins[position]
@@ -219,6 +234,7 @@ def run_weather_ablation(
             quantile_levels,
             median_index,
         )
+        forecasts[forecaster.name].append(base)
 
         train_residuals = np.concatenate(per_origin_residuals[:position])
         for spec in (CALENDAR_ONLY, WEATHER):
@@ -237,8 +253,13 @@ def run_weather_ablation(
                 quantile_levels,
                 median_index,
             )
+            forecasts[f"{forecaster.name}+{spec.name}"].append(corrected)
 
-    return results
+    return AblationOutput(
+        results=results,
+        scored_origins=[origins[position] for position in scored],
+        forecasts=forecasts,
+    )
 
 
 def _features_for(
