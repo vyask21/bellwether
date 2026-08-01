@@ -284,3 +284,95 @@ class ResidualQuantileCorrector:
 def apply_correction(base_median: np.ndarray, residual_quantiles: np.ndarray) -> np.ndarray:
     """Rebuild a predictive distribution as the base point forecast plus residual quantiles."""
     return base_median[:, None] + residual_quantiles
+
+
+class QuantileScaleCorrector:
+    """Stretches the base model's own interval instead of replacing it.
+
+    Built after discovering that the residual corrector above, which rebuilds the
+    distribution from scratch, throws away conditioning the base model had. Chronos-Bolt
+    varies its interval width by 43 to 83% across the year and holds seasonal coverage
+    spread to 13 points; the rebuild flattens that to 7 to 17% and 19 to 30 points, buying
+    a better aggregate coverage number at the cost of being wrong in a predictable season.
+
+    This corrector cannot make that trade. It learns one factor per quantile level and
+    multiplies the base model's spread about its own median:
+
+        q'_t = m_t + k * (q_t - m_t)
+
+    Because `k` is a scalar and `q_t - m_t` is whatever the base model said for that hour,
+    every bit of conditioning survives by construction. What it can fix is the level: a
+    model whose bands are the right *shape* but uniformly too narrow.
+
+    `k` is set so the training data lands at the nominal rate. For an upper level, an
+    observation sits inside the scaled band when `(actual - m) / (q - m) <= k`, so `k` is
+    the empirical quantile of that ratio at the level being calibrated. Lower levels invert
+    because `q - m` is negative there. A perfectly calibrated base model gives `k = 1` at
+    every level and this becomes the identity.
+    """
+
+    def __init__(self, quantile_levels: tuple[float, ...] = DEFAULT_QUANTILES) -> None:
+        self.quantile_levels = quantile_levels
+        self._scales: np.ndarray | None = None
+
+    @property
+    def scales(self) -> np.ndarray:
+        if self._scales is None:
+            raise RuntimeError("Corrector used before fit")
+        return self._scales
+
+    def fit(self, base_quantiles: np.ndarray, actual: np.ndarray) -> QuantileScaleCorrector:
+        """Learn one scale factor per quantile level from past forecasts and outcomes."""
+        if base_quantiles.shape[0] != actual.size:
+            raise ValueError(f"Got {base_quantiles.shape[0]} forecasts and {actual.size} actuals")
+        if base_quantiles.shape[1] != len(self.quantile_levels):
+            raise ValueError(
+                f"Forecast has {base_quantiles.shape[1]} quantiles, "
+                f"expected {len(self.quantile_levels)}"
+            )
+
+        median_index = _median_index(self.quantile_levels)
+        median = base_quantiles[:, median_index]
+        deviation = actual - median
+
+        scales = np.ones(len(self.quantile_levels), dtype=float)
+        for i, level in enumerate(self.quantile_levels):
+            spread = base_quantiles[:, i] - median
+            # The median column has zero spread by definition, and any hour where the base
+            # model emitted a degenerate interval carries no information about scale.
+            usable = np.abs(spread) > _ZERO_SPREAD_TOLERANCE
+            if np.isclose(level, 0.5) or usable.sum() < 2:
+                continue
+
+            ratio = deviation[usable] / spread[usable]
+            # Upper levels: inside means ratio <= k, so k is the level-th quantile of the
+            # ratio. Lower levels: q - m is negative, the inequality flips, and the
+            # complement is the right one to read.
+            target = level if level > 0.5 else 1.0 - level
+            # Never shrink to nothing or flip the interval inside out.
+            scales[i] = max(float(np.quantile(ratio, target)), _MIN_SCALE)
+
+        self._scales = scales
+        return self
+
+    def predict(self, base_quantiles: np.ndarray) -> np.ndarray:
+        """Scale one batch of base forecasts. Shape in, same shape out."""
+        median = base_quantiles[:, _median_index(self.quantile_levels)]
+        scaled = median[:, None] + self.scales * (base_quantiles - median[:, None])
+        # Independent per-level factors can in principle reorder adjacent quantiles, and
+        # every consumer of a quantile forecast assumes they are sorted.
+        return np.sort(scaled, axis=1)
+
+
+# Below this the base model emitted no usable spread at that level, so no scale can be read.
+_ZERO_SPREAD_TOLERANCE = 1e-9
+
+# A scale of zero would collapse the interval onto the median and report certainty.
+_MIN_SCALE = 1e-3
+
+
+def _median_index(quantile_levels: tuple[float, ...]) -> int:
+    matches = [i for i, q in enumerate(quantile_levels) if np.isclose(q, 0.5)]
+    if not matches:
+        raise ValueError("Quantile levels must include the median (0.5) to scale about it")
+    return matches[0]

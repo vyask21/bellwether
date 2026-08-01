@@ -5,11 +5,17 @@ Usage: python scripts/analyze_breaches.py ERCO [--stagger 4]
 Runs the ablation to get hour-level forecasts, then decomposes them. Roughly 3 minutes per
 market per stagger offset, because it is the ablation plus arithmetic.
 
-The default arm is the calendar-recalibrated one rather than the raw base model. Breach
-detection on a miscalibrated interval measures the calibration error as much as the events:
-at ERCO's raw 76.4% coverage a detector fires on 24% of hours while claiming 20%, so a
-fifth of what it reports is the model being wrong about itself rather than the grid doing
-something worth explaining.
+Episodes are computed for **every** arm, and the default reported one is `+scale`.
+
+Breach detection on a badly calibrated interval measures the calibration error as much as
+the events: at ERCO's raw 76.9% coverage a detector fires on 24% of hours while claiming
+20%, so a sixth of what it reports is the model being wrong about itself rather than the
+grid doing anything worth explaining. The first version of this script defaulted to
+`+calendar` for that reason, which fixed the aggregate rate and left the interval badly
+conditioned, so the detector then over-fired every January and under-fired every July.
+
+`+scale` is the arm that fixes both: it reaches nominal aggregate coverage by stretching
+the base model's own interval, so the per-season rate stays right too.
 
 ## Why `--stagger` exists
 
@@ -54,7 +60,7 @@ from bellwether.storage.queries import load_market_temperature, load_series
 
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(message)s")
 
-DEFAULT_ARM = "chronos_bolt_base+calendar"
+DEFAULT_ARM = "chronos_bolt_base+scale"
 
 MONTH_NAMES = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -94,8 +100,10 @@ def main() -> None:
     # part and it is already shared across arms, so covering all of them costs arithmetic
     # and makes the seasonal comparison a single run rather than one run per arm.
     pooled: dict[str, list[HourlyRecords]] = {}
-    episodes = None
-    summary = None
+    # Episodes per arm, so the explanation layer can be pointed at whichever interval is
+    # actually best calibrated rather than whichever one this script defaulted to.
+    episodes: dict[str, list] = {}
+    summaries: dict[str, dict] = {}
 
     for offset in range(0, 24, 24 // args.stagger):
         train_size = 672 + offset
@@ -125,9 +133,9 @@ def main() -> None:
             # Episodes come from one non-overlapping run of the selected arm. Pooled runs
             # cover the same hour several times over, which is what makes the profile
             # crossing work and what would make an episode count fiction.
-            if offset == 0 and arm == args.arm:
-                episodes = find_episodes(records)
-                summary = episode_summary(episodes, total_hours=len(records))
+            if offset == 0:
+                episodes[arm] = find_episodes(records)
+                summaries[arm] = episode_summary(episodes[arm], total_hours=len(records))
 
     profiles = {
         arm: {
@@ -146,18 +154,19 @@ def main() -> None:
         series.series_id,
         args.arm,
         records,
-        summary,
+        summaries[args.arm],
         selected["by_local_hour"],
         selected["by_month"],
         selected["by_horizon_step"],
-        episodes,
+        episodes[args.arm],
         args.stagger,
     )
     _print_seasonal_comparison(profiles)
 
-    worst = sorted(episodes, key=lambda e: e.total_exceedance, reverse=True)[: args.top_episodes]
-    profiles[args.arm]["episodes"] = summary
-    profiles[args.arm]["worst_episodes"] = [e.as_dict() for e in worst]
+    for arm, found in episodes.items():
+        worst = sorted(found, key=lambda e: e.total_exceedance, reverse=True)
+        profiles[arm]["episodes"] = summaries[arm]
+        profiles[arm]["worst_episodes"] = [e.as_dict() for e in worst[: args.top_episodes]]
 
     out_path = Path(args.out)
     existing = json.loads(out_path.read_text()) if out_path.exists() else {}

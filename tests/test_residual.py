@@ -23,6 +23,7 @@ from bellwether.forecast.residual import (
     VOLATILITY,
     WEATHER,
     WEATHER_VOLATILITY,
+    QuantileScaleCorrector,
     ResidualQuantileCorrector,
     apply_correction,
     build_features,
@@ -266,6 +267,124 @@ class TestCorrector:
         assert corrected[1].tolist() == [199.0, 200.0, 201.0]
 
 
+class TestQuantileScaleCorrector:
+    """Stretches the base interval instead of replacing it.
+
+    Built specifically because the residual corrector destroys the base model's
+    conditioning. The test that matters most here is the one asserting this cannot.
+    """
+
+    LEVELS = (0.1, 0.5, 0.9)
+
+    def _forecasts(self, half_width: np.ndarray) -> np.ndarray:
+        """Symmetric bands about a median of 100, one row per element of `half_width`."""
+        return np.column_stack(
+            [100.0 - half_width, np.full(half_width.size, 100.0), 100.0 + half_width]
+        )
+
+    def test_a_calibrated_base_model_is_left_alone(self):
+        """k = 1 at every level means the corrector is the identity."""
+        rng = np.random.default_rng(0)
+        n = 4000
+        actual = 100.0 + rng.normal(scale=10.0, size=n)
+        # A band that genuinely covers 80%: +/- 1.2816 sigma.
+        base = self._forecasts(np.full(n, 12.816))
+
+        scales = QuantileScaleCorrector(self.LEVELS).fit(base, actual).scales
+        assert scales[0] == pytest.approx(1.0, abs=0.06)
+        assert scales[2] == pytest.approx(1.0, abs=0.06)
+
+    def test_a_too_narrow_base_model_is_widened(self):
+        rng = np.random.default_rng(1)
+        n = 4000
+        actual = 100.0 + rng.normal(scale=10.0, size=n)
+        base = self._forecasts(np.full(n, 6.0))  # far too tight
+
+        scales = QuantileScaleCorrector(self.LEVELS).fit(base, actual).scales
+        assert scales[0] > 1.5
+        assert scales[2] > 1.5
+
+    def test_a_too_wide_base_model_is_narrowed(self):
+        rng = np.random.default_rng(2)
+        n = 4000
+        actual = 100.0 + rng.normal(scale=10.0, size=n)
+        base = self._forecasts(np.full(n, 40.0))
+
+        scales = QuantileScaleCorrector(self.LEVELS).fit(base, actual).scales
+        assert scales[0] < 0.7
+        assert scales[2] < 0.7
+
+    def test_scaling_reaches_nominal_coverage(self):
+        """The whole point: fix the level error."""
+        rng = np.random.default_rng(3)
+        n = 6000
+        actual = 100.0 + rng.normal(scale=10.0, size=n)
+        base = self._forecasts(np.full(n, 6.0))
+
+        corrector = QuantileScaleCorrector(self.LEVELS).fit(base, actual)
+        scaled = corrector.predict(base)
+        covered = np.mean((actual >= scaled[:, 0]) & (actual <= scaled[:, 2]))
+
+        assert np.mean((actual >= base[:, 0]) & (actual <= base[:, 2])) < 0.55
+        assert covered == pytest.approx(0.8, abs=0.03)
+
+    def test_conditioning_survives_scaling(self):
+        """The property the residual corrector lacks, and the reason this class exists.
+
+        If the base model widens its band for some hours and not others, that ratio must
+        come through untouched. A single scalar per level cannot flatten it.
+        """
+        rng = np.random.default_rng(4)
+        n = 4000
+        half_width = np.where(np.arange(n) % 2 == 0, 5.0, 20.0)
+        sigma = np.where(np.arange(n) % 2 == 0, 4.0, 16.0)
+        actual = 100.0 + rng.normal(scale=sigma)
+        base = self._forecasts(half_width)
+
+        scaled = QuantileScaleCorrector(self.LEVELS).fit(base, actual).predict(base)
+        widths = scaled[:, 2] - scaled[:, 0]
+
+        # Base widths differ 4x between the two groups; so must the scaled ones.
+        assert widths[1::2].mean() / widths[0::2].mean() == pytest.approx(4.0, abs=0.01)
+
+    def test_the_median_is_never_moved(self):
+        """A scale correction is about spread. Moving the median would be a different claim."""
+        rng = np.random.default_rng(5)
+        base = self._forecasts(np.full(500, 8.0))
+        actual = 100.0 + rng.normal(scale=20.0, size=500)
+
+        scaled = QuantileScaleCorrector(self.LEVELS).fit(base, actual).predict(base)
+        assert np.allclose(scaled[:, 1], base[:, 1])
+
+    def test_output_quantiles_stay_sorted(self):
+        rng = np.random.default_rng(6)
+        base = self._forecasts(rng.uniform(1.0, 30.0, size=500))
+        actual = 100.0 + rng.normal(scale=10.0, size=500)
+
+        scaled = QuantileScaleCorrector(self.LEVELS).fit(base, actual).predict(base)
+        assert np.all(np.diff(scaled, axis=1) >= 0)
+
+    def test_scales_never_collapse_the_interval(self):
+        """A zero scale would report certainty, which is never an honest forecast."""
+        base = self._forecasts(np.full(400, 50.0))
+        actual = np.full(400, 100.0)  # base is absurdly wide; every ratio is zero
+
+        scales = QuantileScaleCorrector(self.LEVELS).fit(base, actual).scales
+        assert np.all(scales > 0.0)
+
+    def test_refuses_to_predict_before_being_fitted(self):
+        with pytest.raises(RuntimeError, match="before fit"):
+            QuantileScaleCorrector(self.LEVELS).predict(np.ones((3, 3)))
+
+    def test_rejects_mismatched_inputs(self):
+        with pytest.raises(ValueError, match="forecasts and"):
+            QuantileScaleCorrector(self.LEVELS).fit(np.ones((5, 3)), np.ones(4))
+
+    def test_rejects_a_forecast_with_the_wrong_quantile_count(self):
+        with pytest.raises(ValueError, match="expected 3"):
+            QuantileScaleCorrector(self.LEVELS).fit(np.ones((5, 4)), np.ones(5))
+
+
 class TestRealisedVolatility:
     """The one feature computed from the target series itself, so leakage is the risk."""
 
@@ -395,6 +514,7 @@ class TestAblation:
             "constant+weather",
             "constant+volatility",
             "constant+weather+volatility",
+            "constant+scale",
         }
         counts = {name: r.n_windows for name, r in results.items()}
         assert len(set(counts.values())) == 1, counts

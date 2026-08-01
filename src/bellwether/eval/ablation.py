@@ -53,10 +53,16 @@ from bellwether.forecast.residual import (
     ALL_SPECS,
     DEFAULT_MIN_TRAIN_ORIGINS,
     FeatureSpec,
+    QuantileScaleCorrector,
     ResidualQuantileCorrector,
     apply_correction,
     build_features,
 )
+
+# The scale arm is not feature-based, so it sits outside the FeatureSpec 2x2. It stretches
+# the base model's own interval rather than replacing the distribution, which is the one
+# correction here that cannot destroy the base model's conditioning.
+SCALE_ARM = "scale"
 
 log = logging.getLogger(__name__)
 
@@ -203,6 +209,10 @@ def run_corrector_ablation(
     per_origin_residuals = [
         series[c.origin : c.origin + horizon] - c.quantiles[:, median_index] for c in cached
     ]
+    # Stacked once and sliced per fit, so the scale corrector sees exactly the origins
+    # before the one it is forecasting and nothing later.
+    stacked_base = np.concatenate([c.quantiles for c in cached])
+    stacked_actual = np.concatenate([series[c.origin : c.origin + horizon] for c in cached])
 
     # Warmup origins are excluded from every arm, including the uncorrected one, so the
     # comparison is over one window set rather than three.
@@ -215,7 +225,11 @@ def run_corrector_ablation(
         min_train_origins,
     )
 
-    arm_names = [forecaster.name, *(f"{forecaster.name}+{spec.name}" for spec in specs)]
+    arm_names = [
+        forecaster.name,
+        *(f"{forecaster.name}+{spec.name}" for spec in specs),
+        f"{forecaster.name}+{SCALE_ARM}",
+    ]
     results = {name: BacktestResult(name, series_id, horizon, 0) for name in arm_names}
     forecasts: dict[str, list[np.ndarray]] = {name: [] for name in arm_names}
 
@@ -255,6 +269,22 @@ def run_corrector_ablation(
                 median_index,
             )
             forecasts[f"{forecaster.name}+{spec.name}"].append(corrected)
+
+        scaler = QuantileScaleCorrector(quantile_levels).fit(
+            stacked_base[: position * horizon], stacked_actual[: position * horizon]
+        )
+        scaled = scaler.predict(base)
+        _score(
+            results[f"{forecaster.name}+{SCALE_ARM}"],
+            origin,
+            actual,
+            scaled,
+            history,
+            season_length,
+            quantile_levels,
+            median_index,
+        )
+        forecasts[f"{forecaster.name}+{SCALE_ARM}"].append(scaled)
 
     return AblationOutput(
         results=results,

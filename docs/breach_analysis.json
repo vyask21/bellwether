@@ -597,8 +597,142 @@
           "month": 12
         }
       ],
+      "episodes": {
+        "above": 288,
+        "below": 209,
+        "breached_fraction": 0.21038925438596492,
+        "breached_hours": 1535,
+        "episodes": 497,
+        "episodes_over_3h": 138,
+        "max_duration_hours": 22,
+        "max_peak_ratio": 6.144871156635568,
+        "mean_duration_hours": 3.0885311871227366,
+        "mean_peak_ratio": 0.2637862007759416
+      },
       "hours_pooled": 29136,
-      "stagger": 4
+      "stagger": 4,
+      "worst_episodes": [
+        {
+          "direction": "above",
+          "duration_hours": 21,
+          "end": "2025-05-10T12:00:00.000000000",
+          "local_hour_start": 9,
+          "month": 5,
+          "peak_at": "2025-05-10T03:00:00.000000000",
+          "peak_exceedance": 3527.0,
+          "peak_exceedance_ratio": 1.268,
+          "start": "2025-05-09T16:00:00.000000000",
+          "total_exceedance": 27961.7
+        },
+        {
+          "direction": "above",
+          "duration_hours": 11,
+          "end": "2025-03-14T23:00:00.000000000",
+          "local_hour_start": 6,
+          "month": 3,
+          "peak_at": "2025-03-14T23:00:00.000000000",
+          "peak_exceedance": 3014.3,
+          "peak_exceedance_ratio": 1.003,
+          "start": "2025-03-14T13:00:00.000000000",
+          "total_exceedance": 17161.2
+        },
+        {
+          "direction": "below",
+          "duration_hours": 1,
+          "end": "2025-07-31T21:00:00.000000000",
+          "local_hour_start": 14,
+          "month": 7,
+          "peak_at": "2025-07-31T21:00:00.000000000",
+          "peak_exceedance": 16755.3,
+          "peak_exceedance_ratio": 6.145,
+          "start": "2025-07-31T21:00:00.000000000",
+          "total_exceedance": 16755.3
+        },
+        {
+          "direction": "above",
+          "duration_hours": 20,
+          "end": "2025-05-31T09:00:00.000000000",
+          "local_hour_start": 7,
+          "month": 5,
+          "peak_at": "2025-05-30T23:00:00.000000000",
+          "peak_exceedance": 3020.4,
+          "peak_exceedance_ratio": 0.947,
+          "start": "2025-05-30T14:00:00.000000000",
+          "total_exceedance": 16454.7
+        },
+        {
+          "direction": "below",
+          "duration_hours": 21,
+          "end": "2024-11-29T08:00:00.000000000",
+          "local_hour_start": 4,
+          "month": 11,
+          "peak_at": "2024-11-28T17:00:00.000000000",
+          "peak_exceedance": 1500.8,
+          "peak_exceedance_ratio": 0.726,
+          "start": "2024-11-28T12:00:00.000000000",
+          "total_exceedance": 14511.1
+        },
+        {
+          "direction": "below",
+          "duration_hours": 11,
+          "end": "2024-12-25T23:00:00.000000000",
+          "local_hour_start": 5,
+          "month": 12,
+          "peak_at": "2024-12-25T19:00:00.000000000",
+          "peak_exceedance": 2123.1,
+          "peak_exceedance_ratio": 0.487,
+          "start": "2024-12-25T13:00:00.000000000",
+          "total_exceedance": 13272.9
+        },
+        {
+          "direction": "below",
+          "duration_hours": 11,
+          "end": "2025-05-26T23:00:00.000000000",
+          "local_hour_start": 6,
+          "month": 5,
+          "peak_at": "2025-05-26T21:00:00.000000000",
+          "peak_exceedance": 2433.2,
+          "peak_exceedance_ratio": 0.719,
+          "start": "2025-05-26T13:00:00.000000000",
+          "total_exceedance": 12003.3
+        },
+        {
+          "direction": "above",
+          "duration_hours": 8,
+          "end": "2025-08-06T23:00:00.000000000",
+          "local_hour_start": 9,
+          "month": 8,
+          "peak_at": "2025-08-06T23:00:00.000000000",
+          "peak_exceedance": 2376.7,
+          "peak_exceedance_ratio": 0.901,
+          "start": "2025-08-06T16:00:00.000000000",
+          "total_exceedance": 11406.3
+        },
+        {
+          "direction": "below",
+          "duration_hours": 5,
+          "end": "2025-03-18T23:00:00.000000000",
+          "local_hour_start": 12,
+          "month": 3,
+          "peak_at": "2025-03-18T23:00:00.000000000",
+          "peak_exceedance": 2817.2,
+          "peak_exceedance_ratio": 0.853,
+          "start": "2025-03-18T19:00:00.000000000",
+          "total_exceedance": 11357.8
+        },
+        {
+          "direction": "above",
+          "duration_hours": 22,
+          "end": "2025-05-28T22:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 5,
+          "peak_at": "2025-05-28T17:00:00.000000000",
+          "peak_exceedance": 1276.8,
+          "peak_exceedance_ratio": 0.561,
+          "start": "2025-05-28T01:00:00.000000000",
+          "total_exceedance": 11220.6
+        }
+      ]
     },
     "chronos_bolt_base+calendar": {
       "by_horizon_step": [
@@ -1334,6 +1468,740 @@
         }
       ]
     },
+    "chronos_bolt_base+scale": {
+      "by_horizon_step": [
+        {
+          "bias": 74.33747715455107,
+          "breach_rate_above": 0.10955518945634267,
+          "breach_rate_below": 0.05518945634266886,
+          "coverage": 0.8352553542009885,
+          "hours": 1214,
+          "mae": 333.9472607984967,
+          "mean_width": 1204.5759597730164,
+          "step": 1
+        },
+        {
+          "bias": 57.24109831908979,
+          "breach_rate_above": 0.11779242174629324,
+          "breach_rate_below": 0.08813838550247118,
+          "coverage": 0.7940691927512356,
+          "hours": 1214,
+          "mae": 463.64950737489704,
+          "mean_width": 1463.582703860116,
+          "step": 2
+        },
+        {
+          "bias": 60.527099207166394,
+          "breach_rate_above": 0.10461285008237232,
+          "breach_rate_below": 0.10378912685337727,
+          "coverage": 0.7915980230642504,
+          "hours": 1214,
+          "mae": 547.0785368616145,
+          "mean_width": 1644.0428305422784,
+          "step": 3
+        },
+        {
+          "bias": 46.36445248146623,
+          "breach_rate_above": 0.10543657331136738,
+          "breach_rate_below": 0.1013179571663921,
+          "coverage": 0.7932454695222405,
+          "hours": 1214,
+          "mae": 626.9736247683278,
+          "mean_width": 1831.1812405992143,
+          "step": 4
+        },
+        {
+          "bias": 43.311113184719936,
+          "breach_rate_above": 0.11037891268533773,
+          "breach_rate_below": 0.10543657331136738,
+          "coverage": 0.7841845140032949,
+          "hours": 1214,
+          "mae": 661.5325853325783,
+          "mean_width": 1997.6145326520614,
+          "step": 5
+        },
+        {
+          "bias": 67.29630708144563,
+          "breach_rate_above": 0.12602965403624383,
+          "breach_rate_below": 0.1013179571663921,
+          "coverage": 0.7726523887973641,
+          "hours": 1214,
+          "mae": 701.094115205416,
+          "mean_width": 2077.300215945512,
+          "step": 6
+        },
+        {
+          "bias": 98.21863255508649,
+          "breach_rate_above": 0.13673805601317957,
+          "breach_rate_below": 0.11202635914332784,
+          "coverage": 0.7512355848434926,
+          "hours": 1214,
+          "mae": 737.3045185723847,
+          "mean_width": 2146.4963647792697,
+          "step": 7
+        },
+        {
+          "bias": 58.11535342874794,
+          "breach_rate_above": 0.12767710049423395,
+          "breach_rate_below": 0.1128500823723229,
+          "coverage": 0.7594728171334432,
+          "hours": 1214,
+          "mae": 728.4362322384678,
+          "mean_width": 2140.4713661102214,
+          "step": 8
+        },
+        {
+          "bias": 50.205214875926686,
+          "breach_rate_above": 0.10049423393739704,
+          "breach_rate_below": 0.11367380560131796,
+          "coverage": 0.785831960461285,
+          "hours": 1214,
+          "mae": 696.3463675736202,
+          "mean_width": 2143.6893156060023,
+          "step": 9
+        },
+        {
+          "bias": 15.46889962160214,
+          "breach_rate_above": 0.08978583196046129,
+          "breach_rate_below": 0.128500823723229,
+          "coverage": 0.7817133443163097,
+          "hours": 1214,
+          "mae": 723.9443906378707,
+          "mean_width": 2216.090362230942,
+          "step": 10
+        },
+        {
+          "bias": 14.927185762458814,
+          "breach_rate_above": 0.0914332784184514,
+          "breach_rate_below": 0.10461285008237232,
+          "coverage": 0.8039538714991763,
+          "hours": 1214,
+          "mae": 728.3773054597406,
+          "mean_width": 2307.622188199903,
+          "step": 11
+        },
+        {
+          "bias": 40.081175350082376,
+          "breach_rate_above": 0.1070840197693575,
+          "breach_rate_below": 0.10049423393739704,
+          "coverage": 0.7924217462932455,
+          "hours": 1214,
+          "mae": 749.3370411604201,
+          "mean_width": 2324.0000472291185,
+          "step": 12
+        },
+        {
+          "bias": 68.77740810337727,
+          "breach_rate_above": 0.10626029654036244,
+          "breach_rate_below": 0.11532125205930807,
+          "coverage": 0.7784184514003295,
+          "hours": 1214,
+          "mae": 770.6152086336491,
+          "mean_width": 2342.1002337701516,
+          "step": 13
+        },
+        {
+          "bias": 83.36673702635915,
+          "breach_rate_above": 0.10873146622734761,
+          "breach_rate_below": 0.10543657331136738,
+          "coverage": 0.785831960461285,
+          "hours": 1214,
+          "mae": 755.8555556270593,
+          "mean_width": 2290.7978643161714,
+          "step": 14
+        },
+        {
+          "bias": 81.7788287041804,
+          "breach_rate_above": 0.10378912685337727,
+          "breach_rate_below": 0.10790774299835255,
+          "coverage": 0.7883031301482701,
+          "hours": 1214,
+          "mae": 720.1885859632414,
+          "mean_width": 2259.5564879314743,
+          "step": 15
+        },
+        {
+          "bias": 41.026822487644154,
+          "breach_rate_above": 0.08237232289950576,
+          "breach_rate_below": 0.10049423393739704,
+          "coverage": 0.8171334431630972,
+          "hours": 1214,
+          "mae": 740.4653038766475,
+          "mean_width": 2342.0110975074263,
+          "step": 16
+        },
+        {
+          "bias": 45.78922981878089,
+          "breach_rate_above": 0.08978583196046129,
+          "breach_rate_below": 0.09060955518945635,
+          "coverage": 0.8196046128500823,
+          "hours": 1214,
+          "mae": 742.859021056425,
+          "mean_width": 2421.504678509097,
+          "step": 17
+        },
+        {
+          "bias": 42.39406468801483,
+          "breach_rate_above": 0.10214168039538715,
+          "breach_rate_below": 0.10049423393739704,
+          "coverage": 0.7973640856672158,
+          "hours": 1214,
+          "mae": 764.8497573877677,
+          "mean_width": 2436.2922820419085,
+          "step": 18
+        },
+        {
+          "bias": 91.2100220732084,
+          "breach_rate_above": 0.11202635914332784,
+          "breach_rate_below": 0.09802306425041186,
+          "coverage": 0.7899505766062603,
+          "hours": 1214,
+          "mae": 792.6097305524094,
+          "mean_width": 2437.081603719566,
+          "step": 19
+        },
+        {
+          "bias": 88.49323324238055,
+          "breach_rate_above": 0.1128500823723229,
+          "breach_rate_below": 0.09802306425041186,
+          "coverage": 0.7891268533772653,
+          "hours": 1214,
+          "mae": 768.4833099516063,
+          "mean_width": 2375.5942323175364,
+          "step": 20
+        },
+        {
+          "bias": 103.19313896468287,
+          "breach_rate_above": 0.10214168039538715,
+          "breach_rate_below": 0.09308072487644152,
+          "coverage": 0.8047775947281713,
+          "hours": 1214,
+          "mae": 728.5071866634061,
+          "mean_width": 2353.8946433327205,
+          "step": 21
+        },
+        {
+          "bias": 50.89737888694399,
+          "breach_rate_above": 0.08813838550247118,
+          "breach_rate_below": 0.09225700164744646,
+          "coverage": 0.8196046128500823,
+          "hours": 1214,
+          "mae": 751.1983628500824,
+          "mean_width": 2441.6926046625445,
+          "step": 22
+        },
+        {
+          "bias": 88.21987618410215,
+          "breach_rate_above": 0.09719934102141681,
+          "breach_rate_below": 0.08319604612850082,
+          "coverage": 0.8196046128500823,
+          "hours": 1214,
+          "mae": 765.7714715043245,
+          "mean_width": 2511.7629034003025,
+          "step": 23
+        },
+        {
+          "bias": 79.33693497734761,
+          "breach_rate_above": 0.10378912685337727,
+          "breach_rate_below": 0.09060955518945635,
+          "coverage": 0.8056013179571664,
+          "hours": 1214,
+          "mae": 800.9179558793245,
+          "mean_width": 2547.030263127119,
+          "step": 24
+        }
+      ],
+      "by_local_hour": [
+        {
+          "bias": 79.66081587211697,
+          "breach_rate_above": 0.10049423393739704,
+          "breach_rate_below": 0.05271828665568369,
+          "coverage": 0.8467874794069192,
+          "hour": 0,
+          "hours": 1214,
+          "mae": 481.6468769306013,
+          "mean_width": 1744.0949483902173
+        },
+        {
+          "bias": 8.714572749897373,
+          "breach_rate_above": 0.0755336617405583,
+          "breach_rate_below": 0.08866995073891626,
+          "coverage": 0.8357963875205254,
+          "hour": 1,
+          "hours": 1218,
+          "mae": 443.53569023245075,
+          "mean_width": 1563.0786531540978
+        },
+        {
+          "bias": 94.31780249225207,
+          "breach_rate_above": 0.09256198347107437,
+          "breach_rate_below": 0.05206611570247934,
+          "coverage": 0.8553719008264463,
+          "hour": 2,
+          "hours": 1210,
+          "mae": 391.4521516658058,
+          "mean_width": 1557.4539862382028
+        },
+        {
+          "bias": 52.33070074392504,
+          "breach_rate_above": 0.085667215815486,
+          "breach_rate_below": 0.05354200988467875,
+          "coverage": 0.8607907742998353,
+          "hour": 3,
+          "hours": 1214,
+          "mae": 387.3177303207372,
+          "mean_width": 1531.4679917151702
+        },
+        {
+          "bias": 47.34518829798188,
+          "breach_rate_above": 0.10049423393739704,
+          "breach_rate_below": 0.06177924217462932,
+          "coverage": 0.8377265238879736,
+          "hour": 4,
+          "hours": 1214,
+          "mae": 376.7131287324959,
+          "mean_width": 1448.1386413614025
+        },
+        {
+          "bias": 39.64784062242587,
+          "breach_rate_above": 0.09802306425041186,
+          "breach_rate_below": 0.06754530477759473,
+          "coverage": 0.8344316309719935,
+          "hour": 5,
+          "hours": 1214,
+          "mae": 347.97594631641266,
+          "mean_width": 1328.6380200794965
+        },
+        {
+          "bias": 0.5984124021828665,
+          "breach_rate_above": 0.06672158154859967,
+          "breach_rate_below": 0.08813838550247118,
+          "coverage": 0.8451400329489291,
+          "hour": 6,
+          "hours": 1214,
+          "mae": 342.8067017607084,
+          "mean_width": 1400.3527786611883
+        },
+        {
+          "bias": -1.5929230591021417,
+          "breach_rate_above": 0.05354200988467875,
+          "breach_rate_below": 0.08896210873146623,
+          "coverage": 0.857495881383855,
+          "hour": 7,
+          "hours": 1214,
+          "mae": 407.2531179211285,
+          "mean_width": 1629.6510435783212
+        },
+        {
+          "bias": -42.48165767864498,
+          "breach_rate_above": 0.054365733113673806,
+          "breach_rate_below": 0.08401976935749589,
+          "coverage": 0.8616144975288303,
+          "hour": 8,
+          "hours": 1214,
+          "mae": 525.2200000643534,
+          "mean_width": 1980.2616631889407
+        },
+        {
+          "bias": -29.44724310131796,
+          "breach_rate_above": 0.0642504118616145,
+          "breach_rate_below": 0.08978583196046129,
+          "coverage": 0.8459637561779242,
+          "hour": 9,
+          "hours": 1214,
+          "mae": 668.0293966227348,
+          "mean_width": 2425.5895531363144
+        },
+        {
+          "bias": 63.716660124073314,
+          "breach_rate_above": 0.10214168039538715,
+          "breach_rate_below": 0.09555189456342669,
+          "coverage": 0.8023064250411862,
+          "hour": 10,
+          "hours": 1214,
+          "mae": 757.8134218621293,
+          "mean_width": 2617.3000374880703
+        },
+        {
+          "bias": 70.64536623507001,
+          "breach_rate_above": 0.12191103789126853,
+          "breach_rate_below": 0.12685337726523888,
+          "coverage": 0.7512355848434926,
+          "hour": 11,
+          "hours": 1214,
+          "mae": 803.7739378475083,
+          "mean_width": 2474.9671918310974
+        },
+        {
+          "bias": 58.07814430601318,
+          "breach_rate_above": 0.1243822075782537,
+          "breach_rate_below": 0.13344316309719934,
+          "coverage": 0.7421746293245469,
+          "hour": 12,
+          "hours": 1214,
+          "mae": 899.2379144357496,
+          "mean_width": 2568.213531554584
+        },
+        {
+          "bias": 138.75668148939457,
+          "breach_rate_above": 0.14744645799011533,
+          "breach_rate_below": 0.15485996705107083,
+          "coverage": 0.6976935749588138,
+          "hour": 13,
+          "hours": 1214,
+          "mae": 1015.4598515367586,
+          "mean_width": 2661.8325972128337
+        },
+        {
+          "bias": 59.034612463962105,
+          "breach_rate_above": 0.14991762767710048,
+          "breach_rate_below": 0.1655683690280066,
+          "coverage": 0.6845140032948929,
+          "hour": 14,
+          "hours": 1214,
+          "mae": 1102.4006705621912,
+          "mean_width": 2725.2553619810096
+        },
+        {
+          "bias": 124.46465712520593,
+          "breach_rate_above": 0.14744645799011533,
+          "breach_rate_below": 0.16639209225700163,
+          "coverage": 0.6861614497528831,
+          "hour": 15,
+          "hours": 1214,
+          "mae": 1116.47865720243,
+          "mean_width": 2808.283695020133
+        },
+        {
+          "bias": 167.88039281301482,
+          "breach_rate_above": 0.15815485996705106,
+          "breach_rate_below": 0.15238879736408567,
+          "coverage": 0.6894563426688632,
+          "hour": 16,
+          "hours": 1214,
+          "mae": 1106.232090455107,
+          "mean_width": 2743.2560762206294
+        },
+        {
+          "bias": 98.95977109503707,
+          "breach_rate_above": 0.14827018121911037,
+          "breach_rate_below": 0.16227347611202636,
+          "coverage": 0.6894563426688632,
+          "hour": 17,
+          "hours": 1214,
+          "mae": 962.817312023785,
+          "mean_width": 2426.01174122084
+        },
+        {
+          "bias": 95.209290053542,
+          "breach_rate_above": 0.12273476112026359,
+          "breach_rate_below": 0.14744645799011533,
+          "coverage": 0.729818780889621,
+          "hour": 18,
+          "hours": 1214,
+          "mae": 934.2064874639622,
+          "mean_width": 2567.9916402776553
+        },
+        {
+          "bias": 115.89631866505354,
+          "breach_rate_above": 0.10626029654036244,
+          "breach_rate_below": 0.09472817133443164,
+          "coverage": 0.7990115321252059,
+          "hour": 19,
+          "hours": 1214,
+          "mae": 881.8728811650535,
+          "mean_width": 2742.6536718840794
+        },
+        {
+          "bias": 89.38859786861615,
+          "breach_rate_above": 0.10214168039538715,
+          "breach_rate_below": 0.08649093904448106,
+          "coverage": 0.8113673805601318,
+          "hour": 20,
+          "hours": 1214,
+          "mae": 859.7502027131384,
+          "mean_width": 2692.670801712042
+        },
+        {
+          "bias": 18.314321200576607,
+          "breach_rate_above": 0.09884678747940692,
+          "breach_rate_below": 0.08072487644151564,
+          "coverage": 0.8204283360790774,
+          "hour": 21,
+          "hours": 1214,
+          "mae": 785.2301437654448,
+          "mean_width": 2500.8981385894426
+        },
+        {
+          "bias": 22.98545131023476,
+          "breach_rate_above": 0.09967051070840198,
+          "breach_rate_below": 0.06672158154859967,
+          "coverage": 0.8336079077429983,
+          "hour": 22,
+          "hours": 1214,
+          "mae": 672.6951146133649,
+          "mean_width": 2223.618016120913
+        },
+        {
+          "bias": 118.4359635631178,
+          "breach_rate_above": 0.11532125205930807,
+          "breach_rate_below": 0.042009884678747944,
+          "coverage": 0.842668863261944,
+          "hour": 23,
+          "hours": 1214,
+          "mae": 530.2519000334638,
+          "mean_width": 1894.2877088718153
+        }
+      ],
+      "by_month": [
+        {
+          "bias": -26.34134272093414,
+          "breach_rate_above": 0.11727150537634409,
+          "breach_rate_below": 0.1364247311827957,
+          "coverage": 0.7463037634408602,
+          "hours": 2976,
+          "mae": 521.4609571887601,
+          "mean_width": 1482.9003894612893,
+          "month": 1
+        },
+        {
+          "bias": -131.7537543887184,
+          "breach_rate_above": 0.09300595238095238,
+          "breach_rate_below": 0.16220238095238096,
+          "coverage": 0.7447916666666666,
+          "hours": 2688,
+          "mae": 689.4507409958612,
+          "mean_width": 1863.2686669250888,
+          "month": 2
+        },
+        {
+          "bias": 30.67802747518506,
+          "breach_rate_above": 0.13593539703903096,
+          "breach_rate_below": 0.12314939434724091,
+          "coverage": 0.7409152086137282,
+          "hours": 2972,
+          "mae": 840.9710606283647,
+          "mean_width": 2264.4006972660763,
+          "month": 3
+        },
+        {
+          "bias": 60.930582682291664,
+          "breach_rate_above": 0.08055555555555556,
+          "breach_rate_below": 0.06770833333333333,
+          "coverage": 0.8517361111111111,
+          "hours": 2880,
+          "mae": 627.5955390082465,
+          "mean_width": 2217.5035915059543,
+          "month": 4
+        },
+        {
+          "bias": 233.8698467951949,
+          "breach_rate_above": 0.14381720430107528,
+          "breach_rate_below": 0.09206989247311828,
+          "coverage": 0.7641129032258065,
+          "hours": 2976,
+          "mae": 935.9537996681788,
+          "mean_width": 2531.0166732983303,
+          "month": 5
+        },
+        {
+          "bias": 101.53524644639757,
+          "breach_rate_above": 0.08368055555555555,
+          "breach_rate_below": 0.08020833333333334,
+          "coverage": 0.8361111111111111,
+          "hours": 2880,
+          "mae": 792.9202928331163,
+          "mean_width": 2870.0679873465206,
+          "month": 6
+        },
+        {
+          "bias": 11.777405441448252,
+          "breach_rate_above": 0.06350806451612903,
+          "breach_rate_below": 0.06989247311827956,
+          "coverage": 0.8665994623655914,
+          "hours": 2976,
+          "mae": 699.518809328797,
+          "mean_width": 2547.3954153424847,
+          "month": 7
+        },
+        {
+          "bias": 215.1573386922333,
+          "breach_rate_above": 0.11522801302931596,
+          "breach_rate_below": 0.02728013029315961,
+          "coverage": 0.8574918566775245,
+          "hours": 2456,
+          "mae": 700.251220703125,
+          "mean_width": 2569.323958640845,
+          "month": 8
+        },
+        {
+          "bias": 80.26260013903601,
+          "breach_rate_above": 0.1843220338983051,
+          "breach_rate_below": 0.1483050847457627,
+          "coverage": 0.6673728813559322,
+          "hours": 472,
+          "mae": 803.089980303231,
+          "mean_width": 1946.5824281310618,
+          "month": 10
+        },
+        {
+          "bias": 135.87045106080964,
+          "breach_rate_above": 0.1473647711511789,
+          "breach_rate_below": 0.10436893203883495,
+          "coverage": 0.7482662968099861,
+          "hours": 2884,
+          "mae": 630.3725545303831,
+          "mean_width": 1745.2678253436832,
+          "month": 11
+        },
+        {
+          "bias": -2.0754112325688845,
+          "breach_rate_above": 0.06418010752688172,
+          "breach_rate_below": 0.1219758064516129,
+          "coverage": 0.8138440860215054,
+          "hours": 2976,
+          "mae": 543.0164433961273,
+          "mean_width": 1767.2819029634852,
+          "month": 12
+        }
+      ],
+      "episodes": {
+        "above": 281,
+        "below": 235,
+        "breached_fraction": 0.22025767543859648,
+        "breached_hours": 1607,
+        "episodes": 516,
+        "episodes_over_3h": 146,
+        "max_duration_hours": 25,
+        "max_peak_ratio": 6.311358558258213,
+        "mean_duration_hours": 3.114341085271318,
+        "mean_peak_ratio": 0.2795532846859383
+      },
+      "hours_pooled": 29136,
+      "stagger": 4,
+      "worst_episodes": [
+        {
+          "direction": "above",
+          "duration_hours": 20,
+          "end": "2025-05-10T11:00:00.000000000",
+          "local_hour_start": 9,
+          "month": 5,
+          "peak_at": "2025-05-10T03:00:00.000000000",
+          "peak_exceedance": 3475.2,
+          "peak_exceedance_ratio": 1.259,
+          "start": "2025-05-09T16:00:00.000000000",
+          "total_exceedance": 27179.2
+        },
+        {
+          "direction": "below",
+          "duration_hours": 22,
+          "end": "2024-12-25T23:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 12,
+          "peak_at": "2024-12-25T19:00:00.000000000",
+          "peak_exceedance": 2431.3,
+          "peak_exceedance_ratio": 0.614,
+          "start": "2024-12-25T02:00:00.000000000",
+          "total_exceedance": 24328.1
+        },
+        {
+          "direction": "below",
+          "duration_hours": 25,
+          "end": "2024-11-29T12:00:00.000000000",
+          "local_hour_start": 4,
+          "month": 11,
+          "peak_at": "2024-11-28T17:00:00.000000000",
+          "peak_exceedance": 1677.5,
+          "peak_exceedance_ratio": 0.894,
+          "start": "2024-11-28T12:00:00.000000000",
+          "total_exceedance": 18106.0
+        },
+        {
+          "direction": "above",
+          "duration_hours": 11,
+          "end": "2025-03-14T23:00:00.000000000",
+          "local_hour_start": 6,
+          "month": 3,
+          "peak_at": "2025-03-14T23:00:00.000000000",
+          "peak_exceedance": 3012.4,
+          "peak_exceedance_ratio": 1.018,
+          "start": "2025-03-14T13:00:00.000000000",
+          "total_exceedance": 17143.2
+        },
+        {
+          "direction": "below",
+          "duration_hours": 1,
+          "end": "2025-07-31T21:00:00.000000000",
+          "local_hour_start": 14,
+          "month": 7,
+          "peak_at": "2025-07-31T21:00:00.000000000",
+          "peak_exceedance": 16915.7,
+          "peak_exceedance_ratio": 6.311,
+          "start": "2025-07-31T21:00:00.000000000",
+          "total_exceedance": 16915.7
+        },
+        {
+          "direction": "below",
+          "duration_hours": 12,
+          "end": "2025-05-26T23:00:00.000000000",
+          "local_hour_start": 5,
+          "month": 5,
+          "peak_at": "2025-05-26T21:00:00.000000000",
+          "peak_exceedance": 2533.7,
+          "peak_exceedance_ratio": 0.746,
+          "start": "2025-05-26T12:00:00.000000000",
+          "total_exceedance": 12992.1
+        },
+        {
+          "direction": "above",
+          "duration_hours": 14,
+          "end": "2024-11-02T23:00:00.000000000",
+          "local_hour_start": 3,
+          "month": 11,
+          "peak_at": "2024-11-02T16:00:00.000000000",
+          "peak_exceedance": 2775.5,
+          "peak_exceedance_ratio": 1.606,
+          "start": "2024-11-02T10:00:00.000000000",
+          "total_exceedance": 12087.2
+        },
+        {
+          "direction": "below",
+          "duration_hours": 5,
+          "end": "2025-03-18T23:00:00.000000000",
+          "local_hour_start": 12,
+          "month": 3,
+          "peak_at": "2025-03-18T23:00:00.000000000",
+          "peak_exceedance": 2865.9,
+          "peak_exceedance_ratio": 0.878,
+          "start": "2025-03-18T19:00:00.000000000",
+          "total_exceedance": 11588.0
+        },
+        {
+          "direction": "above",
+          "duration_hours": 18,
+          "end": "2024-11-18T00:00:00.000000000",
+          "local_hour_start": 23,
+          "month": 11,
+          "peak_at": "2024-11-17T18:00:00.000000000",
+          "peak_exceedance": 1239.9,
+          "peak_exceedance_ratio": 0.544,
+          "start": "2024-11-17T07:00:00.000000000",
+          "total_exceedance": 10738.7
+        },
+        {
+          "direction": "above",
+          "duration_hours": 7,
+          "end": "2025-08-06T23:00:00.000000000",
+          "local_hour_start": 10,
+          "month": 8,
+          "peak_at": "2025-08-06T23:00:00.000000000",
+          "peak_exceedance": 2267.3,
+          "peak_exceedance_ratio": 0.876,
+          "start": "2025-08-06T17:00:00.000000000",
+          "total_exceedance": 10679.9
+        }
+      ]
+    },
     "chronos_bolt_base+volatility": {
       "by_horizon_step": [
         {
@@ -1931,8 +2799,142 @@
           "month": 12
         }
       ],
+      "episodes": {
+        "above": 280,
+        "below": 227,
+        "breached_fraction": 0.22587719298245615,
+        "breached_hours": 1648,
+        "episodes": 507,
+        "episodes_over_3h": 155,
+        "max_duration_hours": 26,
+        "max_peak_ratio": 4.198281433851946,
+        "mean_duration_hours": 3.250493096646943,
+        "mean_peak_ratio": 0.25928935419319515
+      },
       "hours_pooled": 29136,
-      "stagger": 4
+      "stagger": 4,
+      "worst_episodes": [
+        {
+          "direction": "above",
+          "duration_hours": 21,
+          "end": "2025-05-10T12:00:00.000000000",
+          "local_hour_start": 9,
+          "month": 5,
+          "peak_at": "2025-05-10T03:00:00.000000000",
+          "peak_exceedance": 3950.8,
+          "peak_exceedance_ratio": 2.293,
+          "start": "2025-05-09T16:00:00.000000000",
+          "total_exceedance": 29665.2
+        },
+        {
+          "direction": "below",
+          "duration_hours": 22,
+          "end": "2024-12-25T23:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 12,
+          "peak_at": "2024-12-25T19:00:00.000000000",
+          "peak_exceedance": 3404.3,
+          "peak_exceedance_ratio": 1.393,
+          "start": "2024-12-25T02:00:00.000000000",
+          "total_exceedance": 29215.7
+        },
+        {
+          "direction": "above",
+          "duration_hours": 23,
+          "end": "2025-05-31T13:00:00.000000000",
+          "local_hour_start": 8,
+          "month": 5,
+          "peak_at": "2025-05-31T03:00:00.000000000",
+          "peak_exceedance": 2582.1,
+          "peak_exceedance_ratio": 1.344,
+          "start": "2025-05-30T15:00:00.000000000",
+          "total_exceedance": 25670.1
+        },
+        {
+          "direction": "below",
+          "duration_hours": 26,
+          "end": "2024-11-29T13:00:00.000000000",
+          "local_hour_start": 4,
+          "month": 11,
+          "peak_at": "2024-11-28T17:00:00.000000000",
+          "peak_exceedance": 1898.3,
+          "peak_exceedance_ratio": 1.156,
+          "start": "2024-11-28T12:00:00.000000000",
+          "total_exceedance": 18192.3
+        },
+        {
+          "direction": "above",
+          "duration_hours": 17,
+          "end": "2025-05-11T08:00:00.000000000",
+          "local_hour_start": 9,
+          "month": 5,
+          "peak_at": "2025-05-11T03:00:00.000000000",
+          "peak_exceedance": 2681.2,
+          "peak_exceedance_ratio": 1.624,
+          "start": "2025-05-10T16:00:00.000000000",
+          "total_exceedance": 18186.4
+        },
+        {
+          "direction": "above",
+          "duration_hours": 24,
+          "end": "2025-08-06T23:00:00.000000000",
+          "local_hour_start": 17,
+          "month": 8,
+          "peak_at": "2025-08-06T23:00:00.000000000",
+          "peak_exceedance": 1707.9,
+          "peak_exceedance_ratio": 0.337,
+          "start": "2025-08-06T00:00:00.000000000",
+          "total_exceedance": 17964.4
+        },
+        {
+          "direction": "below",
+          "duration_hours": 1,
+          "end": "2025-07-31T21:00:00.000000000",
+          "local_hour_start": 14,
+          "month": 7,
+          "peak_at": "2025-07-31T21:00:00.000000000",
+          "peak_exceedance": 16491.8,
+          "peak_exceedance_ratio": 4.198,
+          "start": "2025-07-31T21:00:00.000000000",
+          "total_exceedance": 16491.8
+        },
+        {
+          "direction": "below",
+          "duration_hours": 13,
+          "end": "2024-11-03T23:00:00.000000000",
+          "local_hour_start": 3,
+          "month": 11,
+          "peak_at": "2024-11-03T16:00:00.000000000",
+          "peak_exceedance": 2353.8,
+          "peak_exceedance_ratio": 2.508,
+          "start": "2024-11-03T11:00:00.000000000",
+          "total_exceedance": 15856.3
+        },
+        {
+          "direction": "above",
+          "duration_hours": 11,
+          "end": "2025-03-14T23:00:00.000000000",
+          "local_hour_start": 6,
+          "month": 3,
+          "peak_at": "2025-03-14T23:00:00.000000000",
+          "peak_exceedance": 2613.7,
+          "peak_exceedance_ratio": 0.65,
+          "start": "2025-03-14T13:00:00.000000000",
+          "total_exceedance": 15762.0
+        },
+        {
+          "direction": "below",
+          "duration_hours": 16,
+          "end": "2025-06-02T19:00:00.000000000",
+          "local_hour_start": 21,
+          "month": 6,
+          "peak_at": "2025-06-02T17:00:00.000000000",
+          "peak_exceedance": 1647.9,
+          "peak_exceedance_ratio": 0.649,
+          "start": "2025-06-02T04:00:00.000000000",
+          "total_exceedance": 14431.1
+        }
+      ]
     },
     "chronos_bolt_base+weather": {
       "by_horizon_step": [
@@ -2531,8 +3533,142 @@
           "month": 12
         }
       ],
+      "episodes": {
+        "above": 289,
+        "below": 233,
+        "breached_fraction": 0.2216282894736842,
+        "breached_hours": 1617,
+        "episodes": 522,
+        "episodes_over_3h": 148,
+        "max_duration_hours": 28,
+        "max_peak_ratio": 4.510183973879606,
+        "mean_duration_hours": 3.0977011494252875,
+        "mean_peak_ratio": 0.262220904969001
+      },
       "hours_pooled": 29136,
-      "stagger": 4
+      "stagger": 4,
+      "worst_episodes": [
+        {
+          "direction": "below",
+          "duration_hours": 22,
+          "end": "2024-12-25T23:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 12,
+          "peak_at": "2024-12-25T19:00:00.000000000",
+          "peak_exceedance": 3457.2,
+          "peak_exceedance_ratio": 1.414,
+          "start": "2024-12-25T02:00:00.000000000",
+          "total_exceedance": 30669.5
+        },
+        {
+          "direction": "above",
+          "duration_hours": 13,
+          "end": "2025-05-10T13:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 5,
+          "peak_at": "2025-05-10T03:00:00.000000000",
+          "peak_exceedance": 3147.3,
+          "peak_exceedance_ratio": 1.688,
+          "start": "2025-05-10T01:00:00.000000000",
+          "total_exceedance": 21996.9
+        },
+        {
+          "direction": "below",
+          "duration_hours": 28,
+          "end": "2024-11-29T17:00:00.000000000",
+          "local_hour_start": 6,
+          "month": 11,
+          "peak_at": "2024-11-28T17:00:00.000000000",
+          "peak_exceedance": 1747.5,
+          "peak_exceedance_ratio": 0.891,
+          "start": "2024-11-28T14:00:00.000000000",
+          "total_exceedance": 17445.4
+        },
+        {
+          "direction": "below",
+          "duration_hours": 1,
+          "end": "2025-07-31T21:00:00.000000000",
+          "local_hour_start": 14,
+          "month": 7,
+          "peak_at": "2025-07-31T21:00:00.000000000",
+          "peak_exceedance": 17029.7,
+          "peak_exceedance_ratio": 4.51,
+          "start": "2025-07-31T21:00:00.000000000",
+          "total_exceedance": 17029.7
+        },
+        {
+          "direction": "below",
+          "duration_hours": 16,
+          "end": "2024-11-04T02:00:00.000000000",
+          "local_hour_start": 3,
+          "month": 11,
+          "peak_at": "2024-11-03T16:00:00.000000000",
+          "peak_exceedance": 2277.9,
+          "peak_exceedance_ratio": 1.775,
+          "start": "2024-11-03T11:00:00.000000000",
+          "total_exceedance": 16929.3
+        },
+        {
+          "direction": "above",
+          "duration_hours": 13,
+          "end": "2025-05-31T14:00:00.000000000",
+          "local_hour_start": 19,
+          "month": 5,
+          "peak_at": "2025-05-31T03:00:00.000000000",
+          "peak_exceedance": 1904.5,
+          "peak_exceedance_ratio": 0.874,
+          "start": "2025-05-31T02:00:00.000000000",
+          "total_exceedance": 15367.1
+        },
+        {
+          "direction": "above",
+          "duration_hours": 10,
+          "end": "2025-03-14T23:00:00.000000000",
+          "local_hour_start": 7,
+          "month": 3,
+          "peak_at": "2025-03-14T23:00:00.000000000",
+          "peak_exceedance": 2324.2,
+          "peak_exceedance_ratio": 0.611,
+          "start": "2025-03-14T14:00:00.000000000",
+          "total_exceedance": 13923.3
+        },
+        {
+          "direction": "below",
+          "duration_hours": 12,
+          "end": "2025-07-04T23:00:00.000000000",
+          "local_hour_start": 5,
+          "month": 7,
+          "peak_at": "2025-07-04T19:00:00.000000000",
+          "peak_exceedance": 2143.7,
+          "peak_exceedance_ratio": 0.683,
+          "start": "2025-07-04T12:00:00.000000000",
+          "total_exceedance": 13685.5
+        },
+        {
+          "direction": "below",
+          "duration_hours": 12,
+          "end": "2025-05-26T23:00:00.000000000",
+          "local_hour_start": 5,
+          "month": 5,
+          "peak_at": "2025-05-26T21:00:00.000000000",
+          "peak_exceedance": 2262.1,
+          "peak_exceedance_ratio": 0.612,
+          "start": "2025-05-26T12:00:00.000000000",
+          "total_exceedance": 12301.2
+        },
+        {
+          "direction": "above",
+          "duration_hours": 19,
+          "end": "2025-05-28T20:00:00.000000000",
+          "local_hour_start": 19,
+          "month": 5,
+          "peak_at": "2025-05-28T17:00:00.000000000",
+          "peak_exceedance": 1326.9,
+          "peak_exceedance_ratio": 0.578,
+          "start": "2025-05-28T02:00:00.000000000",
+          "total_exceedance": 11240.6
+        }
+      ]
     },
     "chronos_bolt_base+weather+volatility": {
       "by_horizon_step": [
@@ -3131,8 +4267,142 @@
           "month": 12
         }
       ],
+      "episodes": {
+        "above": 292,
+        "below": 226,
+        "breached_fraction": 0.22861842105263158,
+        "breached_hours": 1668,
+        "episodes": 518,
+        "episodes_over_3h": 158,
+        "max_duration_hours": 29,
+        "max_peak_ratio": 5.02401506349828,
+        "mean_duration_hours": 3.22007722007722,
+        "mean_peak_ratio": 0.2702001228544326
+      },
       "hours_pooled": 29136,
-      "stagger": 4
+      "stagger": 4,
+      "worst_episodes": [
+        {
+          "direction": "below",
+          "duration_hours": 22,
+          "end": "2024-12-25T23:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 12,
+          "peak_at": "2024-12-25T19:00:00.000000000",
+          "peak_exceedance": 3313.4,
+          "peak_exceedance_ratio": 1.31,
+          "start": "2024-12-25T02:00:00.000000000",
+          "total_exceedance": 29068.4
+        },
+        {
+          "direction": "above",
+          "duration_hours": 13,
+          "end": "2025-05-10T13:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 5,
+          "peak_at": "2025-05-10T03:00:00.000000000",
+          "peak_exceedance": 3078.4,
+          "peak_exceedance_ratio": 1.859,
+          "start": "2025-05-10T01:00:00.000000000",
+          "total_exceedance": 20998.1
+        },
+        {
+          "direction": "below",
+          "duration_hours": 19,
+          "end": "2024-11-04T02:00:00.000000000",
+          "local_hour_start": 1,
+          "month": 11,
+          "peak_at": "2024-11-03T16:00:00.000000000",
+          "peak_exceedance": 2422.0,
+          "peak_exceedance_ratio": 2.234,
+          "start": "2024-11-03T08:00:00.000000000",
+          "total_exceedance": 19325.0
+        },
+        {
+          "direction": "below",
+          "duration_hours": 29,
+          "end": "2024-11-29T17:00:00.000000000",
+          "local_hour_start": 5,
+          "month": 11,
+          "peak_at": "2024-11-28T17:00:00.000000000",
+          "peak_exceedance": 1710.0,
+          "peak_exceedance_ratio": 0.946,
+          "start": "2024-11-28T13:00:00.000000000",
+          "total_exceedance": 19101.7
+        },
+        {
+          "direction": "below",
+          "duration_hours": 1,
+          "end": "2025-07-31T21:00:00.000000000",
+          "local_hour_start": 14,
+          "month": 7,
+          "peak_at": "2025-07-31T21:00:00.000000000",
+          "peak_exceedance": 17348.4,
+          "peak_exceedance_ratio": 5.024,
+          "start": "2025-07-31T21:00:00.000000000",
+          "total_exceedance": 17348.4
+        },
+        {
+          "direction": "above",
+          "duration_hours": 11,
+          "end": "2025-03-14T23:00:00.000000000",
+          "local_hour_start": 6,
+          "month": 3,
+          "peak_at": "2025-03-14T23:00:00.000000000",
+          "peak_exceedance": 2527.2,
+          "peak_exceedance_ratio": 0.644,
+          "start": "2025-03-14T13:00:00.000000000",
+          "total_exceedance": 15089.5
+        },
+        {
+          "direction": "above",
+          "duration_hours": 14,
+          "end": "2025-05-31T14:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 5,
+          "peak_at": "2025-05-31T03:00:00.000000000",
+          "peak_exceedance": 1929.5,
+          "peak_exceedance_ratio": 1.017,
+          "start": "2025-05-31T01:00:00.000000000",
+          "total_exceedance": 14103.6
+        },
+        {
+          "direction": "above",
+          "duration_hours": 6,
+          "end": "2025-03-30T23:00:00.000000000",
+          "local_hour_start": 11,
+          "month": 3,
+          "peak_at": "2025-03-30T21:00:00.000000000",
+          "peak_exceedance": 3247.7,
+          "peak_exceedance_ratio": 0.983,
+          "start": "2025-03-30T18:00:00.000000000",
+          "total_exceedance": 12371.8
+        },
+        {
+          "direction": "below",
+          "duration_hours": 11,
+          "end": "2025-07-04T23:00:00.000000000",
+          "local_hour_start": 6,
+          "month": 7,
+          "peak_at": "2025-07-04T19:00:00.000000000",
+          "peak_exceedance": 2074.8,
+          "peak_exceedance_ratio": 0.687,
+          "start": "2025-07-04T13:00:00.000000000",
+          "total_exceedance": 12108.8
+        },
+        {
+          "direction": "below",
+          "duration_hours": 11,
+          "end": "2025-05-26T23:00:00.000000000",
+          "local_hour_start": 6,
+          "month": 5,
+          "peak_at": "2025-05-26T21:00:00.000000000",
+          "peak_exceedance": 2155.2,
+          "peak_exceedance_ratio": 0.583,
+          "start": "2025-05-26T13:00:00.000000000",
+          "total_exceedance": 11070.4
+        }
+      ]
     }
   },
   "ERCO:D": {
@@ -3733,8 +5003,142 @@
           "month": 12
         }
       ],
+      "episodes": {
+        "above": 137,
+        "below": 179,
+        "breached_fraction": 0.23601973684210525,
+        "breached_hours": 1722,
+        "episodes": 316,
+        "episodes_over_3h": 182,
+        "max_duration_hours": 28,
+        "max_peak_ratio": 1.80896513023864,
+        "mean_duration_hours": 5.449367088607595,
+        "mean_peak_ratio": 0.26648773440428064
+      },
       "hours_pooled": 29136,
-      "stagger": 4
+      "stagger": 4,
+      "worst_episodes": [
+        {
+          "direction": "above",
+          "duration_hours": 28,
+          "end": "2025-01-06T23:00:00.000000000",
+          "local_hour_start": 14,
+          "month": 1,
+          "peak_at": "2025-01-06T14:00:00.000000000",
+          "peak_exceedance": 13461.3,
+          "peak_exceedance_ratio": 1.809,
+          "start": "2025-01-05T20:00:00.000000000",
+          "total_exceedance": 188275.6
+        },
+        {
+          "direction": "above",
+          "duration_hours": 23,
+          "end": "2025-01-19T23:00:00.000000000",
+          "local_hour_start": 19,
+          "month": 1,
+          "peak_at": "2025-01-19T15:00:00.000000000",
+          "peak_exceedance": 12793.3,
+          "peak_exceedance_ratio": 1.604,
+          "start": "2025-01-19T01:00:00.000000000",
+          "total_exceedance": 186492.2
+        },
+        {
+          "direction": "above",
+          "duration_hours": 20,
+          "end": "2025-02-13T20:00:00.000000000",
+          "local_hour_start": 19,
+          "month": 2,
+          "peak_at": "2025-02-13T14:00:00.000000000",
+          "peak_exceedance": 9386.5,
+          "peak_exceedance_ratio": 1.598,
+          "start": "2025-02-13T01:00:00.000000000",
+          "total_exceedance": 95977.6
+        },
+        {
+          "direction": "above",
+          "duration_hours": 23,
+          "end": "2025-01-20T23:00:00.000000000",
+          "local_hour_start": 19,
+          "month": 1,
+          "peak_at": "2025-01-20T23:00:00.000000000",
+          "peak_exceedance": 8694.9,
+          "peak_exceedance_ratio": 0.868,
+          "start": "2025-01-20T01:00:00.000000000",
+          "total_exceedance": 92032.8
+        },
+        {
+          "direction": "below",
+          "duration_hours": 12,
+          "end": "2025-05-26T23:00:00.000000000",
+          "local_hour_start": 7,
+          "month": 5,
+          "peak_at": "2025-05-26T21:00:00.000000000",
+          "peak_exceedance": 10713.7,
+          "peak_exceedance_ratio": 1.29,
+          "start": "2025-05-26T12:00:00.000000000",
+          "total_exceedance": 76988.7
+        },
+        {
+          "direction": "above",
+          "duration_hours": 18,
+          "end": "2024-12-11T17:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 12,
+          "peak_at": "2024-12-11T14:00:00.000000000",
+          "peak_exceedance": 7049.9,
+          "peak_exceedance_ratio": 1.365,
+          "start": "2024-12-11T00:00:00.000000000",
+          "total_exceedance": 76672.7
+        },
+        {
+          "direction": "below",
+          "duration_hours": 18,
+          "end": "2025-01-26T17:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 1,
+          "peak_at": "2025-01-26T13:00:00.000000000",
+          "peak_exceedance": 7198.7,
+          "peak_exceedance_ratio": 0.581,
+          "start": "2025-01-26T00:00:00.000000000",
+          "total_exceedance": 67853.2
+        },
+        {
+          "direction": "above",
+          "duration_hours": 24,
+          "end": "2024-12-06T23:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 12,
+          "peak_at": "2024-12-06T14:00:00.000000000",
+          "peak_exceedance": 4635.6,
+          "peak_exceedance_ratio": 0.948,
+          "start": "2024-12-06T00:00:00.000000000",
+          "total_exceedance": 57729.0
+        },
+        {
+          "direction": "above",
+          "duration_hours": 18,
+          "end": "2024-11-18T17:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 11,
+          "peak_at": "2024-11-18T04:00:00.000000000",
+          "peak_exceedance": 4983.9,
+          "peak_exceedance_ratio": 1.705,
+          "start": "2024-11-18T00:00:00.000000000",
+          "total_exceedance": 50900.3
+        },
+        {
+          "direction": "above",
+          "duration_hours": 9,
+          "end": "2025-02-19T23:00:00.000000000",
+          "local_hour_start": 9,
+          "month": 2,
+          "peak_at": "2025-02-19T20:00:00.000000000",
+          "peak_exceedance": 7767.7,
+          "peak_exceedance_ratio": 0.464,
+          "start": "2025-02-19T15:00:00.000000000",
+          "total_exceedance": 50680.9
+        }
+      ]
     },
     "chronos_bolt_base+calendar": {
       "by_horizon_step": [
@@ -4470,6 +5874,740 @@
         }
       ]
     },
+    "chronos_bolt_base+scale": {
+      "by_horizon_step": [
+        {
+          "bias": 33.89142619954695,
+          "breach_rate_above": 0.08072487644151564,
+          "breach_rate_below": 0.039538714991762765,
+          "coverage": 0.8797364085667215,
+          "hours": 1214,
+          "mae": 496.05192352244643,
+          "mean_width": 2111.9479087828286,
+          "step": 1
+        },
+        {
+          "bias": -12.134073826194399,
+          "breach_rate_above": 0.09719934102141681,
+          "breach_rate_below": 0.0757825370675453,
+          "coverage": 0.8270181219110379,
+          "hours": 1214,
+          "mae": 749.4515290362439,
+          "mean_width": 2800.7942068880757,
+          "step": 2
+        },
+        {
+          "bias": -44.762133829283364,
+          "breach_rate_above": 0.09719934102141681,
+          "breach_rate_below": 0.09225700164744646,
+          "coverage": 0.8105436573311368,
+          "hours": 1214,
+          "mae": 978.1688536089374,
+          "mean_width": 3392.832165919498,
+          "step": 3
+        },
+        {
+          "bias": -7.092443626441516,
+          "breach_rate_above": 0.10214168039538715,
+          "breach_rate_below": 0.09967051070840198,
+          "coverage": 0.7981878088962109,
+          "hours": 1214,
+          "mae": 1147.3466587726523,
+          "mean_width": 3869.652378521424,
+          "step": 4
+        },
+        {
+          "bias": 21.682029962932454,
+          "breach_rate_above": 0.10955518945634267,
+          "breach_rate_below": 0.09555189456342669,
+          "coverage": 0.7948929159802306,
+          "hours": 1214,
+          "mae": 1318.0171823517298,
+          "mean_width": 4315.615769634779,
+          "step": 5
+        },
+        {
+          "bias": 46.24604870263592,
+          "breach_rate_above": 0.11037891268533773,
+          "breach_rate_below": 0.09802306425041186,
+          "coverage": 0.7915980230642504,
+          "hours": 1214,
+          "mae": 1514.775625514827,
+          "mean_width": 4696.06534110274,
+          "step": 6
+        },
+        {
+          "bias": 99.42520528727347,
+          "breach_rate_above": 0.1186161449752883,
+          "breach_rate_below": 0.1128500823723229,
+          "coverage": 0.7685337726523888,
+          "hours": 1214,
+          "mae": 1683.0256802151978,
+          "mean_width": 5072.690755396309,
+          "step": 7
+        },
+        {
+          "bias": 43.70200203356672,
+          "breach_rate_above": 0.11202635914332784,
+          "breach_rate_below": 0.1243822075782537,
+          "coverage": 0.7635914332784185,
+          "hours": 1214,
+          "mae": 1800.4273160780479,
+          "mean_width": 5417.809945601676,
+          "step": 8
+        },
+        {
+          "bias": 38.40610520490115,
+          "breach_rate_above": 0.11202635914332784,
+          "breach_rate_below": 0.12026359143327842,
+          "coverage": 0.7677100494233937,
+          "hours": 1214,
+          "mae": 1864.1298104149505,
+          "mean_width": 5647.181969398019,
+          "step": 9
+        },
+        {
+          "bias": 100.18224232907743,
+          "breach_rate_above": 0.11037891268533773,
+          "breach_rate_below": 0.12355848434925865,
+          "coverage": 0.7660626029654036,
+          "hours": 1214,
+          "mae": 1883.722134987644,
+          "mean_width": 5851.766667558635,
+          "step": 10
+        },
+        {
+          "bias": 112.77565769151565,
+          "breach_rate_above": 0.10543657331136738,
+          "breach_rate_below": 0.10626029654036244,
+          "coverage": 0.7883031301482701,
+          "hours": 1214,
+          "mae": 1911.0708723743821,
+          "mean_width": 6037.9495657856205,
+          "step": 11
+        },
+        {
+          "bias": 134.88281893533772,
+          "breach_rate_above": 0.10873146622734761,
+          "breach_rate_below": 0.09719934102141681,
+          "coverage": 0.7940691927512356,
+          "hours": 1214,
+          "mae": 1961.1309462520594,
+          "mean_width": 6178.199830069828,
+          "step": 12
+        },
+        {
+          "bias": 98.35636004427512,
+          "breach_rate_above": 0.10626029654036244,
+          "breach_rate_below": 0.10214168039538715,
+          "coverage": 0.7915980230642504,
+          "hours": 1214,
+          "mae": 2045.3302261377678,
+          "mean_width": 6403.933463118502,
+          "step": 13
+        },
+        {
+          "bias": 90.69592063941516,
+          "breach_rate_above": 0.1070840197693575,
+          "breach_rate_below": 0.10296540362438221,
+          "coverage": 0.7899505766062603,
+          "hours": 1214,
+          "mae": 2142.1481189507826,
+          "mean_width": 6586.65391356951,
+          "step": 14
+        },
+        {
+          "bias": 124.17039165465404,
+          "breach_rate_above": 0.11449752883031301,
+          "breach_rate_below": 0.10461285008237232,
+          "coverage": 0.7808896210873146,
+          "hours": 1214,
+          "mae": 2195.1415613416393,
+          "mean_width": 6699.160670692523,
+          "step": 15
+        },
+        {
+          "bias": 148.25857830518945,
+          "breach_rate_above": 0.10955518945634267,
+          "breach_rate_below": 0.10378912685337727,
+          "coverage": 0.78665568369028,
+          "hours": 1214,
+          "mae": 2202.415214425453,
+          "mean_width": 6811.313490906138,
+          "step": 16
+        },
+        {
+          "bias": 145.38441811676276,
+          "breach_rate_above": 0.10626029654036244,
+          "breach_rate_below": 0.10378912685337727,
+          "coverage": 0.7899505766062603,
+          "hours": 1214,
+          "mae": 2188.544799603583,
+          "mean_width": 6880.181453483448,
+          "step": 17
+        },
+        {
+          "bias": 173.1112122889209,
+          "breach_rate_above": 0.10378912685337727,
+          "breach_rate_below": 0.11037891268533773,
+          "coverage": 0.785831960461285,
+          "hours": 1214,
+          "mae": 2200.3441393379326,
+          "mean_width": 6934.023014535366,
+          "step": 18
+        },
+        {
+          "bias": 220.14929983525536,
+          "breach_rate_above": 0.10626029654036244,
+          "breach_rate_below": 0.10543657331136738,
+          "coverage": 0.7883031301482701,
+          "hours": 1214,
+          "mae": 2235.627329592257,
+          "mean_width": 7022.793333163429,
+          "step": 19
+        },
+        {
+          "bias": 188.60153032331138,
+          "breach_rate_above": 0.10049423393739704,
+          "breach_rate_below": 0.11449752883031301,
+          "coverage": 0.78500823723229,
+          "hours": 1214,
+          "mae": 2273.023482547364,
+          "mean_width": 7140.150425432706,
+          "step": 20
+        },
+        {
+          "bias": 180.8575602347611,
+          "breach_rate_above": 0.09884678747940692,
+          "breach_rate_below": 0.10873146622734761,
+          "coverage": 0.7924217462932455,
+          "hours": 1214,
+          "mae": 2278.206271880148,
+          "mean_width": 7230.578599070483,
+          "step": 21
+        },
+        {
+          "bias": 232.24803078665568,
+          "breach_rate_above": 0.09472817133443164,
+          "breach_rate_below": 0.10049423393739704,
+          "coverage": 0.8047775947281713,
+          "hours": 1214,
+          "mae": 2262.3970345963758,
+          "mean_width": 7325.521370452744,
+          "step": 22
+        },
+        {
+          "bias": 334.3123037221993,
+          "breach_rate_above": 0.1070840197693575,
+          "breach_rate_below": 0.09225700164744646,
+          "coverage": 0.800658978583196,
+          "hours": 1214,
+          "mae": 2247.3798104149505,
+          "mean_width": 7347.325255668166,
+          "step": 23
+        },
+        {
+          "bias": 303.11618358731465,
+          "breach_rate_above": 0.09719934102141681,
+          "breach_rate_below": 0.09390444810543658,
+          "coverage": 0.8088962108731467,
+          "hours": 1214,
+          "mae": 2271.0131860070014,
+          "mean_width": 7486.765580760671,
+          "step": 24
+        }
+      ],
+      "by_local_hour": [
+        {
+          "bias": 187.57416726729818,
+          "breach_rate_above": 0.12273476112026359,
+          "breach_rate_below": 0.09884678747940692,
+          "coverage": 0.7784184514003295,
+          "hour": 0,
+          "hours": 1214,
+          "mae": 1580.3342578768534,
+          "mean_width": 4956.328599219057
+        },
+        {
+          "bias": 146.19215350472086,
+          "breach_rate_above": 0.11083743842364532,
+          "breach_rate_below": 0.09195402298850575,
+          "coverage": 0.7972085385878489,
+          "hour": 1,
+          "hours": 1218,
+          "mae": 1356.8846180983169,
+          "mean_width": 4290.8536786044315
+        },
+        {
+          "bias": 164.44997417355373,
+          "breach_rate_above": 0.11487603305785124,
+          "breach_rate_below": 0.10743801652892562,
+          "coverage": 0.7776859504132232,
+          "hour": 2,
+          "hours": 1210,
+          "mae": 1408.2285640495868,
+          "mean_width": 4348.882730288314
+        },
+        {
+          "bias": 172.06244529962933,
+          "breach_rate_above": 0.11120263591433278,
+          "breach_rate_below": 0.11449752883031301,
+          "coverage": 0.7742998352553542,
+          "hour": 3,
+          "hours": 1214,
+          "mae": 1479.4341761480644,
+          "mean_width": 4458.060158272712
+        },
+        {
+          "bias": 207.28080596169687,
+          "breach_rate_above": 0.1128500823723229,
+          "breach_rate_below": 0.1186161449752883,
+          "coverage": 0.7685337726523888,
+          "hour": 4,
+          "hours": 1214,
+          "mae": 1573.068381898682,
+          "mean_width": 4660.065503019513
+        },
+        {
+          "bias": 189.2442435904036,
+          "breach_rate_above": 0.1070840197693575,
+          "breach_rate_below": 0.11449752883031301,
+          "coverage": 0.7784184514003295,
+          "hour": 5,
+          "hours": 1214,
+          "mae": 1680.4025722044894,
+          "mean_width": 5054.800523559358
+        },
+        {
+          "bias": 138.86326837932455,
+          "breach_rate_above": 0.09637561779242175,
+          "breach_rate_below": 0.10049423393739704,
+          "coverage": 0.8031301482701813,
+          "hour": 6,
+          "hours": 1214,
+          "mae": 1534.8320956033772,
+          "mean_width": 5037.244541796533
+        },
+        {
+          "bias": 186.46086992895388,
+          "breach_rate_above": 0.1013179571663921,
+          "breach_rate_below": 0.09225700164744646,
+          "coverage": 0.8064250411861614,
+          "hour": 7,
+          "hours": 1214,
+          "mae": 1610.6986106105849,
+          "mean_width": 5167.7037714891785
+        },
+        {
+          "bias": -34.378767890238876,
+          "breach_rate_above": 0.07907742998352553,
+          "breach_rate_below": 0.12685337726523888,
+          "coverage": 0.7940691927512356,
+          "hour": 8,
+          "hours": 1214,
+          "mae": 1710.6442320067956,
+          "mean_width": 5493.941635070784
+        },
+        {
+          "bias": -62.93682428953871,
+          "breach_rate_above": 0.0642504118616145,
+          "breach_rate_below": 0.1013179571663921,
+          "coverage": 0.8344316309719935,
+          "hour": 9,
+          "hours": 1214,
+          "mae": 1609.5518109040363,
+          "mean_width": 5692.79860479661
+        },
+        {
+          "bias": 10.15666507928336,
+          "breach_rate_above": 0.06013179571663921,
+          "breach_rate_below": 0.09060955518945635,
+          "coverage": 0.8492586490939045,
+          "hour": 10,
+          "hours": 1214,
+          "mae": 1541.109751467257,
+          "mean_width": 5938.424047542331
+        },
+        {
+          "bias": 81.31725893224876,
+          "breach_rate_above": 0.06836902800658978,
+          "breach_rate_below": 0.07990115321252059,
+          "coverage": 0.8517298187808896,
+          "hour": 11,
+          "hours": 1214,
+          "mae": 1658.622860250206,
+          "mean_width": 6272.849632126659
+        },
+        {
+          "bias": 136.8335017246705,
+          "breach_rate_above": 0.09719934102141681,
+          "breach_rate_below": 0.07331136738056013,
+          "coverage": 0.8294892915980231,
+          "hour": 12,
+          "hours": 1214,
+          "mae": 1696.1835390496294,
+          "mean_width": 6060.524619802595
+        },
+        {
+          "bias": 156.03976073414333,
+          "breach_rate_above": 0.11449752883031301,
+          "breach_rate_below": 0.08649093904448106,
+          "coverage": 0.7990115321252059,
+          "hour": 13,
+          "hours": 1214,
+          "mae": 1761.0452629478996,
+          "mean_width": 5770.564123226566
+        },
+        {
+          "bias": 198.41464811573312,
+          "breach_rate_above": 0.1243822075782537,
+          "breach_rate_below": 0.10378912685337727,
+          "coverage": 0.771828665568369,
+          "hour": 14,
+          "hours": 1214,
+          "mae": 2084.1523051379736,
+          "mean_width": 6387.062910945108
+        },
+        {
+          "bias": 138.13437950473642,
+          "breach_rate_above": 0.12026359143327842,
+          "breach_rate_below": 0.12685337726523888,
+          "coverage": 0.7528830313014827,
+          "hour": 15,
+          "hours": 1214,
+          "mae": 2314.9418084586077,
+          "mean_width": 6919.401460052262
+        },
+        {
+          "bias": 92.81273167215815,
+          "breach_rate_above": 0.12520593080724876,
+          "breach_rate_below": 0.12355848434925865,
+          "coverage": 0.7512355848434926,
+          "hour": 16,
+          "hours": 1214,
+          "mae": 2506.327886892504,
+          "mean_width": 7362.176680907202
+        },
+        {
+          "bias": 116.97012394460461,
+          "breach_rate_above": 0.12108731466227347,
+          "breach_rate_below": 0.11614497528830313,
+          "coverage": 0.7627677100494233,
+          "hour": 17,
+          "hours": 1214,
+          "mae": 2608.844081419893,
+          "mean_width": 7711.777393673453
+        },
+        {
+          "bias": 106.72896288097199,
+          "breach_rate_above": 0.11037891268533773,
+          "breach_rate_below": 0.10296540362438221,
+          "coverage": 0.78665568369028,
+          "hour": 18,
+          "hours": 1214,
+          "mae": 2415.7405915362438,
+          "mean_width": 7202.160151206141
+        },
+        {
+          "bias": 49.68725223949753,
+          "breach_rate_above": 0.09884678747940692,
+          "breach_rate_below": 0.09390444810543658,
+          "coverage": 0.8072487644151565,
+          "hour": 19,
+          "hours": 1214,
+          "mae": 2032.079962288921,
+          "mean_width": 6215.723941546823
+        },
+        {
+          "bias": -31.501196972817134,
+          "breach_rate_above": 0.10461285008237232,
+          "breach_rate_below": 0.09555189456342669,
+          "coverage": 0.799835255354201,
+          "hour": 20,
+          "hours": 1214,
+          "mae": 2017.9745675453048,
+          "mean_width": 6187.963514641573
+        },
+        {
+          "bias": 30.464042550453048,
+          "breach_rate_above": 0.11696869851729819,
+          "breach_rate_below": 0.09637561779242175,
+          "coverage": 0.78665568369028,
+          "hour": 21,
+          "hours": 1214,
+          "mae": 1962.5142767967463,
+          "mean_width": 6150.713031913954
+        },
+        {
+          "bias": 228.66788187294068,
+          "breach_rate_above": 0.12191103789126853,
+          "breach_rate_below": 0.0815485996705107,
+          "coverage": 0.7965403624382208,
+          "hour": 22,
+          "hours": 1214,
+          "mae": 1898.0840873404036,
+          "mean_width": 6098.854323018055
+        },
+        {
+          "bias": 196.98848396313838,
+          "breach_rate_above": 0.11202635914332784,
+          "breach_rate_below": 0.09060955518945635,
+          "coverage": 0.7973640856672158,
+          "hour": 23,
+          "hours": 1214,
+          "mae": 1807.3585802357907,
+          "mean_width": 5822.222698305226
+        }
+      ],
+      "by_month": [
+        {
+          "bias": 450.14657494329634,
+          "breach_rate_above": 0.14818548387096775,
+          "breach_rate_below": 0.10416666666666667,
+          "coverage": 0.7476478494623656,
+          "hours": 2976,
+          "mae": 2768.28809250042,
+          "mean_width": 7701.921792642113,
+          "month": 1
+        },
+        {
+          "bias": 168.1488763718378,
+          "breach_rate_above": 0.10267857142857142,
+          "breach_rate_below": 0.09970238095238096,
+          "coverage": 0.7976190476190477,
+          "hours": 2688,
+          "mae": 2397.9259672619046,
+          "mean_width": 7717.082823918761,
+          "month": 2
+        },
+        {
+          "bias": 225.13907932368775,
+          "breach_rate_above": 0.10699865410497982,
+          "breach_rate_below": 0.08142664872139974,
+          "coverage": 0.8115746971736204,
+          "hours": 2972,
+          "mae": 1748.409533247813,
+          "mean_width": 6436.014305114793,
+          "month": 3
+        },
+        {
+          "bias": 321.8994506835937,
+          "breach_rate_above": 0.07256944444444445,
+          "breach_rate_below": 0.05243055555555556,
+          "coverage": 0.875,
+          "hours": 2880,
+          "mae": 1619.6385647243924,
+          "mean_width": 6384.868487094777,
+          "month": 4
+        },
+        {
+          "bias": -66.93596033896169,
+          "breach_rate_above": 0.08434139784946236,
+          "breach_rate_below": 0.13978494623655913,
+          "coverage": 0.7758736559139785,
+          "hours": 2976,
+          "mae": 2080.352477371052,
+          "mean_width": 6075.723454513582,
+          "month": 5
+        },
+        {
+          "bias": 38.873989529079864,
+          "breach_rate_above": 0.07777777777777778,
+          "breach_rate_below": 0.09270833333333334,
+          "coverage": 0.8295138888888889,
+          "hours": 2880,
+          "mae": 1630.5581312391494,
+          "mean_width": 5402.316355968784,
+          "month": 6
+        },
+        {
+          "bias": 4.482818275369624,
+          "breach_rate_above": 0.05880376344086022,
+          "breach_rate_below": 0.10584677419354839,
+          "coverage": 0.8353494623655914,
+          "hours": 2976,
+          "mae": 1287.7215169270833,
+          "mean_width": 4614.517867912479,
+          "month": 7
+        },
+        {
+          "bias": -140.2319383497362,
+          "breach_rate_above": 0.08116883116883117,
+          "breach_rate_below": 0.13068181818181818,
+          "coverage": 0.7881493506493507,
+          "hours": 2464,
+          "mae": 1402.6532140954748,
+          "mean_width": 4312.059683187904,
+          "month": 8
+        },
+        {
+          "bias": 323.1226006869612,
+          "breach_rate_above": 0.34698275862068967,
+          "breach_rate_below": 0.1206896551724138,
+          "coverage": 0.5323275862068966,
+          "hours": 464,
+          "mae": 1927.594381398168,
+          "mean_width": 3814.9839764402354,
+          "month": 10
+        },
+        {
+          "bias": -134.40653308122398,
+          "breach_rate_above": 0.13765603328710124,
+          "breach_rate_below": 0.12725381414701803,
+          "coverage": 0.7350901525658807,
+          "hours": 2884,
+          "mae": 1772.8673757693307,
+          "mean_width": 4964.712630781473,
+          "month": 11
+        },
+        {
+          "bias": 227.27853032594086,
+          "breach_rate_above": 0.13541666666666666,
+          "breach_rate_below": 0.07862903225806452,
+          "coverage": 0.7859543010752689,
+          "hours": 2976,
+          "mae": 1513.7039965557797,
+          "mean_width": 4635.725609574985,
+          "month": 12
+        }
+      ],
+      "episodes": {
+        "above": 104,
+        "below": 157,
+        "breached_fraction": 0.19010416666666666,
+        "breached_hours": 1387,
+        "episodes": 261,
+        "episodes_over_3h": 142,
+        "max_duration_hours": 26,
+        "max_peak_ratio": 1.4646558632043645,
+        "mean_duration_hours": 5.314176245210728,
+        "mean_peak_ratio": 0.22405066204069438
+      },
+      "hours_pooled": 29136,
+      "stagger": 4,
+      "worst_episodes": [
+        {
+          "direction": "above",
+          "duration_hours": 26,
+          "end": "2025-01-06T23:00:00.000000000",
+          "local_hour_start": 16,
+          "month": 1,
+          "peak_at": "2025-01-06T14:00:00.000000000",
+          "peak_exceedance": 12384.5,
+          "peak_exceedance_ratio": 1.4,
+          "start": "2025-01-05T22:00:00.000000000",
+          "total_exceedance": 168118.9
+        },
+        {
+          "direction": "above",
+          "duration_hours": 22,
+          "end": "2025-01-19T23:00:00.000000000",
+          "local_hour_start": 20,
+          "month": 1,
+          "peak_at": "2025-01-19T15:00:00.000000000",
+          "peak_exceedance": 11564.6,
+          "peak_exceedance_ratio": 1.202,
+          "start": "2025-01-19T02:00:00.000000000",
+          "total_exceedance": 166348.6
+        },
+        {
+          "direction": "above",
+          "duration_hours": 19,
+          "end": "2025-02-13T19:00:00.000000000",
+          "local_hour_start": 19,
+          "month": 2,
+          "peak_at": "2025-02-13T14:00:00.000000000",
+          "peak_exceedance": 8458.2,
+          "peak_exceedance_ratio": 1.174,
+          "start": "2025-02-13T01:00:00.000000000",
+          "total_exceedance": 82785.2
+        },
+        {
+          "direction": "below",
+          "duration_hours": 12,
+          "end": "2025-05-26T23:00:00.000000000",
+          "local_hour_start": 7,
+          "month": 5,
+          "peak_at": "2025-05-26T21:00:00.000000000",
+          "peak_exceedance": 10294.2,
+          "peak_exceedance_ratio": 1.124,
+          "start": "2025-05-26T12:00:00.000000000",
+          "total_exceedance": 73502.3
+        },
+        {
+          "direction": "above",
+          "duration_hours": 17,
+          "end": "2024-12-11T16:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 12,
+          "peak_at": "2024-12-11T14:00:00.000000000",
+          "peak_exceedance": 6408.0,
+          "peak_exceedance_ratio": 1.077,
+          "start": "2024-12-11T00:00:00.000000000",
+          "total_exceedance": 68681.8
+        },
+        {
+          "direction": "below",
+          "duration_hours": 17,
+          "end": "2025-01-26T17:00:00.000000000",
+          "local_hour_start": 19,
+          "month": 1,
+          "peak_at": "2025-01-26T13:00:00.000000000",
+          "peak_exceedance": 6729.6,
+          "peak_exceedance_ratio": 0.437,
+          "start": "2025-01-26T01:00:00.000000000",
+          "total_exceedance": 62716.4
+        },
+        {
+          "direction": "above",
+          "duration_hours": 23,
+          "end": "2025-01-20T23:00:00.000000000",
+          "local_hour_start": 19,
+          "month": 1,
+          "peak_at": "2025-01-20T23:00:00.000000000",
+          "peak_exceedance": 7104.7,
+          "peak_exceedance_ratio": 0.583,
+          "start": "2025-01-20T01:00:00.000000000",
+          "total_exceedance": 62683.4
+        },
+        {
+          "direction": "above",
+          "duration_hours": 24,
+          "end": "2024-12-06T23:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 12,
+          "peak_at": "2024-12-06T14:00:00.000000000",
+          "peak_exceedance": 4152.2,
+          "peak_exceedance_ratio": 0.745,
+          "start": "2024-12-06T00:00:00.000000000",
+          "total_exceedance": 48772.6
+        },
+        {
+          "direction": "above",
+          "duration_hours": 17,
+          "end": "2024-11-18T16:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 11,
+          "peak_at": "2024-11-18T04:00:00.000000000",
+          "peak_exceedance": 4799.2,
+          "peak_exceedance_ratio": 1.465,
+          "start": "2024-11-18T00:00:00.000000000",
+          "total_exceedance": 47069.6
+        },
+        {
+          "direction": "above",
+          "duration_hours": 9,
+          "end": "2025-03-29T23:00:00.000000000",
+          "local_hour_start": 10,
+          "month": 3,
+          "peak_at": "2025-03-29T23:00:00.000000000",
+          "peak_exceedance": 8197.5,
+          "peak_exceedance_ratio": 1.321,
+          "start": "2025-03-29T15:00:00.000000000",
+          "total_exceedance": 38433.1
+        }
+      ]
+    },
     "chronos_bolt_base+volatility": {
       "by_horizon_step": [
         {
@@ -5067,8 +7205,142 @@
           "month": 12
         }
       ],
+      "episodes": {
+        "above": 135,
+        "below": 167,
+        "breached_fraction": 0.21518640350877194,
+        "breached_hours": 1570,
+        "episodes": 302,
+        "episodes_over_3h": 159,
+        "max_duration_hours": 23,
+        "max_peak_ratio": 2.027446247042769,
+        "mean_duration_hours": 5.198675496688741,
+        "mean_peak_ratio": 0.2826275174495037
+      },
       "hours_pooled": 29136,
-      "stagger": 4
+      "stagger": 4,
+      "worst_episodes": [
+        {
+          "direction": "above",
+          "duration_hours": 22,
+          "end": "2025-01-19T23:00:00.000000000",
+          "local_hour_start": 20,
+          "month": 1,
+          "peak_at": "2025-01-19T15:00:00.000000000",
+          "peak_exceedance": 13453.3,
+          "peak_exceedance_ratio": 2.007,
+          "start": "2025-01-19T02:00:00.000000000",
+          "total_exceedance": 183682.2
+        },
+        {
+          "direction": "above",
+          "duration_hours": 23,
+          "end": "2025-01-06T23:00:00.000000000",
+          "local_hour_start": 19,
+          "month": 1,
+          "peak_at": "2025-01-06T14:00:00.000000000",
+          "peak_exceedance": 13481.1,
+          "peak_exceedance_ratio": 2.027,
+          "start": "2025-01-06T01:00:00.000000000",
+          "total_exceedance": 166521.8
+        },
+        {
+          "direction": "above",
+          "duration_hours": 19,
+          "end": "2025-02-19T23:00:00.000000000",
+          "local_hour_start": 23,
+          "month": 2,
+          "peak_at": "2025-02-19T20:00:00.000000000",
+          "peak_exceedance": 12847.7,
+          "peak_exceedance_ratio": 1.695,
+          "start": "2025-02-19T05:00:00.000000000",
+          "total_exceedance": 117290.0
+        },
+        {
+          "direction": "above",
+          "duration_hours": 23,
+          "end": "2025-01-20T23:00:00.000000000",
+          "local_hour_start": 19,
+          "month": 1,
+          "peak_at": "2025-01-20T23:00:00.000000000",
+          "peak_exceedance": 10021.8,
+          "peak_exceedance_ratio": 1.195,
+          "start": "2025-01-20T01:00:00.000000000",
+          "total_exceedance": 104482.1
+        },
+        {
+          "direction": "below",
+          "duration_hours": 17,
+          "end": "2025-01-26T17:00:00.000000000",
+          "local_hour_start": 19,
+          "month": 1,
+          "peak_at": "2025-01-26T13:00:00.000000000",
+          "peak_exceedance": 10308.6,
+          "peak_exceedance_ratio": 1.583,
+          "start": "2025-01-26T01:00:00.000000000",
+          "total_exceedance": 95640.3
+        },
+        {
+          "direction": "above",
+          "duration_hours": 18,
+          "end": "2025-02-13T19:00:00.000000000",
+          "local_hour_start": 20,
+          "month": 2,
+          "peak_at": "2025-02-13T14:00:00.000000000",
+          "peak_exceedance": 8376.6,
+          "peak_exceedance_ratio": 1.197,
+          "start": "2025-02-13T02:00:00.000000000",
+          "total_exceedance": 71486.9
+        },
+        {
+          "direction": "below",
+          "duration_hours": 12,
+          "end": "2025-05-26T23:00:00.000000000",
+          "local_hour_start": 7,
+          "month": 5,
+          "peak_at": "2025-05-26T21:00:00.000000000",
+          "peak_exceedance": 10886.6,
+          "peak_exceedance_ratio": 1.437,
+          "start": "2025-05-26T12:00:00.000000000",
+          "total_exceedance": 69605.1
+        },
+        {
+          "direction": "above",
+          "duration_hours": 16,
+          "end": "2024-12-11T16:00:00.000000000",
+          "local_hour_start": 19,
+          "month": 12,
+          "peak_at": "2024-12-11T14:00:00.000000000",
+          "peak_exceedance": 6006.4,
+          "peak_exceedance_ratio": 0.992,
+          "start": "2024-12-11T01:00:00.000000000",
+          "total_exceedance": 52430.2
+        },
+        {
+          "direction": "below",
+          "duration_hours": 17,
+          "end": "2025-02-18T16:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 2,
+          "peak_at": "2025-02-18T12:00:00.000000000",
+          "peak_exceedance": 5320.4,
+          "peak_exceedance_ratio": 0.78,
+          "start": "2025-02-18T00:00:00.000000000",
+          "total_exceedance": 50858.8
+        },
+        {
+          "direction": "below",
+          "duration_hours": 19,
+          "end": "2025-01-15T18:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 1,
+          "peak_at": "2025-01-15T14:00:00.000000000",
+          "peak_exceedance": 4239.0,
+          "peak_exceedance_ratio": 0.644,
+          "start": "2025-01-15T00:00:00.000000000",
+          "total_exceedance": 48080.2
+        }
+      ]
     },
     "chronos_bolt_base+weather": {
       "by_horizon_step": [
@@ -5667,8 +7939,142 @@
           "month": 12
         }
       ],
+      "episodes": {
+        "above": 162,
+        "below": 211,
+        "breached_fraction": 0.22574013157894737,
+        "breached_hours": 1647,
+        "episodes": 373,
+        "episodes_over_3h": 166,
+        "max_duration_hours": 20,
+        "max_peak_ratio": 4.89129609698697,
+        "mean_duration_hours": 4.415549597855228,
+        "mean_peak_ratio": 0.2777215390891088
+      },
       "hours_pooled": 29136,
-      "stagger": 4
+      "stagger": 4,
+      "worst_episodes": [
+        {
+          "direction": "below",
+          "duration_hours": 17,
+          "end": "2025-01-27T16:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 1,
+          "peak_at": "2025-01-27T09:00:00.000000000",
+          "peak_exceedance": 6395.0,
+          "peak_exceedance_ratio": 1.105,
+          "start": "2025-01-27T00:00:00.000000000",
+          "total_exceedance": 57053.9
+        },
+        {
+          "direction": "below",
+          "duration_hours": 16,
+          "end": "2025-01-26T18:00:00.000000000",
+          "local_hour_start": 21,
+          "month": 1,
+          "peak_at": "2025-01-26T14:00:00.000000000",
+          "peak_exceedance": 6436.5,
+          "peak_exceedance_ratio": 0.765,
+          "start": "2025-01-26T03:00:00.000000000",
+          "total_exceedance": 52215.5
+        },
+        {
+          "direction": "above",
+          "duration_hours": 14,
+          "end": "2025-01-06T19:00:00.000000000",
+          "local_hour_start": 0,
+          "month": 1,
+          "peak_at": "2025-01-06T15:00:00.000000000",
+          "peak_exceedance": 6143.2,
+          "peak_exceedance_ratio": 0.563,
+          "start": "2025-01-06T06:00:00.000000000",
+          "total_exceedance": 47933.5
+        },
+        {
+          "direction": "above",
+          "duration_hours": 14,
+          "end": "2025-01-19T20:00:00.000000000",
+          "local_hour_start": 1,
+          "month": 1,
+          "peak_at": "2025-01-19T15:00:00.000000000",
+          "peak_exceedance": 5407.5,
+          "peak_exceedance_ratio": 0.493,
+          "start": "2025-01-19T07:00:00.000000000",
+          "total_exceedance": 46005.8
+        },
+        {
+          "direction": "below",
+          "duration_hours": 20,
+          "end": "2025-01-15T19:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 1,
+          "peak_at": "2025-01-15T14:00:00.000000000",
+          "peak_exceedance": 3686.0,
+          "peak_exceedance_ratio": 0.529,
+          "start": "2025-01-15T00:00:00.000000000",
+          "total_exceedance": 41486.4
+        },
+        {
+          "direction": "above",
+          "duration_hours": 10,
+          "end": "2025-01-20T23:00:00.000000000",
+          "local_hour_start": 8,
+          "month": 1,
+          "peak_at": "2025-01-20T23:00:00.000000000",
+          "peak_exceedance": 7141.9,
+          "peak_exceedance_ratio": 0.814,
+          "start": "2025-01-20T14:00:00.000000000",
+          "total_exceedance": 36171.1
+        },
+        {
+          "direction": "below",
+          "duration_hours": 11,
+          "end": "2025-05-26T23:00:00.000000000",
+          "local_hour_start": 8,
+          "month": 5,
+          "peak_at": "2025-05-26T22:00:00.000000000",
+          "peak_exceedance": 6960.8,
+          "peak_exceedance_ratio": 0.713,
+          "start": "2025-05-26T13:00:00.000000000",
+          "total_exceedance": 35240.3
+        },
+        {
+          "direction": "below",
+          "duration_hours": 11,
+          "end": "2024-12-16T17:00:00.000000000",
+          "local_hour_start": 1,
+          "month": 12,
+          "peak_at": "2024-12-16T13:00:00.000000000",
+          "peak_exceedance": 6380.1,
+          "peak_exceedance_ratio": 1.721,
+          "start": "2024-12-16T07:00:00.000000000",
+          "total_exceedance": 33896.6
+        },
+        {
+          "direction": "below",
+          "duration_hours": 17,
+          "end": "2025-01-09T16:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 1,
+          "peak_at": "2025-01-09T13:00:00.000000000",
+          "peak_exceedance": 3143.0,
+          "peak_exceedance_ratio": 0.623,
+          "start": "2025-01-09T00:00:00.000000000",
+          "total_exceedance": 33676.4
+        },
+        {
+          "direction": "below",
+          "duration_hours": 17,
+          "end": "2024-12-07T16:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 12,
+          "peak_at": "2024-12-07T13:00:00.000000000",
+          "peak_exceedance": 3877.0,
+          "peak_exceedance_ratio": 1.292,
+          "start": "2024-12-07T00:00:00.000000000",
+          "total_exceedance": 33278.4
+        }
+      ]
     },
     "chronos_bolt_base+weather+volatility": {
       "by_horizon_step": [
@@ -6267,8 +8673,142 @@
           "month": 12
         }
       ],
+      "episodes": {
+        "above": 165,
+        "below": 221,
+        "breached_fraction": 0.22574013157894737,
+        "breached_hours": 1647,
+        "episodes": 386,
+        "episodes_over_3h": 176,
+        "max_duration_hours": 21,
+        "max_peak_ratio": 1.9593488870108389,
+        "mean_duration_hours": 4.266839378238342,
+        "mean_peak_ratio": 0.26679028558588685
+      },
       "hours_pooled": 29136,
-      "stagger": 4
+      "stagger": 4,
+      "worst_episodes": [
+        {
+          "direction": "above",
+          "duration_hours": 17,
+          "end": "2025-01-19T23:00:00.000000000",
+          "local_hour_start": 1,
+          "month": 1,
+          "peak_at": "2025-01-19T15:00:00.000000000",
+          "peak_exceedance": 5687.5,
+          "peak_exceedance_ratio": 0.503,
+          "start": "2025-01-19T07:00:00.000000000",
+          "total_exceedance": 49645.8
+        },
+        {
+          "direction": "below",
+          "duration_hours": 18,
+          "end": "2024-12-16T17:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 12,
+          "peak_at": "2024-12-16T13:00:00.000000000",
+          "peak_exceedance": 7046.7,
+          "peak_exceedance_ratio": 1.715,
+          "start": "2024-12-16T00:00:00.000000000",
+          "total_exceedance": 45911.2
+        },
+        {
+          "direction": "below",
+          "duration_hours": 12,
+          "end": "2025-01-27T14:00:00.000000000",
+          "local_hour_start": 21,
+          "month": 1,
+          "peak_at": "2025-01-27T09:00:00.000000000",
+          "peak_exceedance": 5637.8,
+          "peak_exceedance_ratio": 0.724,
+          "start": "2025-01-27T03:00:00.000000000",
+          "total_exceedance": 45116.8
+        },
+        {
+          "direction": "below",
+          "duration_hours": 15,
+          "end": "2025-01-26T17:00:00.000000000",
+          "local_hour_start": 21,
+          "month": 1,
+          "peak_at": "2025-01-26T14:00:00.000000000",
+          "peak_exceedance": 5935.9,
+          "peak_exceedance_ratio": 0.736,
+          "start": "2025-01-26T03:00:00.000000000",
+          "total_exceedance": 44231.9
+        },
+        {
+          "direction": "below",
+          "duration_hours": 17,
+          "end": "2025-02-04T16:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 2,
+          "peak_at": "2025-02-04T15:00:00.000000000",
+          "peak_exceedance": 3857.0,
+          "peak_exceedance_ratio": 0.898,
+          "start": "2025-02-04T00:00:00.000000000",
+          "total_exceedance": 42957.2
+        },
+        {
+          "direction": "above",
+          "duration_hours": 14,
+          "end": "2025-01-06T19:00:00.000000000",
+          "local_hour_start": 0,
+          "month": 1,
+          "peak_at": "2025-01-06T15:00:00.000000000",
+          "peak_exceedance": 5944.9,
+          "peak_exceedance_ratio": 0.521,
+          "start": "2025-01-06T06:00:00.000000000",
+          "total_exceedance": 42099.9
+        },
+        {
+          "direction": "above",
+          "duration_hours": 10,
+          "end": "2025-01-20T23:00:00.000000000",
+          "local_hour_start": 8,
+          "month": 1,
+          "peak_at": "2025-01-20T23:00:00.000000000",
+          "peak_exceedance": 7575.6,
+          "peak_exceedance_ratio": 0.828,
+          "start": "2025-01-20T14:00:00.000000000",
+          "total_exceedance": 39365.0
+        },
+        {
+          "direction": "below",
+          "duration_hours": 20,
+          "end": "2025-01-15T19:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 1,
+          "peak_at": "2025-01-15T14:00:00.000000000",
+          "peak_exceedance": 3544.6,
+          "peak_exceedance_ratio": 0.564,
+          "start": "2025-01-15T00:00:00.000000000",
+          "total_exceedance": 38251.5
+        },
+        {
+          "direction": "above",
+          "duration_hours": 21,
+          "end": "2024-12-12T22:00:00.000000000",
+          "local_hour_start": 20,
+          "month": 12,
+          "peak_at": "2024-12-12T14:00:00.000000000",
+          "peak_exceedance": 3588.1,
+          "peak_exceedance_ratio": 0.936,
+          "start": "2024-12-12T02:00:00.000000000",
+          "total_exceedance": 33859.9
+        },
+        {
+          "direction": "below",
+          "duration_hours": 17,
+          "end": "2025-01-09T16:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 1,
+          "peak_at": "2025-01-09T13:00:00.000000000",
+          "peak_exceedance": 3026.4,
+          "peak_exceedance_ratio": 0.67,
+          "start": "2025-01-09T00:00:00.000000000",
+          "total_exceedance": 32011.8
+        }
+      ]
     }
   },
   "PACE:D": {
@@ -6869,8 +9409,142 @@
           "month": 12
         }
       ],
+      "episodes": {
+        "above": 220,
+        "below": 200,
+        "breached_fraction": 0.22382127192982457,
+        "breached_hours": 1633,
+        "episodes": 420,
+        "episodes_over_3h": 154,
+        "max_duration_hours": 23,
+        "max_peak_ratio": 1.2996377002510047,
+        "mean_duration_hours": 3.888095238095238,
+        "mean_peak_ratio": 0.23233890030936116
+      },
       "hours_pooled": 29136,
-      "stagger": 4
+      "stagger": 4,
+      "worst_episodes": [
+        {
+          "direction": "below",
+          "duration_hours": 19,
+          "end": "2025-06-22T00:00:00.000000000",
+          "local_hour_start": 0,
+          "month": 6,
+          "peak_at": "2025-06-21T22:00:00.000000000",
+          "peak_exceedance": 1288.6,
+          "peak_exceedance_ratio": 1.3,
+          "start": "2025-06-21T06:00:00.000000000",
+          "total_exceedance": 9796.5
+        },
+        {
+          "direction": "below",
+          "duration_hours": 22,
+          "end": "2025-08-10T00:00:00.000000000",
+          "local_hour_start": 21,
+          "month": 8,
+          "peak_at": "2025-08-10T00:00:00.000000000",
+          "peak_exceedance": 740.0,
+          "peak_exceedance_ratio": 0.682,
+          "start": "2025-08-09T03:00:00.000000000",
+          "total_exceedance": 6736.8
+        },
+        {
+          "direction": "above",
+          "duration_hours": 23,
+          "end": "2025-02-14T00:00:00.000000000",
+          "local_hour_start": 19,
+          "month": 2,
+          "peak_at": "2025-02-13T19:00:00.000000000",
+          "peak_exceedance": 489.0,
+          "peak_exceedance_ratio": 0.844,
+          "start": "2025-02-13T02:00:00.000000000",
+          "total_exceedance": 6547.2
+        },
+        {
+          "direction": "below",
+          "duration_hours": 23,
+          "end": "2025-08-09T00:00:00.000000000",
+          "local_hour_start": 20,
+          "month": 8,
+          "peak_at": "2025-08-08T19:00:00.000000000",
+          "peak_exceedance": 498.4,
+          "peak_exceedance_ratio": 0.681,
+          "start": "2025-08-08T02:00:00.000000000",
+          "total_exceedance": 5120.7
+        },
+        {
+          "direction": "above",
+          "duration_hours": 13,
+          "end": "2025-03-19T00:00:00.000000000",
+          "local_hour_start": 6,
+          "month": 3,
+          "peak_at": "2025-03-18T21:00:00.000000000",
+          "peak_exceedance": 575.5,
+          "peak_exceedance_ratio": 1.014,
+          "start": "2025-03-18T12:00:00.000000000",
+          "total_exceedance": 4163.3
+        },
+        {
+          "direction": "above",
+          "duration_hours": 20,
+          "end": "2024-10-29T22:00:00.000000000",
+          "local_hour_start": 21,
+          "month": 10,
+          "peak_at": "2024-10-29T17:00:00.000000000",
+          "peak_exceedance": 517.2,
+          "peak_exceedance_ratio": 1.136,
+          "start": "2024-10-29T03:00:00.000000000",
+          "total_exceedance": 3751.2
+        },
+        {
+          "direction": "above",
+          "duration_hours": 15,
+          "end": "2025-02-22T16:00:00.000000000",
+          "local_hour_start": 19,
+          "month": 2,
+          "peak_at": "2025-02-22T04:00:00.000000000",
+          "peak_exceedance": 324.1,
+          "peak_exceedance_ratio": 0.941,
+          "start": "2025-02-22T02:00:00.000000000",
+          "total_exceedance": 3683.1
+        },
+        {
+          "direction": "above",
+          "duration_hours": 9,
+          "end": "2025-05-13T00:00:00.000000000",
+          "local_hour_start": 10,
+          "month": 5,
+          "peak_at": "2025-05-12T23:00:00.000000000",
+          "peak_exceedance": 478.1,
+          "peak_exceedance_ratio": 0.465,
+          "start": "2025-05-12T16:00:00.000000000",
+          "total_exceedance": 3574.5
+        },
+        {
+          "direction": "below",
+          "duration_hours": 23,
+          "end": "2025-02-15T01:00:00.000000000",
+          "local_hour_start": 20,
+          "month": 2,
+          "peak_at": "2025-02-14T13:00:00.000000000",
+          "peak_exceedance": 238.1,
+          "peak_exceedance_ratio": 0.379,
+          "start": "2025-02-14T03:00:00.000000000",
+          "total_exceedance": 3162.2
+        },
+        {
+          "direction": "below",
+          "duration_hours": 11,
+          "end": "2024-11-22T00:00:00.000000000",
+          "local_hour_start": 7,
+          "month": 11,
+          "peak_at": "2024-11-21T20:00:00.000000000",
+          "peak_exceedance": 456.2,
+          "peak_exceedance_ratio": 0.88,
+          "start": "2024-11-21T14:00:00.000000000",
+          "total_exceedance": 3141.8
+        }
+      ]
     },
     "chronos_bolt_base+calendar": {
       "by_horizon_step": [
@@ -7606,6 +10280,740 @@
         }
       ]
     },
+    "chronos_bolt_base+scale": {
+      "by_horizon_step": [
+        {
+          "bias": -3.7849792782125204,
+          "breach_rate_above": 0.05848434925864909,
+          "breach_rate_below": 0.07166392092257001,
+          "coverage": 0.8698517298187809,
+          "hours": 1214,
+          "mae": 65.45386667267299,
+          "mean_width": 249.10323679836418,
+          "step": 1
+        },
+        {
+          "bias": -9.159885563606878,
+          "breach_rate_above": 0.07248764415156507,
+          "breach_rate_below": 0.10955518945634267,
+          "coverage": 0.8179571663920923,
+          "hours": 1214,
+          "mae": 93.954722170382,
+          "mean_width": 323.5107613174567,
+          "step": 2
+        },
+        {
+          "bias": -9.212857643894152,
+          "breach_rate_above": 0.0815485996705107,
+          "breach_rate_below": 0.11532125205930807,
+          "coverage": 0.8031301482701813,
+          "hours": 1214,
+          "mae": 114.9503224104201,
+          "mean_width": 382.77458743384835,
+          "step": 3
+        },
+        {
+          "bias": -4.01685535613159,
+          "breach_rate_above": 0.0914332784184514,
+          "breach_rate_below": 0.11614497528830313,
+          "coverage": 0.7924217462932455,
+          "hours": 1214,
+          "mae": 130.6638087063684,
+          "mean_width": 424.4180003409009,
+          "step": 4
+        },
+        {
+          "bias": -3.679133658746911,
+          "breach_rate_above": 0.0914332784184514,
+          "breach_rate_below": 0.10626029654036244,
+          "coverage": 0.8023064250411862,
+          "hours": 1214,
+          "mae": 141.41754039783257,
+          "mean_width": 458.6007234947213,
+          "step": 5
+        },
+        {
+          "bias": -3.571800269640651,
+          "breach_rate_above": 0.10296540362438221,
+          "breach_rate_below": 0.13179571663920922,
+          "coverage": 0.7652388797364086,
+          "hours": 1214,
+          "mae": 156.33496214412583,
+          "mean_width": 483.22229421697403,
+          "step": 6
+        },
+        {
+          "bias": -4.577388556038921,
+          "breach_rate_above": 0.10626029654036244,
+          "breach_rate_below": 0.12767710049423395,
+          "coverage": 0.7660626029654036,
+          "hours": 1214,
+          "mae": 168.11368144756486,
+          "mean_width": 509.41201830198577,
+          "step": 7
+        },
+        {
+          "bias": -9.473566850288304,
+          "breach_rate_above": 0.11120263591433278,
+          "breach_rate_below": 0.12767710049423395,
+          "coverage": 0.7611202635914333,
+          "hours": 1214,
+          "mae": 175.7889611434308,
+          "mean_width": 536.7423296405312,
+          "step": 8
+        },
+        {
+          "bias": -7.713624253500824,
+          "breach_rate_above": 0.10873146622734761,
+          "breach_rate_below": 0.12602965403624383,
+          "coverage": 0.7652388797364086,
+          "hours": 1214,
+          "mae": 176.30882059565485,
+          "mean_width": 550.4895454725672,
+          "step": 9
+        },
+        {
+          "bias": 2.566707102038715,
+          "breach_rate_above": 0.11696869851729819,
+          "breach_rate_below": 0.11120263591433278,
+          "coverage": 0.771828665568369,
+          "hours": 1214,
+          "mae": 178.91613467874794,
+          "mean_width": 559.8523303954531,
+          "step": 10
+        },
+        {
+          "bias": 2.6506806174063016,
+          "breach_rate_above": 0.11696869851729819,
+          "breach_rate_below": 0.11449752883031301,
+          "coverage": 0.7685337726523888,
+          "hours": 1214,
+          "mae": 181.59533188645491,
+          "mean_width": 569.3310332118349,
+          "step": 11
+        },
+        {
+          "bias": 5.263269666392092,
+          "breach_rate_above": 0.1128500823723229,
+          "breach_rate_below": 0.1186161449752883,
+          "coverage": 0.7685337726523888,
+          "hours": 1214,
+          "mae": 187.41962504504735,
+          "mean_width": 575.5371689534927,
+          "step": 12
+        },
+        {
+          "bias": -1.7609911546282948,
+          "breach_rate_above": 0.10296540362438221,
+          "breach_rate_below": 0.12273476112026359,
+          "coverage": 0.7742998352553542,
+          "hours": 1214,
+          "mae": 190.12024066554264,
+          "mean_width": 588.2377433038567,
+          "step": 13
+        },
+        {
+          "bias": -2.995387471684514,
+          "breach_rate_above": 0.11696869851729819,
+          "breach_rate_below": 0.1243822075782537,
+          "coverage": 0.7586490939044481,
+          "hours": 1214,
+          "mae": 193.1542365437088,
+          "mean_width": 601.2074113122128,
+          "step": 14
+        },
+        {
+          "bias": -1.5432852881744235,
+          "breach_rate_above": 0.10790774299835255,
+          "breach_rate_below": 0.10790774299835255,
+          "coverage": 0.7841845140032949,
+          "hours": 1214,
+          "mae": 191.98153420060234,
+          "mean_width": 610.4311156747639,
+          "step": 15
+        },
+        {
+          "bias": 2.367326664178336,
+          "breach_rate_above": 0.10790774299835255,
+          "breach_rate_below": 0.10873146622734761,
+          "coverage": 0.7833607907742999,
+          "hours": 1214,
+          "mae": 192.8841808136841,
+          "mean_width": 613.4076163165165,
+          "step": 16
+        },
+        {
+          "bias": 0.30284739561882207,
+          "breach_rate_above": 0.09637561779242175,
+          "breach_rate_below": 0.11202635914332784,
+          "coverage": 0.7915980230642504,
+          "hours": 1214,
+          "mae": 193.12577666482187,
+          "mean_width": 613.5770662345851,
+          "step": 17
+        },
+        {
+          "bias": 0.2466544287994234,
+          "breach_rate_above": 0.09472817133443164,
+          "breach_rate_below": 0.1128500823723229,
+          "coverage": 0.7924217462932455,
+          "hours": 1214,
+          "mae": 196.35186013436984,
+          "mean_width": 612.9578997663936,
+          "step": 18
+        },
+        {
+          "bias": -2.9231801669326605,
+          "breach_rate_above": 0.09472817133443164,
+          "breach_rate_below": 0.11120263591433278,
+          "coverage": 0.7940691927512356,
+          "hours": 1214,
+          "mae": 199.8406775284442,
+          "mean_width": 615.7284874288115,
+          "step": 19
+        },
+        {
+          "bias": -5.010539072153007,
+          "breach_rate_above": 0.09884678747940692,
+          "breach_rate_below": 0.11943986820428336,
+          "coverage": 0.7817133443163097,
+          "hours": 1214,
+          "mae": 200.7853344284133,
+          "mean_width": 625.1756599468616,
+          "step": 20
+        },
+        {
+          "bias": -5.44994916083196,
+          "breach_rate_above": 0.09802306425041186,
+          "breach_rate_below": 0.11696869851729819,
+          "coverage": 0.78500823723229,
+          "hours": 1214,
+          "mae": 197.6278283309308,
+          "mean_width": 629.9201959524855,
+          "step": 21
+        },
+        {
+          "bias": 2.7140135914332784,
+          "breach_rate_above": 0.11449752883031301,
+          "breach_rate_below": 0.10626029654036244,
+          "coverage": 0.7792421746293245,
+          "hours": 1214,
+          "mae": 199.05350339785832,
+          "mean_width": 632.1187567090462,
+          "step": 22
+        },
+        {
+          "bias": 9.873657829875413,
+          "breach_rate_above": 0.11943986820428336,
+          "breach_rate_below": 0.10461285008237232,
+          "coverage": 0.7759472817133443,
+          "hours": 1214,
+          "mae": 200.22713484284904,
+          "mean_width": 627.477048399916,
+          "step": 23
+        },
+        {
+          "bias": 7.396828665568369,
+          "breach_rate_above": 0.11120263591433278,
+          "breach_rate_below": 0.10461285008237232,
+          "coverage": 0.7841845140032949,
+          "hours": 1214,
+          "mae": 204.82197844805395,
+          "mean_width": 634.0254575948584,
+          "step": 24
+        }
+      ],
+      "by_local_hour": [
+        {
+          "bias": -0.9615922956136738,
+          "breach_rate_above": 0.11037891268533773,
+          "breach_rate_below": 0.1186161449752883,
+          "coverage": 0.771004942339374,
+          "hour": 0,
+          "hours": 1214,
+          "mae": 151.2028909145902,
+          "mean_width": 465.5102107584718
+        },
+        {
+          "bias": 3.24475999653633,
+          "breach_rate_above": 0.11330049261083744,
+          "breach_rate_below": 0.11576354679802955,
+          "coverage": 0.770935960591133,
+          "hour": 1,
+          "hours": 1218,
+          "mae": 134.5933022084103,
+          "mean_width": 406.28118077239077
+        },
+        {
+          "bias": -1.2637546003357438,
+          "breach_rate_above": 0.11652892561983472,
+          "breach_rate_below": 0.13305785123966943,
+          "coverage": 0.7504132231404959,
+          "hour": 2,
+          "hours": 1210,
+          "mae": 137.56476748127582,
+          "mean_width": 404.443378565673
+        },
+        {
+          "bias": 2.4448145657434104,
+          "breach_rate_above": 0.12355848434925865,
+          "breach_rate_below": 0.1400329489291598,
+          "coverage": 0.7364085667215815,
+          "hour": 3,
+          "hours": 1214,
+          "mae": 139.2492317815589,
+          "mean_width": 406.0306819066128
+        },
+        {
+          "bias": 4.091319051173806,
+          "breach_rate_above": 0.11367380560131796,
+          "breach_rate_below": 0.13591433278418452,
+          "coverage": 0.7504118616144976,
+          "hour": 4,
+          "hours": 1214,
+          "mae": 139.0783132336285,
+          "mean_width": 411.5896543747698
+        },
+        {
+          "bias": 0.07977968621293245,
+          "breach_rate_above": 0.09802306425041186,
+          "breach_rate_below": 0.1400329489291598,
+          "coverage": 0.7619439868204283,
+          "hour": 5,
+          "hours": 1214,
+          "mae": 142.23189900380973,
+          "mean_width": 427.73638199757954
+        },
+        {
+          "bias": -0.04789097894357496,
+          "breach_rate_above": 0.06919275123558484,
+          "breach_rate_below": 0.11367380560131796,
+          "coverage": 0.8171334431630972,
+          "hour": 6,
+          "hours": 1214,
+          "mae": 127.24229207423805,
+          "mean_width": 428.9026921752905
+        },
+        {
+          "bias": -4.752875791546541,
+          "breach_rate_above": 0.06342668863261944,
+          "breach_rate_below": 0.10955518945634267,
+          "coverage": 0.8270181219110379,
+          "hour": 7,
+          "hours": 1214,
+          "mae": 125.53054935260502,
+          "mean_width": 441.83810072135054
+        },
+        {
+          "bias": -14.66975093634164,
+          "breach_rate_above": 0.04942339373970346,
+          "breach_rate_below": 0.11449752883031301,
+          "coverage": 0.8360790774299836,
+          "hour": 8,
+          "hours": 1214,
+          "mae": 136.3655959605385,
+          "mean_width": 501.0972619748174
+        },
+        {
+          "bias": -14.096662794738467,
+          "breach_rate_above": 0.05683690280065898,
+          "breach_rate_below": 0.09390444810543658,
+          "coverage": 0.8492586490939045,
+          "hour": 9,
+          "hours": 1214,
+          "mae": 140.59022504376028,
+          "mean_width": 539.152428935585
+        },
+        {
+          "bias": -1.6827660046849258,
+          "breach_rate_above": 0.07990115321252059,
+          "breach_rate_below": 0.085667215815486,
+          "coverage": 0.8344316309719935,
+          "hour": 10,
+          "hours": 1214,
+          "mae": 160.16297895001028,
+          "mean_width": 572.5044566901394
+        },
+        {
+          "bias": -0.8003730082629736,
+          "breach_rate_above": 0.08978583196046129,
+          "breach_rate_below": 0.1013179571663921,
+          "coverage": 0.8088962108731467,
+          "hour": 11,
+          "hours": 1214,
+          "mae": 185.51331752921644,
+          "mean_width": 605.8068682392756
+        },
+        {
+          "bias": -3.6803986048187807,
+          "breach_rate_above": 0.09637561779242175,
+          "breach_rate_below": 0.11367380560131796,
+          "coverage": 0.7899505766062603,
+          "hour": 12,
+          "hours": 1214,
+          "mae": 200.129618159236,
+          "mean_width": 594.9583373514295
+        },
+        {
+          "bias": -2.1630545652285833,
+          "breach_rate_above": 0.11120263591433278,
+          "breach_rate_below": 0.128500823723229,
+          "coverage": 0.7602965403624382,
+          "hour": 13,
+          "hours": 1214,
+          "mae": 192.17588582423807,
+          "mean_width": 563.4731166122648
+        },
+        {
+          "bias": 4.207170816386944,
+          "breach_rate_above": 0.1186161449752883,
+          "breach_rate_below": 0.12355848434925865,
+          "coverage": 0.7578253706754531,
+          "hour": 14,
+          "hours": 1214,
+          "mae": 209.03438441168143,
+          "mean_width": 607.7789655740446
+        },
+        {
+          "bias": 6.337596610507619,
+          "breach_rate_above": 0.12602965403624383,
+          "breach_rate_below": 0.11779242174629324,
+          "coverage": 0.7561779242174629,
+          "hour": 15,
+          "hours": 1214,
+          "mae": 220.80746153276874,
+          "mean_width": 645.1712738461581
+        },
+        {
+          "bias": 5.960265007207578,
+          "breach_rate_above": 0.13344316309719934,
+          "breach_rate_below": 0.11037891268533773,
+          "coverage": 0.7561779242174629,
+          "hour": 16,
+          "hours": 1214,
+          "mae": 224.5517328755663,
+          "mean_width": 674.2769945706275
+        },
+        {
+          "bias": -0.50807393559514,
+          "breach_rate_above": 0.11696869851729819,
+          "breach_rate_below": 0.1070840197693575,
+          "coverage": 0.7759472817133443,
+          "hour": 17,
+          "hours": 1214,
+          "mae": 225.66674201374587,
+          "mean_width": 703.3948699587196
+        },
+        {
+          "bias": 9.39936981955313,
+          "breach_rate_above": 0.11779242174629324,
+          "breach_rate_below": 0.09472817133443164,
+          "coverage": 0.7874794069192751,
+          "hour": 18,
+          "hours": 1214,
+          "mae": 217.89265052254942,
+          "mean_width": 688.2408294620034
+        },
+        {
+          "bias": -8.101942587134474,
+          "breach_rate_above": 0.10049423393739704,
+          "breach_rate_below": 0.09967051070840198,
+          "coverage": 0.799835255354201,
+          "hour": 19,
+          "hours": 1214,
+          "mae": 189.3085273855797,
+          "mean_width": 608.3419772792461
+        },
+        {
+          "bias": -15.635777581857496,
+          "breach_rate_above": 0.1070840197693575,
+          "breach_rate_below": 0.11779242174629324,
+          "coverage": 0.7751235584843492,
+          "hour": 20,
+          "hours": 1214,
+          "mae": 194.45238091407538,
+          "mean_width": 607.4004076868446
+        },
+        {
+          "bias": -15.33156991672673,
+          "breach_rate_above": 0.10214168039538715,
+          "breach_rate_below": 0.10873146622734761,
+          "coverage": 0.7891268533772653,
+          "hour": 21,
+          "hours": 1214,
+          "mae": 186.38416754080004,
+          "mean_width": 596.2437208928026
+        },
+        {
+          "bias": 3.987806643842669,
+          "breach_rate_above": 0.11614497528830313,
+          "breach_rate_below": 0.09884678747940692,
+          "coverage": 0.78500823723229,
+          "hour": 22,
+          "hours": 1214,
+          "mae": 180.0747834508855,
+          "mean_width": 581.2253426882914
+        },
+        {
+          "bias": 2.437308548702636,
+          "breach_rate_above": 0.10461285008237232,
+          "breach_rate_below": 0.10543657331136738,
+          "coverage": 0.7899505766062603,
+          "hour": 23,
+          "hours": 1214,
+          "mae": 171.09815579309102,
+          "mean_width": 545.853299822578
+        }
+      ],
+      "by_month": [
+        {
+          "bias": 0.3557442285681284,
+          "breach_rate_above": 0.07022849462365591,
+          "breach_rate_below": 0.10551075268817205,
+          "coverage": 0.824260752688172,
+          "hours": 2976,
+          "mae": 129.0608161187941,
+          "mean_width": 463.0394176647816,
+          "month": 1
+        },
+        {
+          "bias": -31.402355375744047,
+          "breach_rate_above": 0.10193452380952381,
+          "breach_rate_below": 0.12946428571428573,
+          "coverage": 0.7686011904761905,
+          "hours": 2688,
+          "mae": 164.51473672049386,
+          "mean_width": 512.1652556551159,
+          "month": 2
+        },
+        {
+          "bias": -15.5479384739338,
+          "breach_rate_above": 0.08378196500672948,
+          "breach_rate_below": 0.11440107671601615,
+          "coverage": 0.8018169582772544,
+          "hours": 2972,
+          "mae": 164.8781118893527,
+          "mean_width": 541.4582438680777,
+          "month": 3
+        },
+        {
+          "bias": 6.491595289442274,
+          "breach_rate_above": 0.06076388888888889,
+          "breach_rate_below": 0.06527777777777778,
+          "coverage": 0.8739583333333333,
+          "hours": 2880,
+          "mae": 114.59015892876519,
+          "mean_width": 462.1344565843168,
+          "month": 4
+        },
+        {
+          "bias": 56.59642422583796,
+          "breach_rate_above": 0.1461693548387097,
+          "breach_rate_below": 0.07190860215053764,
+          "coverage": 0.7819220430107527,
+          "hours": 2976,
+          "mae": 173.77062578098747,
+          "mean_width": 526.9697944304467,
+          "month": 5
+        },
+        {
+          "bias": 27.50032772488064,
+          "breach_rate_above": 0.1423611111111111,
+          "breach_rate_below": 0.10347222222222222,
+          "coverage": 0.7541666666666667,
+          "hours": 2880,
+          "mae": 219.9966812133789,
+          "mean_width": 637.9846261187004,
+          "month": 6
+        },
+        {
+          "bias": -40.49860669207829,
+          "breach_rate_above": 0.062163978494623656,
+          "breach_rate_below": 0.13911290322580644,
+          "coverage": 0.7987231182795699,
+          "hours": 2976,
+          "mae": 207.46268717447916,
+          "mean_width": 659.1362427696757,
+          "month": 7
+        },
+        {
+          "bias": -69.90578411151836,
+          "breach_rate_above": 0.06168831168831169,
+          "breach_rate_below": 0.1737012987012987,
+          "coverage": 0.7646103896103896,
+          "hours": 2464,
+          "mae": 213.6224153196657,
+          "mean_width": 661.1000540194584,
+          "month": 8
+        },
+        {
+          "bias": 140.5529511550377,
+          "breach_rate_above": 0.4051724137931034,
+          "breach_rate_below": 0.021551724137931036,
+          "coverage": 0.5732758620689655,
+          "hours": 464,
+          "mae": 193.98793187634698,
+          "mean_width": 408.1730892241048,
+          "month": 10
+        },
+        {
+          "bias": 20.117731991158113,
+          "breach_rate_above": 0.13973647711511789,
+          "breach_rate_below": 0.11511789181692095,
+          "coverage": 0.7451456310679612,
+          "hours": 2884,
+          "mae": 167.76797565772364,
+          "mean_width": 479.12537774055744,
+          "month": 11
+        },
+        {
+          "bias": -5.915119458270329,
+          "breach_rate_above": 0.09274193548387097,
+          "breach_rate_below": 0.1431451612903226,
+          "coverage": 0.7641129032258065,
+          "hours": 2976,
+          "mae": 168.0797388220346,
+          "mean_width": 521.7867704804986,
+          "month": 12
+        }
+      ],
+      "episodes": {
+        "above": 187,
+        "below": 225,
+        "breached_fraction": 0.22080592105263158,
+        "breached_hours": 1611,
+        "episodes": 412,
+        "episodes_over_3h": 155,
+        "max_duration_hours": 23,
+        "max_peak_ratio": 1.3163582980565147,
+        "mean_duration_hours": 3.9101941747572817,
+        "mean_peak_ratio": 0.23420190970247745
+      },
+      "hours_pooled": 29136,
+      "stagger": 4,
+      "worst_episodes": [
+        {
+          "direction": "below",
+          "duration_hours": 19,
+          "end": "2025-06-22T00:00:00.000000000",
+          "local_hour_start": 0,
+          "month": 6,
+          "peak_at": "2025-06-21T22:00:00.000000000",
+          "peak_exceedance": 1315.9,
+          "peak_exceedance_ratio": 1.316,
+          "start": "2025-06-21T06:00:00.000000000",
+          "total_exceedance": 10117.8
+        },
+        {
+          "direction": "below",
+          "duration_hours": 22,
+          "end": "2025-08-10T00:00:00.000000000",
+          "local_hour_start": 21,
+          "month": 8,
+          "peak_at": "2025-08-10T00:00:00.000000000",
+          "peak_exceedance": 737.9,
+          "peak_exceedance_ratio": 0.664,
+          "start": "2025-08-09T03:00:00.000000000",
+          "total_exceedance": 6714.3
+        },
+        {
+          "direction": "above",
+          "duration_hours": 21,
+          "end": "2025-02-14T00:00:00.000000000",
+          "local_hour_start": 21,
+          "month": 2,
+          "peak_at": "2025-02-13T19:00:00.000000000",
+          "peak_exceedance": 460.2,
+          "peak_exceedance_ratio": 0.782,
+          "start": "2025-02-13T04:00:00.000000000",
+          "total_exceedance": 5919.6
+        },
+        {
+          "direction": "below",
+          "duration_hours": 23,
+          "end": "2025-08-09T00:00:00.000000000",
+          "local_hour_start": 20,
+          "month": 8,
+          "peak_at": "2025-08-08T19:00:00.000000000",
+          "peak_exceedance": 503.2,
+          "peak_exceedance_ratio": 0.677,
+          "start": "2025-08-08T02:00:00.000000000",
+          "total_exceedance": 5202.1
+        },
+        {
+          "direction": "above",
+          "duration_hours": 23,
+          "end": "2024-10-29T23:00:00.000000000",
+          "local_hour_start": 19,
+          "month": 10,
+          "peak_at": "2024-10-29T17:00:00.000000000",
+          "peak_exceedance": 535.0,
+          "peak_exceedance_ratio": 1.306,
+          "start": "2024-10-29T01:00:00.000000000",
+          "total_exceedance": 4088.2
+        },
+        {
+          "direction": "above",
+          "duration_hours": 12,
+          "end": "2025-03-19T00:00:00.000000000",
+          "local_hour_start": 7,
+          "month": 3,
+          "peak_at": "2025-03-18T21:00:00.000000000",
+          "peak_exceedance": 543.7,
+          "peak_exceedance_ratio": 0.92,
+          "start": "2025-03-18T13:00:00.000000000",
+          "total_exceedance": 3762.3
+        },
+        {
+          "direction": "below",
+          "duration_hours": 11,
+          "end": "2024-11-22T00:00:00.000000000",
+          "local_hour_start": 7,
+          "month": 11,
+          "peak_at": "2024-11-21T20:00:00.000000000",
+          "peak_exceedance": 510.0,
+          "peak_exceedance_ratio": 1.034,
+          "start": "2024-11-21T14:00:00.000000000",
+          "total_exceedance": 3726.2
+        },
+        {
+          "direction": "below",
+          "duration_hours": 23,
+          "end": "2025-02-15T01:00:00.000000000",
+          "local_hour_start": 20,
+          "month": 2,
+          "peak_at": "2025-02-14T13:00:00.000000000",
+          "peak_exceedance": 260.9,
+          "peak_exceedance_ratio": 0.406,
+          "start": "2025-02-14T03:00:00.000000000",
+          "total_exceedance": 3657.1
+        },
+        {
+          "direction": "above",
+          "duration_hours": 15,
+          "end": "2025-02-22T16:00:00.000000000",
+          "local_hour_start": 19,
+          "month": 2,
+          "peak_at": "2025-02-22T04:00:00.000000000",
+          "peak_exceedance": 306.0,
+          "peak_exceedance_ratio": 0.857,
+          "start": "2025-02-22T02:00:00.000000000",
+          "total_exceedance": 3382.7
+        },
+        {
+          "direction": "above",
+          "duration_hours": 9,
+          "end": "2025-05-13T00:00:00.000000000",
+          "local_hour_start": 10,
+          "month": 5,
+          "peak_at": "2025-05-12T23:00:00.000000000",
+          "peak_exceedance": 444.8,
+          "peak_exceedance_ratio": 0.426,
+          "start": "2025-05-12T16:00:00.000000000",
+          "total_exceedance": 3310.6
+        }
+      ]
+    },
     "chronos_bolt_base+volatility": {
       "by_horizon_step": [
         {
@@ -8203,8 +11611,142 @@
           "month": 12
         }
       ],
+      "episodes": {
+        "above": 196,
+        "below": 222,
+        "breached_fraction": 0.22861842105263158,
+        "breached_hours": 1668,
+        "episodes": 418,
+        "episodes_over_3h": 164,
+        "max_duration_hours": 24,
+        "max_peak_ratio": 1.7145882631633105,
+        "mean_duration_hours": 3.9904306220095696,
+        "mean_peak_ratio": 0.2570257295468194
+      },
       "hours_pooled": 29136,
-      "stagger": 4
+      "stagger": 4,
+      "worst_episodes": [
+        {
+          "direction": "below",
+          "duration_hours": 19,
+          "end": "2025-06-22T00:00:00.000000000",
+          "local_hour_start": 0,
+          "month": 6,
+          "peak_at": "2025-06-21T22:00:00.000000000",
+          "peak_exceedance": 1457.8,
+          "peak_exceedance_ratio": 1.715,
+          "start": "2025-06-21T06:00:00.000000000",
+          "total_exceedance": 11352.7
+        },
+        {
+          "direction": "below",
+          "duration_hours": 22,
+          "end": "2025-08-10T00:00:00.000000000",
+          "local_hour_start": 21,
+          "month": 8,
+          "peak_at": "2025-08-10T00:00:00.000000000",
+          "peak_exceedance": 857.9,
+          "peak_exceedance_ratio": 0.925,
+          "start": "2025-08-09T03:00:00.000000000",
+          "total_exceedance": 6125.3
+        },
+        {
+          "direction": "above",
+          "duration_hours": 20,
+          "end": "2025-02-13T23:00:00.000000000",
+          "local_hour_start": 21,
+          "month": 2,
+          "peak_at": "2025-02-13T18:00:00.000000000",
+          "peak_exceedance": 474.2,
+          "peak_exceedance_ratio": 0.83,
+          "start": "2025-02-13T04:00:00.000000000",
+          "total_exceedance": 6018.1
+        },
+        {
+          "direction": "below",
+          "duration_hours": 22,
+          "end": "2025-02-15T00:00:00.000000000",
+          "local_hour_start": 20,
+          "month": 2,
+          "peak_at": "2025-02-14T13:00:00.000000000",
+          "peak_exceedance": 372.1,
+          "peak_exceedance_ratio": 0.793,
+          "start": "2025-02-14T03:00:00.000000000",
+          "total_exceedance": 4786.9
+        },
+        {
+          "direction": "above",
+          "duration_hours": 19,
+          "end": "2025-05-12T00:00:00.000000000",
+          "local_hour_start": 0,
+          "month": 5,
+          "peak_at": "2025-05-11T20:00:00.000000000",
+          "peak_exceedance": 564.1,
+          "peak_exceedance_ratio": 0.915,
+          "start": "2025-05-11T06:00:00.000000000",
+          "total_exceedance": 4760.9
+        },
+        {
+          "direction": "above",
+          "duration_hours": 11,
+          "end": "2025-05-13T00:00:00.000000000",
+          "local_hour_start": 8,
+          "month": 5,
+          "peak_at": "2025-05-12T23:00:00.000000000",
+          "peak_exceedance": 587.8,
+          "peak_exceedance_ratio": 0.751,
+          "start": "2025-05-12T14:00:00.000000000",
+          "total_exceedance": 4553.4
+        },
+        {
+          "direction": "below",
+          "duration_hours": 24,
+          "end": "2024-11-22T00:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 11,
+          "peak_at": "2024-11-21T20:00:00.000000000",
+          "peak_exceedance": 401.4,
+          "peak_exceedance_ratio": 0.622,
+          "start": "2024-11-21T01:00:00.000000000",
+          "total_exceedance": 4013.3
+        },
+        {
+          "direction": "above",
+          "duration_hours": 13,
+          "end": "2025-03-19T00:00:00.000000000",
+          "local_hour_start": 6,
+          "month": 3,
+          "peak_at": "2025-03-18T21:00:00.000000000",
+          "peak_exceedance": 537.1,
+          "peak_exceedance_ratio": 0.727,
+          "start": "2025-03-18T12:00:00.000000000",
+          "total_exceedance": 3892.0
+        },
+        {
+          "direction": "below",
+          "duration_hours": 19,
+          "end": "2024-12-04T19:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 12,
+          "peak_at": "2024-12-04T11:00:00.000000000",
+          "peak_exceedance": 390.1,
+          "peak_exceedance_ratio": 0.985,
+          "start": "2024-12-04T01:00:00.000000000",
+          "total_exceedance": 3711.7
+        },
+        {
+          "direction": "below",
+          "duration_hours": 10,
+          "end": "2025-08-09T00:00:00.000000000",
+          "local_hour_start": 9,
+          "month": 8,
+          "peak_at": "2025-08-08T22:00:00.000000000",
+          "peak_exceedance": 568.4,
+          "peak_exceedance_ratio": 0.63,
+          "start": "2025-08-08T15:00:00.000000000",
+          "total_exceedance": 3690.9
+        }
+      ]
     },
     "chronos_bolt_base+weather": {
       "by_horizon_step": [
@@ -8803,8 +12345,142 @@
           "month": 12
         }
       ],
+      "episodes": {
+        "above": 186,
+        "below": 267,
+        "breached_fraction": 0.22491776315789475,
+        "breached_hours": 1641,
+        "episodes": 453,
+        "episodes_over_3h": 161,
+        "max_duration_hours": 20,
+        "max_peak_ratio": 1.2543266639914634,
+        "mean_duration_hours": 3.622516556291391,
+        "mean_peak_ratio": 0.23777560453167726
+      },
       "hours_pooled": 29136,
-      "stagger": 4
+      "stagger": 4,
+      "worst_episodes": [
+        {
+          "direction": "below",
+          "duration_hours": 11,
+          "end": "2025-06-22T00:00:00.000000000",
+          "local_hour_start": 8,
+          "month": 6,
+          "peak_at": "2025-06-21T22:00:00.000000000",
+          "peak_exceedance": 1068.6,
+          "peak_exceedance_ratio": 1.254,
+          "start": "2025-06-21T14:00:00.000000000",
+          "total_exceedance": 6307.2
+        },
+        {
+          "direction": "below",
+          "duration_hours": 17,
+          "end": "2025-08-10T00:00:00.000000000",
+          "local_hour_start": 2,
+          "month": 8,
+          "peak_at": "2025-08-10T00:00:00.000000000",
+          "peak_exceedance": 894.2,
+          "peak_exceedance_ratio": 1.093,
+          "start": "2025-08-09T08:00:00.000000000",
+          "total_exceedance": 5408.7
+        },
+        {
+          "direction": "above",
+          "duration_hours": 17,
+          "end": "2025-05-13T00:00:00.000000000",
+          "local_hour_start": 2,
+          "month": 5,
+          "peak_at": "2025-05-12T23:00:00.000000000",
+          "peak_exceedance": 572.2,
+          "peak_exceedance_ratio": 0.715,
+          "start": "2025-05-12T08:00:00.000000000",
+          "total_exceedance": 5063.5
+        },
+        {
+          "direction": "above",
+          "duration_hours": 19,
+          "end": "2025-02-14T00:00:00.000000000",
+          "local_hour_start": 23,
+          "month": 2,
+          "peak_at": "2025-02-13T18:00:00.000000000",
+          "peak_exceedance": 551.6,
+          "peak_exceedance_ratio": 0.923,
+          "start": "2025-02-13T06:00:00.000000000",
+          "total_exceedance": 5056.3
+        },
+        {
+          "direction": "above",
+          "duration_hours": 19,
+          "end": "2025-05-12T00:00:00.000000000",
+          "local_hour_start": 0,
+          "month": 5,
+          "peak_at": "2025-05-11T20:00:00.000000000",
+          "peak_exceedance": 610.9,
+          "peak_exceedance_ratio": 0.931,
+          "start": "2025-05-11T06:00:00.000000000",
+          "total_exceedance": 4880.9
+        },
+        {
+          "direction": "below",
+          "duration_hours": 20,
+          "end": "2024-12-04T20:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 12,
+          "peak_at": "2024-12-04T11:00:00.000000000",
+          "peak_exceedance": 437.1,
+          "peak_exceedance_ratio": 1.148,
+          "start": "2024-12-04T01:00:00.000000000",
+          "total_exceedance": 4769.2
+        },
+        {
+          "direction": "below",
+          "duration_hours": 19,
+          "end": "2025-08-11T21:00:00.000000000",
+          "local_hour_start": 21,
+          "month": 8,
+          "peak_at": "2025-08-11T05:00:00.000000000",
+          "peak_exceedance": 333.2,
+          "peak_exceedance_ratio": 1.187,
+          "start": "2025-08-11T03:00:00.000000000",
+          "total_exceedance": 3391.3
+        },
+        {
+          "direction": "below",
+          "duration_hours": 17,
+          "end": "2025-03-25T20:00:00.000000000",
+          "local_hour_start": 22,
+          "month": 3,
+          "peak_at": "2025-03-25T16:00:00.000000000",
+          "peak_exceedance": 284.7,
+          "peak_exceedance_ratio": 0.609,
+          "start": "2025-03-25T04:00:00.000000000",
+          "total_exceedance": 2967.5
+        },
+        {
+          "direction": "below",
+          "duration_hours": 6,
+          "end": "2025-08-27T00:00:00.000000000",
+          "local_hour_start": 13,
+          "month": 8,
+          "peak_at": "2025-08-26T23:00:00.000000000",
+          "peak_exceedance": 826.4,
+          "peak_exceedance_ratio": 1.038,
+          "start": "2025-08-26T19:00:00.000000000",
+          "total_exceedance": 2800.6
+        },
+        {
+          "direction": "below",
+          "duration_hours": 11,
+          "end": "2024-11-22T00:00:00.000000000",
+          "local_hour_start": 7,
+          "month": 11,
+          "peak_at": "2024-11-21T20:00:00.000000000",
+          "peak_exceedance": 409.0,
+          "peak_exceedance_ratio": 0.686,
+          "start": "2024-11-21T14:00:00.000000000",
+          "total_exceedance": 2603.3
+        }
+      ]
     },
     "chronos_bolt_base+weather+volatility": {
       "by_horizon_step": [
@@ -9403,8 +13079,142 @@
           "month": 12
         }
       ],
+      "episodes": {
+        "above": 199,
+        "below": 249,
+        "breached_fraction": 0.22025767543859648,
+        "breached_hours": 1607,
+        "episodes": 448,
+        "episodes_over_3h": 158,
+        "max_duration_hours": 20,
+        "max_peak_ratio": 1.1771879122745108,
+        "mean_duration_hours": 3.5870535714285716,
+        "mean_peak_ratio": 0.2367409403933655
+      },
       "hours_pooled": 29136,
-      "stagger": 4
+      "stagger": 4,
+      "worst_episodes": [
+        {
+          "direction": "below",
+          "duration_hours": 11,
+          "end": "2025-06-22T00:00:00.000000000",
+          "local_hour_start": 8,
+          "month": 6,
+          "peak_at": "2025-06-21T22:00:00.000000000",
+          "peak_exceedance": 1076.4,
+          "peak_exceedance_ratio": 1.167,
+          "start": "2025-06-21T14:00:00.000000000",
+          "total_exceedance": 6375.4
+        },
+        {
+          "direction": "above",
+          "duration_hours": 19,
+          "end": "2025-02-14T00:00:00.000000000",
+          "local_hour_start": 23,
+          "month": 2,
+          "peak_at": "2025-02-13T18:00:00.000000000",
+          "peak_exceedance": 560.6,
+          "peak_exceedance_ratio": 0.951,
+          "start": "2025-02-13T06:00:00.000000000",
+          "total_exceedance": 5211.8
+        },
+        {
+          "direction": "above",
+          "duration_hours": 17,
+          "end": "2025-05-13T00:00:00.000000000",
+          "local_hour_start": 2,
+          "month": 5,
+          "peak_at": "2025-05-12T23:00:00.000000000",
+          "peak_exceedance": 580.0,
+          "peak_exceedance_ratio": 0.744,
+          "start": "2025-05-12T08:00:00.000000000",
+          "total_exceedance": 5144.9
+        },
+        {
+          "direction": "above",
+          "duration_hours": 19,
+          "end": "2025-05-12T00:00:00.000000000",
+          "local_hour_start": 0,
+          "month": 5,
+          "peak_at": "2025-05-11T20:00:00.000000000",
+          "peak_exceedance": 621.8,
+          "peak_exceedance_ratio": 0.946,
+          "start": "2025-05-11T06:00:00.000000000",
+          "total_exceedance": 4980.1
+        },
+        {
+          "direction": "below",
+          "duration_hours": 16,
+          "end": "2025-08-10T00:00:00.000000000",
+          "local_hour_start": 3,
+          "month": 8,
+          "peak_at": "2025-08-10T00:00:00.000000000",
+          "peak_exceedance": 879.4,
+          "peak_exceedance_ratio": 1.072,
+          "start": "2025-08-09T09:00:00.000000000",
+          "total_exceedance": 4881.0
+        },
+        {
+          "direction": "below",
+          "duration_hours": 20,
+          "end": "2024-12-04T20:00:00.000000000",
+          "local_hour_start": 18,
+          "month": 12,
+          "peak_at": "2024-12-04T11:00:00.000000000",
+          "peak_exceedance": 407.4,
+          "peak_exceedance_ratio": 1.025,
+          "start": "2024-12-04T01:00:00.000000000",
+          "total_exceedance": 3963.0
+        },
+        {
+          "direction": "below",
+          "duration_hours": 17,
+          "end": "2025-03-25T20:00:00.000000000",
+          "local_hour_start": 22,
+          "month": 3,
+          "peak_at": "2025-03-25T16:00:00.000000000",
+          "peak_exceedance": 301.7,
+          "peak_exceedance_ratio": 0.675,
+          "start": "2025-03-25T04:00:00.000000000",
+          "total_exceedance": 3233.2
+        },
+        {
+          "direction": "below",
+          "duration_hours": 19,
+          "end": "2025-08-11T21:00:00.000000000",
+          "local_hour_start": 21,
+          "month": 8,
+          "peak_at": "2025-08-11T05:00:00.000000000",
+          "peak_exceedance": 284.5,
+          "peak_exceedance_ratio": 1.041,
+          "start": "2025-08-11T03:00:00.000000000",
+          "total_exceedance": 2872.1
+        },
+        {
+          "direction": "above",
+          "duration_hours": 11,
+          "end": "2024-10-30T00:00:00.000000000",
+          "local_hour_start": 8,
+          "month": 10,
+          "peak_at": "2024-10-29T17:00:00.000000000",
+          "peak_exceedance": 484.7,
+          "peak_exceedance_ratio": 0.923,
+          "start": "2024-10-29T14:00:00.000000000",
+          "total_exceedance": 2751.7
+        },
+        {
+          "direction": "below",
+          "duration_hours": 6,
+          "end": "2025-08-27T00:00:00.000000000",
+          "local_hour_start": 13,
+          "month": 8,
+          "peak_at": "2025-08-26T23:00:00.000000000",
+          "peak_exceedance": 792.9,
+          "peak_exceedance_ratio": 0.994,
+          "start": "2025-08-26T19:00:00.000000000",
+          "total_exceedance": 2590.3
+        }
+      ]
     }
   }
 }
