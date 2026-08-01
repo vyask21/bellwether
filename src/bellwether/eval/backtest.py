@@ -16,6 +16,7 @@ import numpy as np
 from bellwether.eval.metrics import (
     DEFAULT_QUANTILES,
     interval_coverage,
+    interval_width,
     mae,
     mase,
     rmse,
@@ -38,6 +39,7 @@ class WindowResult:
     mase: float
     wql: float
     coverage_80: float
+    width_80: float
 
 
 @dataclass(slots=True)
@@ -63,6 +65,9 @@ class BacktestResult:
             "coverage_80": float(np.mean([w.coverage_80 for w in self.windows])),
             # Signed gap from nominal 80%: negative means overconfident intervals.
             "coverage_80_error": float(np.mean([w.coverage_80 for w in self.windows]) - 0.80),
+            # Reported beside coverage because neither number means much alone: a model can
+            # buy coverage by widening, and sharpen its way out of it.
+            "width_80": float(np.mean([w.width_80 for w in self.windows])),
         }
 
 
@@ -140,6 +145,7 @@ def rolling_origin_backtest(
                 mase=mase(actual, median, history, season_length),
                 wql=weighted_quantile_loss(actual, forecasts, quantile_levels),
                 coverage_80=interval_coverage(actual, forecasts, quantile_levels, 0.1, 0.9),
+                width_80=interval_width(forecasts, quantile_levels, 0.1, 0.9),
             )
         )
         result.n_windows += 1

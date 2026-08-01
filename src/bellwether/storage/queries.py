@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC
 
 import duckdb
 import numpy as np
+
+from bellwether.ingest.noaa import SUSPECT_QUALITY_CODES, stations_for
+
+log = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -138,6 +143,141 @@ def load_aligned_series(
         values[series_type] = column
 
     return timestamps, values
+
+
+# Half an hour: the widest a reading can sit from an hour mark once each reading is
+# assigned to its nearest hour. Routine METARs land near :53, so most readings are within
+# seven minutes of the hour they are credited to.
+_NEAREST_HOUR_SQL = "date_trunc('hour', (observed_at AT TIME ZONE 'UTC') + INTERVAL 30 MINUTE)"
+
+
+def load_station_temperatures(
+    conn: duckdb.DuckDBPyConnection,
+    station_ids: Sequence[str],
+) -> dict[str, dict[np.datetime64, float]]:
+    """Collapse raw readings to one temperature per station per hour.
+
+    Stations report a routine observation near :53 plus irregular extras: three-hourly
+    synoptic reports on the hour and unscheduled special reports whenever conditions
+    change fast. So an hour can hold zero, one, or several readings.
+
+    Each reading is credited to the hour it is nearest in time, and where several land in
+    the same hour the closest to the hour mark wins. Rounding rather than truncating
+    matters: a reading taken at 00:53 describes 01:00 far better than it describes 00:00,
+    and truncating would shift the whole temperature series an hour late against demand.
+
+    Readings NOAA flagged suspect or erroneous are dropped here rather than at ingest, so
+    the stored table stays a faithful copy of the archive.
+    """
+    if not station_ids:
+        raise ValueError("Need at least one station")
+
+    placeholders = ", ".join("?" for _ in station_ids)
+    rows = conn.execute(
+        f"""
+        WITH usable AS (
+            SELECT
+                station_id,
+                temperature_c,
+                {_NEAREST_HOUR_SQL} AS hour,
+                abs(epoch((observed_at AT TIME ZONE 'UTC') - {_NEAREST_HOUR_SQL}))
+                    AS distance_seconds
+            FROM weather_observations
+            WHERE station_id IN ({placeholders})
+              AND temperature_c IS NOT NULL
+              AND quality_code NOT IN ({", ".join("?" for _ in SUSPECT_QUALITY_CODES)})
+        ),
+        ranked AS (
+            SELECT
+                station_id,
+                hour,
+                temperature_c,
+                row_number() OVER (
+                    PARTITION BY station_id, hour ORDER BY distance_seconds
+                ) AS rank
+            FROM usable
+        )
+        SELECT station_id, hour, temperature_c
+        FROM ranked
+        WHERE rank = 1
+        ORDER BY station_id, hour
+        """,
+        [*station_ids, *sorted(SUSPECT_QUALITY_CODES)],
+    ).fetchall()
+
+    by_station: dict[str, dict[np.datetime64, float]] = {sid: {} for sid in station_ids}
+    for station_id, hour, temperature in rows:
+        by_station[station_id][np.datetime64(hour, "ns")] = float(temperature)
+    return by_station
+
+
+def load_market_temperature(
+    conn: duckdb.DuckDBPyConnection,
+    respondent: str,
+    timestamps: np.ndarray,
+) -> np.ndarray:
+    """Population-weighted temperature for one market, on a caller-supplied hourly grid.
+
+    Taking the grid as an argument rather than deriving one is deliberate. The alignment
+    bug this project already hit came from two series each building their own grid from
+    their own bounds; weather and demand have different bounds by construction, since the
+    NCEI archive ends well before EIA's data does. Handing in the demand grid makes the
+    weather series align with it by construction rather than by coincidence.
+
+    Weights are renormalised over whichever stations reported in each hour, so a single
+    station outage shifts the average toward the remaining cities rather than dragging it
+    toward zero. Hours where no station reported come back as NaN.
+    """
+    stations = stations_for(respondent)
+    by_station = load_station_temperatures(conn, [s.station_id for s in stations])
+
+    weighted_sum = np.zeros(timestamps.size, dtype=float)
+    weight_total = np.zeros(timestamps.size, dtype=float)
+
+    for station in stations:
+        readings = by_station[station.station_id]
+        if not readings:
+            log.warning("No usable readings stored for %s (%s)", station.call_sign, station.place)
+            continue
+        present = np.array([hour in readings for hour in timestamps], dtype=bool)
+        values = np.array([readings.get(hour, 0.0) for hour in timestamps], dtype=float)
+        weighted_sum += np.where(present, values * station.population, 0.0)
+        weight_total += np.where(present, float(station.population), 0.0)
+
+    with np.errstate(invalid="ignore", divide="ignore"):
+        return np.where(weight_total > 0, weighted_sum / weight_total, np.nan)
+
+
+def weather_coverage_report(conn: duckdb.DuckDBPyConnection) -> list[dict]:
+    """Per-station hourly coverage: the weather counterpart to `coverage_report`."""
+    rows = conn.execute(
+        f"""
+        SELECT
+            station_id,
+            count(DISTINCT {_NEAREST_HOUR_SQL})                          AS hours,
+            min(observed_at)                                             AS first_observed,
+            max(observed_at)                                             AS last_observed,
+            sum(CASE WHEN temperature_c IS NULL THEN 1 ELSE 0 END)       AS missing_values,
+            sum(CASE WHEN quality_code IN ({", ".join("?" for _ in SUSPECT_QUALITY_CODES)})
+                     THEN 1 ELSE 0 END)                                  AS suspect_values
+        FROM weather_observations
+        GROUP BY station_id
+        ORDER BY station_id
+        """,
+        sorted(SUSPECT_QUALITY_CODES),
+    ).fetchall()
+
+    return [
+        {
+            "station_id": r[0],
+            "hours": r[1],
+            "first_observed": r[2],
+            "last_observed": r[3],
+            "missing_values": r[4],
+            "suspect_values": r[5],
+        }
+        for r in rows
+    ]
 
 
 def coverage_report(conn: duckdb.DuckDBPyConnection) -> list[dict]:

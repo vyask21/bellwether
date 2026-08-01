@@ -22,7 +22,8 @@ value.
 | Chronos-Bolt vs baselines | done, [wins on all metrics](docs/RESULTS.md) |
 | TimesFM comparison | todo |
 | Operator baseline (EIA `DF` series) | done, [splits by market](docs/RESULTS.md) |
-| Weather features (NOAA/NWS) | todo |
+| NOAA weather ingestion | done, 14 stations, hourly temperature |
+| Weather ablation vs a calendar control | done, [prediction half failed](docs/RESULTS.md) |
 | Nuclear outage and energy disruption ingestion | todo |
 | Anomaly detection and brief generation | todo |
 | Scheduled refresh and dashboard | todo |
@@ -42,8 +43,10 @@ Every model emits quantiles and is scored on three axes:
   the naive baseline.
 * **WQL**: weighted quantile loss, a discrete CRPS approximation. Scores the whole
   predictive distribution.
-* **80% interval coverage**: what fraction of actuals landed inside the claimed 80% band.
-  Under-coverage means overconfidence.
+* **80% interval coverage and width**: what fraction of actuals landed inside the claimed
+  80% band, and how wide that band was. Reported as a pair, because neither means much
+  alone: a model can buy coverage by widening and sharpen its way back out of it, and both
+  look the same in a coverage column.
 
 EIA also publishes each balancing authority's own day-ahead forecast (`DF`), which serves
 as an operator baseline alongside the statistical ones.
@@ -65,11 +68,13 @@ Free EIA key: https://www.eia.gov/opendata/register.php
 
 ```bash
 bellwether ingest --respondent CISO --days 730
+bellwether ingest-weather --respondent CISO --days 730
 bellwether status
 bellwether backtest --respondent CISO --horizon 24
 ```
 
-`ingest` is idempotent. EIA restates recent values, so re-running an overlapping window
+Both ingest commands are idempotent. EIA restates recent values and NCEI revises its
+archive as late reports and quality control land, so re-running an overlapping window
 converges on the latest published number instead of duplicating rows.
 
 ## Data sources
@@ -77,8 +82,17 @@ converges on the latest published number instead of duplicating rows.
 | Source | Used for |
 |---|---|
 | [EIA v2 API](https://www.eia.gov/opendata/) | Hourly demand, day-ahead forecast, net generation, interchange |
+| [NOAA NCEI Integrated Surface Database](https://www.ncei.noaa.gov/products/land-based-station/integrated-surface-database) | Hourly observed temperature, 14 stations |
 | [NOAA/NWS API](https://www.weather.gov/documentation/services-web-api) | Temperature forecasts, weather alerts (planned) |
 | EIA nuclear outages, energy disruptions | Evidence for briefs (planned) |
+
+Weather comes from two NOAA surfaces because they answer different questions. NCEI
+archives observations permanently after quality control, which is what a backtest needs
+and what is ingested today. NWS carries the live forecast, which is what a running
+day-ahead forecast will need, and retains about a week of observations, so it cannot
+substitute. NCEI's quality-control pass is also why it lags: its archive currently ends in
+August 2025 while EIA demand runs to the present, so weather experiments are scoped to the
+overlap.
 
 Scoped to three balancing authorities out of the 83 the API lists: CISO (California ISO),
 ERCO (ERCOT), and PACE (PacifiCorp East). No state is a unit in this data. Also scoped to
@@ -123,6 +137,23 @@ large historical pulls rather than sequential API calls.
 The API key goes in an `X-Api-Key` header rather than an `api_key=` query parameter. Both
 work; the header keeps the key out of request URLs, which are what tends to reach logs.
 
+Source: NOAA National Centers for Environmental Information, Integrated Surface Database
+(ISD). NOAA data is a US Government work and so public domain, which makes the obligation
+citation rather than permission. NCEI is named alongside its dataset because NOAA runs many
+archives and "NOAA" alone does not identify which one a number came from. Acknowledgments
+carry a retrieval date, which matters more here than for EIA: NCEI revises the archive as
+late reports arrive and quality control runs, so two retrievals of the same hour can
+differ.
+
+This project is not affiliated with or endorsed by NOAA.
+
+NCEI's Access Data Service needs no key and publishes no rate limit, so the 1.0s pacing is
+a courtesy rather than a ceiling being avoided. Retries cover 429 and 5xx; a 400 fails
+immediately, since a malformed request never becomes valid. Readings NOAA flagged suspect
+or erroneous are stored with their quality code and screened when read, so the stored table
+stays a faithful copy of the archive and the screening policy stays visible where it is
+applied.
+
 ## Storage
 
 DuckDB, in-process. At this volume (about 10^5 rows) no database is a bottleneck, so the
@@ -146,12 +177,15 @@ ruff format .
 src/bellwether/
   config.py             Settings from .env
   ingest/eia.py         Paginating EIA v2 client
+  ingest/noaa.py        NCEI hourly weather client, station registry and weights
   storage/db.py         Schema, idempotent upsert, Parquet snapshots
-  storage/queries.py    Gap-aware series loading
+  storage/queries.py    Gap-aware series loading, weather gridding and weighting
   forecast/base.py      Forecaster protocol
   forecast/baseline.py  Seasonal-naive with empirical residual quantiles
-  eval/metrics.py       MASE, WQL, pinball loss, coverage
+  forecast/residual.py  Weather-conditioned residual quantile correction
+  eval/metrics.py       MASE, WQL, pinball loss, coverage, sharpness
   eval/backtest.py      Rolling-origin evaluation
+  eval/ablation.py      Weather ablation against a calendar-only control
 ```
 
 Baselines and foundation models share one `Forecaster` protocol, so the backtest harness

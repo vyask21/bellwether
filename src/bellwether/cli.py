@@ -10,13 +10,24 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from bellwether.attribution import DERIVED_DISCLAIMER, NOT_AFFILIATED, eia_acknowledgment
+from bellwether.attribution import (
+    DERIVED_DISCLAIMER,
+    NOT_AFFILIATED,
+    eia_acknowledgment,
+    noaa_acknowledgment,
+)
 from bellwether.config import settings
 from bellwether.eval.backtest import rolling_origin_backtest
 from bellwether.forecast.baseline import DailySeasonalNaive, WeeklySeasonalNaive
 from bellwether.ingest.eia import BALANCING_AUTHORITIES, EIAClient
-from bellwether.storage.db import connect, export_snapshot, upsert_observations
-from bellwether.storage.queries import coverage_report, load_series
+from bellwether.ingest.noaa import MARKET_STATIONS, NCEIClient, stations_for
+from bellwether.storage.db import (
+    connect,
+    export_snapshot,
+    upsert_observations,
+    upsert_weather_observations,
+)
+from bellwether.storage.queries import coverage_report, load_series, weather_coverage_report
 
 app = typer.Typer(help="Bellwether: probabilistic grid load forecasting.", no_args_is_help=True)
 console = Console()
@@ -47,6 +58,36 @@ def ingest(
 
 
 @app.command()
+def ingest_weather(
+    respondent: str = typer.Option("CISO", help=f"Balancing authority: {list(MARKET_STATIONS)}"),
+    days: int = typer.Option(730, help="How far back to backfill from now."),
+) -> None:
+    """Pull hourly temperatures for a market's weighted stations from NOAA NCEI.
+
+    NCEI archives lag live weather by months, so a request reaching to the present is
+    normal and simply returns nothing past the archive's end.
+    """
+    end = datetime.now(UTC).replace(minute=0, second=0, microsecond=0)
+    start = end - timedelta(days=days)
+    stations = stations_for(respondent)
+
+    total = 0
+    with NCEIClient() as client, connect() as conn:
+        for station in stations:
+            rows = client.fetch_temperatures(station.station_id, start, end)
+            written = upsert_weather_observations(conn, rows)
+            total += written
+            console.print(
+                f"  {station.call_sign} ({station.place}): [green]{written:,}[/green] readings"
+            )
+        snapshot = export_snapshot(conn, table="weather_observations")
+
+    console.print(f"[green]Wrote {total:,} readings[/green] across {len(stations)} stations")
+    console.print(f"Snapshot: {snapshot}")
+    console.print(f"[dim]{noaa_acknowledgment()}[/dim]")
+
+
+@app.command()
 def status() -> None:
     """Show what is stored, and how complete it is."""
     if not settings.duckdb_path.exists():
@@ -55,6 +96,7 @@ def status() -> None:
 
     with connect(read_only=True) as conn:
         report = coverage_report(conn)
+        weather = weather_coverage_report(conn)
 
     table = Table(title="Stored observations")
     for column in ("Respondent", "Type", "Rows", "First", "Last", "Nulls"):
@@ -70,6 +112,33 @@ def status() -> None:
         )
     console.print(table)
     console.print(f"[dim]{eia_acknowledgment()}[/dim]")
+
+    if not weather:
+        return
+
+    # Reverse the registry so the display can name a station rather than show its ISD id.
+    stations = {
+        station.station_id: (market, station)
+        for market, group in MARKET_STATIONS.items()
+        for station in group
+    }
+
+    weather_table = Table(title="Stored weather")
+    for column in ("Market", "Station", "Place", "Hours", "First", "Last", "Suspect"):
+        weather_table.add_column(column)
+    for row in weather:
+        market, station = stations.get(row["station_id"], ("?", None))
+        weather_table.add_row(
+            market,
+            station.call_sign if station else row["station_id"],
+            station.place if station else "unknown station",
+            f"{row['hours']:,}",
+            str(row["first_observed"]),
+            str(row["last_observed"]),
+            f"{row['suspect_values']:,}",
+        )
+    console.print(weather_table)
+    console.print(f"[dim]{noaa_acknowledgment()}[/dim]")
 
 
 @app.command()

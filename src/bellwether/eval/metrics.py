@@ -119,6 +119,24 @@ def interval_coverage(
     return float(np.mean(inside))
 
 
+def interval_width(
+    quantile_forecasts: np.ndarray,
+    quantile_levels: tuple[float, ...],
+    lower: float,
+    upper: float,
+) -> float:
+    """Mean width of the [lower, upper] band, in the units of the series.
+
+    Sharpness. Coverage alone cannot tell a well-calibrated forecast from a hedging one:
+    an interval spanning zero to infinity covers 100% of observations and says nothing.
+    The pair is what carries information, so a coverage number reported without a width
+    beside it is an incomplete claim.
+    """
+    lo_idx = _quantile_index(quantile_levels, lower)
+    hi_idx = _quantile_index(quantile_levels, upper)
+    return float(np.mean(quantile_forecasts[:, hi_idx] - quantile_forecasts[:, lo_idx]))
+
+
 def _quantile_index(quantile_levels: tuple[float, ...], level: float) -> int:
     matches = [i for i, q in enumerate(quantile_levels) if np.isclose(q, level)]
     if not matches:

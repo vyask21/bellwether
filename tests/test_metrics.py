@@ -7,6 +7,7 @@ import pytest
 
 from bellwether.eval.metrics import (
     interval_coverage,
+    interval_width,
     mae,
     mase,
     quantile_loss,
@@ -105,3 +106,29 @@ def test_smape_ignores_zero_denominator_points():
     predicted = np.array([0.0, 110.0])
     # First point contributes nothing; second is |100-110| / 105 * 100.
     assert smape(actual, predicted) == pytest.approx(10 / 105 * 100)
+
+
+class TestIntervalWidth:
+    """Sharpness. Coverage alone cannot distinguish calibration from hedging."""
+
+    def test_width_is_the_gap_between_the_named_quantiles(self):
+        levels = (0.1, 0.5, 0.9)
+        forecasts = np.array([[90.0, 100.0, 110.0], [80.0, 100.0, 130.0]])
+
+        # Widths of 20 and 50.
+        assert interval_width(forecasts, levels, 0.1, 0.9) == pytest.approx(35.0)
+
+    def test_a_hedging_forecast_buys_coverage_with_width(self):
+        """The pairing that makes reporting coverage alone incomplete."""
+        levels = (0.1, 0.5, 0.9)
+        actual = np.array([100.0, 100.0])
+        tight = np.array([[99.0, 100.0, 101.0], [99.0, 100.0, 101.0]])
+        hedged = np.array([[0.0, 100.0, 200.0], [0.0, 100.0, 200.0]])
+
+        assert interval_coverage(actual, hedged, levels, 0.1, 0.9) == 1.0
+        assert interval_coverage(actual, tight, levels, 0.1, 0.9) == 1.0
+        assert interval_width(hedged, levels, 0.1, 0.9) > interval_width(tight, levels, 0.1, 0.9)
+
+    def test_rejects_a_level_the_forecast_does_not_carry(self):
+        with pytest.raises(ValueError, match="not among forecast levels"):
+            interval_width(np.array([[1.0, 2.0]]), (0.25, 0.75), 0.1, 0.9)

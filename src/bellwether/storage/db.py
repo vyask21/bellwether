@@ -6,20 +6,23 @@ DuckDB is single-writer: the ingest job writes, and anything that reads concurre
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from contextlib import contextmanager
+from datetime import date
 from pathlib import Path
 
 import duckdb
 
 from bellwether.attribution import (
-    AGENCY,
     DERIVED_DISCLAIMER,
+    NOAA_NOT_AFFILIATED,
     NOT_AFFILIATED,
     eia_acknowledgment,
+    noaa_acknowledgment,
 )
 from bellwether.config import SNAPSHOT_DIR, settings
 from bellwether.ingest.eia import ObservationRow
+from bellwether.ingest.noaa import WeatherRow
 
 SCHEMA = """
 -- Raw EIA content, stored exactly as returned. The API Terms of Service forbid modifying
@@ -33,6 +36,22 @@ CREATE TABLE IF NOT EXISTS observations (
     value_units  VARCHAR,
     ingested_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (period, respondent, series_type)
+);
+
+-- Raw NOAA content, stored as returned. Separate from `observations` because it is a
+-- different agency under a different policy, and because conflating the two would make
+-- the EIA attribution attach to values EIA never published.
+--
+-- Values NOAA flagged suspect are stored with their quality code rather than dropped, so
+-- the table stays faithful to the source. Screening happens at read time.
+CREATE TABLE IF NOT EXISTS weather_observations (
+    observed_at   TIMESTAMPTZ NOT NULL,
+    station_id    VARCHAR     NOT NULL,
+    report_type   VARCHAR     NOT NULL,
+    temperature_c DOUBLE,
+    quality_code  VARCHAR,
+    ingested_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (observed_at, station_id, report_type)
 );
 
 -- Derived data. Not EIA content and never attributed to EIA. Kept in its own table so a
@@ -119,7 +138,52 @@ def upsert_observations(
     return written
 
 
-EXPORTABLE_TABLES = frozenset({"observations", "forecasts"})
+def upsert_weather_observations(
+    conn: duckdb.DuckDBPyConnection,
+    rows: Iterable[WeatherRow],
+    batch_size: int = 10_000,
+) -> int:
+    """Insert weather readings idempotently, replacing any existing row for the same key.
+
+    NCEI revises the archive as late reports arrive and quality control runs, so a re-run
+    must converge on the current published value rather than duplicate it.
+    """
+    written = 0
+    batch: list[tuple] = []
+
+    def flush(records: list[tuple]) -> None:
+        if not records:
+            return
+        conn.executemany(
+            """
+            INSERT OR REPLACE INTO weather_observations
+                (observed_at, station_id, report_type, temperature_c, quality_code)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            records,
+        )
+
+    for row in rows:
+        batch.append(
+            (
+                row.observed_at,
+                row.station_id,
+                row.report_type,
+                row.temperature_c,
+                row.quality_code,
+            )
+        )
+        if len(batch) >= batch_size:
+            flush(batch)
+            written += len(batch)
+            batch = []
+
+    flush(batch)
+    written += len(batch)
+    return written
+
+
+EXPORTABLE_TABLES = frozenset({"observations", "weather_observations", "forecasts"})
 
 
 def export_snapshot(
@@ -152,18 +216,42 @@ def export_snapshot(
 def _write_attribution(conn: duckdb.DuckDBPyConnection, out_dir: Path, table: str) -> None:
     """Ship the acknowledgment alongside exported data.
 
-    EIA's reuse policy asks acknowledgments to carry a date, so observations are dated from
-    the most recent `ingested_at` rather than from wall-clock time at export.
+    Each table gets the notice for the agency that published it and no other. A snapshot of
+    NOAA temperatures carrying an EIA acknowledgment would credit EIA with data it never
+    published, which is exactly what the raw/derived split exists to prevent.
+
+    Both agencies ask acknowledgments to carry a date, so a snapshot is dated from the most
+    recent `ingested_at` in the table rather than from wall-clock time at export.
     """
     if table == "observations":
-        # Formatted in SQL: handing a TIMESTAMPTZ back to Python makes DuckDB import pytz,
-        # and the month and year are all the acknowledgment needs.
-        stamp = conn.execute(
-            "SELECT strftime(max(ingested_at) AT TIME ZONE 'UTC', '%b %Y') FROM observations"
-        ).fetchone()[0]
-        acknowledgment = f"Source: {AGENCY} (retrieved {stamp})" if stamp else eia_acknowledgment()
-        notice = "\n".join([acknowledgment, NOT_AFFILIATED])
+        notice = "\n".join([_dated(conn, table, eia_acknowledgment), NOT_AFFILIATED])
+    elif table == "weather_observations":
+        notice = "\n".join([_dated(conn, table, noaa_acknowledgment), NOAA_NOT_AFFILIATED])
     else:
-        notice = "\n".join([eia_acknowledgment(), NOT_AFFILIATED, DERIVED_DISCLAIMER])
+        notice = "\n".join(
+            [
+                eia_acknowledgment(),
+                NOT_AFFILIATED,
+                noaa_acknowledgment(),
+                NOAA_NOT_AFFILIATED,
+                DERIVED_DISCLAIMER,
+            ]
+        )
 
-    (out_dir / "ATTRIBUTION.txt").write_text(f"{notice}\n", encoding="utf-8")
+    (out_dir / f"ATTRIBUTION-{table}.txt").write_text(f"{notice}\n", encoding="utf-8")
+
+
+def _dated(
+    conn: duckdb.DuckDBPyConnection,
+    table: str,
+    acknowledgment: Callable[[date | None], str],
+) -> str:
+    """Build an acknowledgment dated from the table's most recent ingest.
+
+    The date is read in SQL rather than as a Python datetime: handing a TIMESTAMPTZ back
+    makes DuckDB import pytz, and only the date is needed.
+    """
+    stamp = conn.execute(
+        f"SELECT max(ingested_at)::DATE FROM {table}"  # noqa: S608 - table is allowlisted
+    ).fetchone()[0]
+    return acknowledgment(stamp) if stamp else acknowledgment(None)

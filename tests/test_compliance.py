@@ -14,12 +14,20 @@ import pytest
 from bellwether.attribution import (
     DERIVED_DISCLAIMER,
     EIA_SOURCE,
+    NOAA_SOURCE,
     NOT_AFFILIATED,
     attribution_block,
     eia_acknowledgment,
+    noaa_acknowledgment,
 )
 from bellwether.ingest.eia import MIN_REQUEST_INTERVAL_SECONDS, EIAClient, ObservationRow
-from bellwether.storage.db import connect, export_snapshot, upsert_observations
+from bellwether.ingest.noaa import WeatherRow
+from bellwether.storage.db import (
+    connect,
+    export_snapshot,
+    upsert_observations,
+    upsert_weather_observations,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -44,11 +52,38 @@ class TestAttribution:
         assert "U.S. Energy Information Administration" in readme
         assert "not affiliated with or endorsed by EIA" in readme
 
-    def test_block_covers_both_eia_and_derived_content(self):
+    def test_block_covers_every_source_and_derived_content(self):
         block = attribution_block()
         assert "U.S. Energy Information Administration" in block
+        assert "NOAA National Centers for Environmental Information" in block
         assert NOT_AFFILIATED in block
         assert DERIVED_DISCLAIMER in block
+
+
+class TestNOAAAttribution:
+    """NOAA data is a US Government work, so the obligation is citation, not permission."""
+
+    def test_attribution_names_the_dataset_not_just_the_agency(self):
+        """NOAA runs many archives; 'NOAA' alone does not identify which one."""
+        assert "NOAA National Centers for Environmental Information" in NOAA_SOURCE
+        assert "Integrated Surface Database" in NOAA_SOURCE
+
+    @pytest.mark.parametrize(
+        "phrase", ["courtesy of", "powered by", "in partnership with", "endorsed", "approved by"]
+    )
+    def test_attribution_avoids_endorsement_wording(self, phrase: str):
+        assert phrase not in NOAA_SOURCE.lower()
+
+    def test_acknowledgment_carries_a_retrieval_date(self):
+        """NCEI revises the archive as late reports and QC land, so the date is load-bearing."""
+        text = noaa_acknowledgment(date(2026, 7, 30))
+        assert "Jul 2026" in text
+        assert "retrieved" in text.lower()
+
+    def test_readme_carries_noaa_attribution_and_non_affiliation(self):
+        readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        assert "NOAA National Centers for Environmental Information" in readme
+        assert "not affiliated with or endorsed by NOAA" in readme
 
 
 class TestDatedAcknowledgment:
@@ -83,7 +118,7 @@ class TestDatedAcknowledgment:
             ).fetchone()[0]
             export_snapshot(conn, table="observations", directory=out)
 
-        notice = (out / "ATTRIBUTION.txt").read_text(encoding="utf-8")
+        notice = (out / "ATTRIBUTION-observations.txt").read_text(encoding="utf-8")
         assert ingested in notice
         # Dated from the observation period (2025), not from when the export ran.
         assert "2025" not in notice
@@ -156,6 +191,19 @@ class TestNoModificationOfEIAContent:
             }
             assert "model_name" not in observation_columns
 
+    def test_noaa_content_is_stored_apart_from_eia_content(self, tmp_path: Path):
+        """Two agencies, two policies. A shared table would blur which notice applies."""
+        with connect(tmp_path / "t.duckdb") as conn:
+            tables = {row[0] for row in conn.execute("SHOW TABLES").fetchall()}
+            assert "weather_observations" in tables
+
+            weather_columns = {
+                row[0] for row in conn.execute("DESCRIBE weather_observations").fetchall()
+            }
+            assert "respondent" not in weather_columns, (
+                "a balancing authority is our mapping, not something NOAA published"
+            )
+
     def test_snapshot_export_rejects_unknown_tables(self, tmp_path: Path):
         with (
             connect(tmp_path / "t.duckdb") as conn,
@@ -172,7 +220,7 @@ class TestNoModificationOfEIAContent:
             upsert_observations(conn, rows)
             export_snapshot(conn, table="observations", directory=out)
 
-        notice = (out / "ATTRIBUTION.txt").read_text(encoding="utf-8")
+        notice = (out / "ATTRIBUTION-observations.txt").read_text(encoding="utf-8")
         assert "U.S. Energy Information Administration" in notice
 
     def test_exported_forecasts_carry_the_derived_disclaimer(self, tmp_path: Path):
@@ -181,8 +229,33 @@ class TestNoModificationOfEIAContent:
         with connect(tmp_path / "t.duckdb") as conn:
             export_snapshot(conn, table="forecasts", directory=out)
 
-        notice = (out / "ATTRIBUTION.txt").read_text(encoding="utf-8")
+        notice = (out / "ATTRIBUTION-forecasts.txt").read_text(encoding="utf-8")
         assert "not by EIA" in notice
+
+    def test_an_eia_snapshot_does_not_claim_noaa_content(self, tmp_path: Path):
+        """Each snapshot credits the agency that published it, and no other.
+
+        One shared attribution file would mean the last export overwrote the previous
+        one's notice, leaving EIA demand data labelled as NOAA weather or the reverse.
+        """
+        rows = [
+            ObservationRow(datetime(2025, 1, 1, tzinfo=UTC), "CISO", "D", 10.0, "megawatthours")
+        ]
+        weather = [WeatherRow(datetime(2025, 1, 1, tzinfo=UTC), "72259003927", "FM-15", 10.0, "1")]
+        out = tmp_path / "snapshots"
+        with connect(tmp_path / "t.duckdb") as conn:
+            upsert_observations(conn, rows)
+            upsert_weather_observations(conn, weather)
+            export_snapshot(conn, table="observations", directory=out)
+            export_snapshot(conn, table="weather_observations", directory=out)
+
+        eia_notice = (out / "ATTRIBUTION-observations.txt").read_text(encoding="utf-8")
+        noaa_notice = (out / "ATTRIBUTION-weather_observations.txt").read_text(encoding="utf-8")
+
+        assert "U.S. Energy Information Administration" in eia_notice
+        assert "NOAA" not in eia_notice
+        assert "NOAA National Centers for Environmental Information" in noaa_notice
+        assert "Energy Information Administration" not in noaa_notice
 
 
 class TestComplianceDocumentation:
