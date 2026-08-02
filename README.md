@@ -26,7 +26,7 @@ value.
 | Corrector ablation: weather and volatility | done, [both predictions failed usefully](docs/RESULTS.md) |
 | Breach detection and error decomposition | done, [where the forecast fails](docs/RESULTS.md) |
 | Nuclear outage and energy disruption ingestion | todo |
-| Brief generation from retrieved evidence | todo |
+| Brief generation, with citation verification | done, model call needs a key |
 | Scheduled refresh and dashboard | todo |
 
 A companion project is sketched but not started: an MCP server exposing EIA data to LLM
@@ -193,6 +193,8 @@ src/bellwether/
   forecast/base.py      Forecaster protocol
   forecast/baseline.py  Seasonal-naive with empirical residual quantiles
   forecast/residual.py  Weather-conditioned residual quantile correction
+  explain/evidence.py   Candidate explanations computed from stored data
+  explain/brief.py      Brief generation, and the check that it cited nothing else
   eval/metrics.py       MASE, WQL, pinball loss, coverage, sharpness
   eval/backtest.py      Rolling-origin evaluation
   eval/ablation.py      Weather ablation against a calendar-only control
