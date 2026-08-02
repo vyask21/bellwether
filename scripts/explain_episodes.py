@@ -20,6 +20,7 @@ import numpy as np
 
 from bellwether.eval.breaches import BreachEpisode
 from bellwether.eval.operator import BA_TIMEZONES
+from bellwether.explain.brief import BriefContext, render_template_brief
 from bellwether.explain.evidence import find_data_spikes, gather_evidence
 from bellwether.storage.db import connect
 from bellwether.storage.queries import load_market_temperature, load_series
@@ -32,6 +33,9 @@ def main() -> None:
     parser.add_argument("respondent")
     parser.add_argument("--arm", default=DEFAULT_ARM)
     parser.add_argument("--top", type=int, default=5)
+    parser.add_argument(
+        "--brief", action="store_true", help="Render a written brief for each episode."
+    )
     parser.add_argument("--analysis", default="docs/breach_analysis.json")
     args = parser.parse_args()
 
@@ -68,6 +72,15 @@ def main() -> None:
         for item in evidence:
             marker = "!!" if item.is_disqualifying else "  "
             print(f"{marker} [{item.kind} {item.strength:.2f}] {item.summary}")
+
+        if args.brief:
+            brief = render_template_brief(
+                BriefContext(market=args.respondent, episode=episode, evidence=evidence)
+            )
+            status = "verified" if brief.verification.ok else brief.verification.describe()
+            print(f"\n  BRIEF ({status})")
+            print(f"  {brief.headline}")
+            print(f"  {brief.body}")
         print()
 
     print(f"{unexplained} of {len(recorded)} episodes had no candidate explanation")

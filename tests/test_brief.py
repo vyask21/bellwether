@@ -20,6 +20,7 @@ from bellwether.explain.brief import (
     BriefContext,
     generate_brief,
     render_prompt,
+    render_template_brief,
     traces_to,
     verify_brief,
 )
@@ -47,7 +48,12 @@ def _context(evidence: list[Evidence] | None = None) -> BriefContext:
             Evidence(
                 kind="temperature",
                 summary="Temperature averaged 2.8 C against 15.4 C, an anomaly of -12.6 C.",
-                facts={"episode_mean_c": 2.8, "baseline_mean_c": 15.4, "anomaly_c": -12.6},
+                facts={
+                    "episode_mean_c": 2.8,
+                    "baseline_mean_c": 15.4,
+                    "anomaly_c": -12.6,
+                    "degree_day_change": 12.6,
+                },
                 strength=0.85,
             )
         ]
@@ -283,3 +289,115 @@ class TestSystemConstants:
     def test_a_nearby_percentage_is_still_rejected(self):
         """Allowing 80 must not quietly allow every two-digit number near it."""
         assert not verify_brief("Demand fell outside the 85% band.", _context()).ok
+
+
+class TestTemplateBriefs:
+    """The shipped path: deterministic prose, checked by the same verifier.
+
+    The template interpolates measurements, so an edit that computes one inline would
+    reach a reader as a fabricated number wearing a template's authority. Every case here
+    asserts verification passes for exactly that reason.
+    """
+
+    def test_a_supported_cause_is_stated(self):
+        brief = render_template_brief(_context())
+
+        assert brief.verification.ok
+        assert brief.cause_known
+        assert "unusual cold" in brief.headline
+        assert "26 consecutive hours" in brief.body
+
+    def test_a_holiday_headline_names_the_holiday_not_the_weather(self):
+        context = _context(
+            [
+                Evidence(
+                    kind="holiday",
+                    summary="The episode covers a US federal holiday (2025-01-06 local).",
+                    facts={"holiday_dates": ["2025-01-06"], "consistent_with_direction": True},
+                    strength=0.9,
+                )
+            ]
+        )
+        brief = render_template_brief(context)
+
+        assert brief.verification.ok
+        assert "public holiday" in brief.headline
+
+    def test_a_data_artifact_refuses_to_explain(self):
+        """The brief's job here is to say the number is not real, not to find a cause."""
+        context = _context(
+            [
+                Evidence(
+                    kind="data_quality",
+                    summary="The reported demand is 11,819 MW against about 29,884 MW either side.",
+                    facts={"reported_mw": 11819.0, "neighbour_mean_mw": 29884.0},
+                    strength=1.0,
+                )
+            ]
+        )
+        brief = render_template_brief(context)
+
+        assert brief.verification.ok
+        assert not brief.cause_known
+        assert "not a real value" in brief.headline
+        assert "excluded rather than explained" in brief.body
+
+    def test_no_evidence_admits_ignorance(self):
+        """Silence is a valid answer; inventing a cause is not."""
+        brief = render_template_brief(_context([]))
+
+        assert brief.verification.ok
+        assert not brief.cause_known
+        assert "cause unexplained" in brief.headline
+        assert "No stored evidence explains" in brief.body
+
+    def test_contrary_evidence_is_named_as_ruled_out(self):
+        """Telling the reader what was checked saves them re-investigating it."""
+        context = _context(
+            [
+                Evidence(
+                    kind="temperature",
+                    summary="Temperature averaged 28.4 C, an anomaly of +8.0 C.",
+                    facts={
+                        "episode_mean_c": 28.4,
+                        "anomaly_c": 8.0,
+                        "consistent_with_direction": False,
+                    },
+                    strength=0.2,
+                )
+            ]
+        )
+        brief = render_template_brief(context)
+
+        assert brief.verification.ok
+        assert not brief.cause_known
+        assert "does not account for it" in brief.body
+
+    def test_a_missing_degree_day_change_does_not_guess_a_direction(self):
+        """Defaulting would let a hard freeze be announced as mild weather."""
+        context = _context(
+            [
+                Evidence(
+                    kind="temperature",
+                    summary="Temperature averaged 2.8 C, an anomaly of -12.6 C.",
+                    facts={"episode_mean_c": 2.8, "anomaly_c": -12.6},
+                    strength=0.85,
+                )
+            ]
+        )
+        headline = render_template_brief(context).headline
+
+        assert "mild" not in headline
+        assert "unusual weather" in headline
+
+    def test_headlines_stay_short_enough_to_scan(self):
+        for evidence in ([], _context().evidence):
+            headline = render_template_brief(_context(evidence)).headline
+            assert len(headline.split()) <= 12, headline
+
+    def test_a_template_that_computed_a_number_would_be_caught(self):
+        """Guards the guard: verification must be capable of failing on this path."""
+        context = _context()
+        invented = f"Demand averaged {context.episode.peak_exceedance / 26:.0f} MW above the band."
+
+        assert not verify_brief(invented, context).ok

@@ -1,18 +1,26 @@
 """Turn evidence into prose, and prove the prose invented nothing.
 
-The project's standing constraint is that the language model never produces a number.
-`evidence.py` computes; this module lets a model narrate what was computed and then
-**checks that it did**. Verification is the point: a constraint nothing enforces is a
-comment, and "the LLM only narrates" is exactly the kind of claim that quietly stops being
-true.
+Two paths write briefs, and both are checked the same way.
 
-The check is mechanical. Every numeric token in a generated brief must trace to a value
-this module handed the model, either exactly or as a correct rounding of one. A brief
-containing anything else is rejected rather than shown, because a number a reader cannot
-trace back is worse than no brief: it looks like a measurement.
+`render_template_brief` is **the shipped one**: deterministic Python, no API key, no
+network, no dependency. `evidence.py` already writes each finding as a sentence, so a
+brief is mostly a matter of choosing which findings to include and what to say when there
+are none. That takes domain judgement rather than fluency, and judgement is cheaper to
+encode than to verify.
 
-The model call is optional. Prompt rendering and verification run with no API key and no
-network, which is what makes the constraint testable rather than aspirational.
+`generate_brief` is the model path, kept for whoever wants better prose later. **It has
+never been run against the live API** and needs an `anthropic` client passed in; the
+package is not a dependency of this project. Its tests exercise it through a stub.
+
+`verify_brief` is what makes either honest. Every numeric token in a brief must trace to a
+value the context supplied, exactly or as a correct rounding. Anything else is rejected
+rather than shown, because a number a reader cannot trace back is worse than no brief: it
+looks like a measurement.
+
+That check matters on the template path too, and not as ceremony. The templates
+interpolate measurements, so an edit that computes one inline, a rate or a total or a unit
+conversion, would otherwise reach a reader as a fabricated number wearing a template's
+authority.
 """
 
 from __future__ import annotations
@@ -206,6 +214,122 @@ def verify_brief(text: str, context: BriefContext) -> Verification:
             unverified.append(token)
 
     return Verification(ok=not unverified, unverified=unverified)
+
+
+MARKET_NAMES = {
+    "CISO": "California ISO",
+    "ERCO": "ERCOT",
+    "PACE": "PacifiCorp East",
+}
+
+
+def render_template_brief(context: BriefContext) -> Brief:
+    """Assemble a brief in Python, with no model involved.
+
+    This is the shipped path. `evidence.py` already writes each finding as a sentence, so
+    a brief is mostly a matter of choosing which findings to include, in what order, and
+    what to say when there is nothing to report. That needs judgement about the domain,
+    not fluency, and judgement is cheaper to encode than to verify.
+
+    The result is passed through the same verifier the model path uses. That is not
+    ceremony: the templates interpolate measurements, and a future edit that computes one
+    inline, a rate or a total or a unit conversion, would be caught here rather than
+    reaching a reader as a fabricated number wearing a template's authority.
+    """
+    market = MARKET_NAMES.get(context.market, context.market)
+    episode = context.episode
+    disqualifying = [item for item in context.evidence if item.is_disqualifying]
+    supporting = [
+        item
+        for item in context.evidence
+        if not item.is_disqualifying and item.facts.get("consistent_with_direction", True)
+    ]
+    contrary = [
+        item
+        for item in context.evidence
+        if not item.is_disqualifying and item.facts.get("consistent_with_direction", True) is False
+    ]
+
+    if disqualifying:
+        headline = f"{market} demand for this hour is not a real value"
+        body = " ".join(
+            [
+                disqualifying[0].summary,
+                "The forecast was not wrong here, and this episode should be excluded "
+                "rather than explained.",
+            ]
+        )
+        return _verified(headline, body, cause_known=False, context=context)
+
+    span = _describe_span(episode, market)
+
+    if supporting:
+        headline = f"{market} demand ran {episode.duration_hours} hours "
+        headline += "above forecast" if episode.direction == "above" else "below forecast"
+        headline += f" {_headline_cause(supporting[0])}"
+        body = " ".join([span, *(item.summary for item in supporting)])
+        return _verified(headline, body, cause_known=True, context=context)
+
+    headline = (
+        f"{market} demand ran {episode.duration_hours} hours "
+        f"{'above' if episode.direction == 'above' else 'below'} forecast, cause unexplained"
+    )
+    parts = [span, "No stored evidence explains this episode."]
+    if contrary:
+        # Naming what was checked and rejected is more useful than silence: it tells the
+        # reader which explanations they do not need to re-investigate.
+        parts.append(
+            "The following was considered and does not account for it: "
+            + " ".join(item.summary for item in contrary)
+        )
+    return _verified(headline, " ".join(parts), cause_known=False, context=context)
+
+
+def _describe_span(episode: BreachEpisode, market: str) -> str:
+    direction = "above" if episode.direction == "above" else "below"
+    return (
+        f"{market} demand ran {direction} its 80% forecast band for "
+        f"{episode.duration_hours} consecutive hours from {_readable(episode.start)}, "
+        f"reaching {episode.peak_exceedance:,.0f} MW outside the band at its peak."
+    )
+
+
+def _readable(stamp: Any) -> str:
+    """A timestamp a person would write. Must stay among the forms the verifier accepts."""
+    return f"{pd.Timestamp(str(stamp)):%Y-%m-%d %H:%M} UTC"
+
+
+def _headline_cause(item: Evidence) -> str:
+    if item.kind == "holiday":
+        return "on a public holiday"
+    if item.kind == "temperature":
+        load_change = item.facts.get("degree_day_change")
+        if load_change is None:
+            # Without the degree-day change there is no way to tell which direction the
+            # weather pushed demand, and defaulting would let a hard freeze be announced
+            # as mild. Say less instead.
+            return "during unusual weather"
+        if load_change > 0:
+            # Weather asking more of the grid than usual: heat or cold, depending which.
+            return (
+                "during unusual heat"
+                if item.facts.get("anomaly_c", 0.0) > 0
+                else "during unusual cold"
+            )
+        # Weather asking less of it. Whether that arrived as a cool spell in summer or a
+        # mild one in winter does not change the headline, and naming both would.
+        return "in unusually mild weather"
+    return f"attributed to {item.kind}"
+
+
+def _verified(headline: str, body: str, cause_known: bool, context: BriefContext) -> Brief:
+    """Build a Brief and check it, so a template edit cannot smuggle in a new number."""
+    return Brief(
+        headline=headline,
+        body=body,
+        cause_known=cause_known,
+        verification=verify_brief(f"{headline} {body}", context),
+    )
 
 
 SYSTEM_PROMPT = """\

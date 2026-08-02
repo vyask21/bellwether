@@ -7,10 +7,14 @@ Bellwether ingests public grid and weather data, forecasts electricity demand wi
 uncertainty intervals, detects when reality falls outside those intervals, and explains
 the breach against retrieved evidence.
 
-Design constraint: the language model never produces a number. Forecasts come from
-time-series models and are scored as forecasts. The LLM only retrieves, attributes, and
-narrates. Every numeric claim in a generated brief must trace back to a forecasting-layer
-value.
+Design constraint: **no number in a brief is ever generated.** Forecasts come from
+time-series models and are scored as forecasts; evidence is computed in Python; briefs are
+assembled from that evidence and then mechanically checked, so every numeric claim traces
+back to a specific measurement or the brief is rejected.
+
+The shipped explanation layer is deterministic and needs no API key. A language-model path
+exists behind the same verifier for whoever wants better prose, but it has never been run
+and `anthropic` is not a dependency.
 
 ## Status
 
@@ -26,7 +30,7 @@ value.
 | Corrector ablation: weather and volatility | done, [both predictions failed usefully](docs/RESULTS.md) |
 | Breach detection and error decomposition | done, [where the forecast fails](docs/RESULTS.md) |
 | Nuclear outage and energy disruption ingestion | todo |
-| Brief generation, with citation verification | done, model call needs a key |
+| Brief generation, with citation verification | done, deterministic, no API key |
 | Scheduled refresh and dashboard | todo |
 
 A companion project is sketched but not started: an MCP server exposing EIA data to LLM
