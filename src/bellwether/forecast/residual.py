@@ -364,6 +364,74 @@ class QuantileScaleCorrector:
         return np.sort(scaled, axis=1)
 
 
+# Past holiday hours needed before a holiday offset is estimated at all. Thirteen months
+# of data holds roughly ten federal holidays, so a run early in the scored period has seen
+# very few, and an offset fitted on one afternoon would be noise wearing a correction's
+# clothes.
+MIN_HOLIDAY_HOURS = 48
+
+
+class HolidayScaleCorrector(QuantileScaleCorrector):
+    """Scales the base interval and shifts it on public holidays.
+
+    Built from a finding rather than a hunch. Breach analysis showed three of the largest
+    below-bound episodes across the three markets were US federal holidays: Thanksgiving
+    2024 ran CISO 25 hours below its interval, Christmas Day 22, Memorial Day put ERCO 12
+    hours below. Chronos-Bolt sees only demand history and has no calendar, so a holiday
+    is precisely the thing it cannot anticipate.
+
+    The correction is a location shift on holiday hours, on top of the scaling this
+    inherits:
+
+        q'_t = m_t + offset * holiday_t + k * (q_t - m_t)
+
+    Two design choices worth stating.
+
+    It extends the **scale** corrector rather than the residual one. The residual
+    correctors rebuild the predictive distribution and flatten the base model's seasonal
+    conditioning; a holiday fix built on that would inherit the damage to buy back a few
+    days a year. Scaling keeps the conditioning, so this adds the calendar without giving
+    anything up.
+
+    The offset is the holiday median residual **minus the non-holiday median**, not the
+    raw holiday median. The raw figure carries whatever level bias the model has on every
+    other day, and applying that on holidays would double-count a bias the scaling is not
+    addressing and the shift was never meant to.
+    """
+
+    def __init__(self, quantile_levels: tuple[float, ...] = DEFAULT_QUANTILES) -> None:
+        super().__init__(quantile_levels)
+        self._offset: float = 0.0
+
+    @property
+    def offset(self) -> float:
+        """Megawatts to shift a holiday hour by. Zero when too few have been seen."""
+        return self._offset
+
+    def fit(  # type: ignore[override]
+        self, base_quantiles: np.ndarray, actual: np.ndarray, is_holiday: np.ndarray
+    ) -> HolidayScaleCorrector:
+        """Learn scale factors from all hours and a shift from the holiday ones."""
+        if is_holiday.size != actual.size:
+            raise ValueError(f"Got {is_holiday.size} holiday flags and {actual.size} actuals")
+        super().fit(base_quantiles, actual)
+
+        residual = actual - base_quantiles[:, _median_index(self.quantile_levels)]
+        holiday, ordinary = residual[is_holiday], residual[~is_holiday]
+        if holiday.size >= MIN_HOLIDAY_HOURS and ordinary.size > 0:
+            self._offset = float(np.median(holiday) - np.median(ordinary))
+        else:
+            self._offset = 0.0
+        return self
+
+    def predict(  # type: ignore[override]
+        self, base_quantiles: np.ndarray, is_holiday: np.ndarray
+    ) -> np.ndarray:
+        """Scale, then shift the holiday hours. Ordinary hours are untouched."""
+        scaled = super().predict(base_quantiles)
+        return scaled + (self._offset * is_holiday.astype(float))[:, None]
+
+
 # Below this the base model emitted no usable spread at that level, so no scale can be read.
 _ZERO_SPREAD_TOLERANCE = 1e-9
 

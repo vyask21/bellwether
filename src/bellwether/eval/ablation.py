@@ -48,11 +48,13 @@ from bellwether.eval.metrics import (
     smape,
     weighted_quantile_loss,
 )
+from bellwether.explain.evidence import holidays_in_window
 from bellwether.forecast.base import Forecaster
 from bellwether.forecast.residual import (
     ALL_SPECS,
     DEFAULT_MIN_TRAIN_ORIGINS,
     FeatureSpec,
+    HolidayScaleCorrector,
     QuantileScaleCorrector,
     ResidualQuantileCorrector,
     apply_correction,
@@ -63,6 +65,10 @@ from bellwether.forecast.residual import (
 # the base model's own interval rather than replacing the distribution, which is the one
 # correction here that cannot destroy the base model's conditioning.
 SCALE_ARM = "scale"
+
+# The scale arm plus a calendar the base model cannot see. Kept separate from `scale` so
+# the holiday effect is measured against a corrector identical in every other respect.
+HOLIDAY_ARM = "scale+holiday"
 
 log = logging.getLogger(__name__)
 
@@ -159,6 +165,18 @@ def _calendar_columns(timestamps: np.ndarray, timezone: str) -> tuple[np.ndarray
     return local.hour.to_numpy(), (local.dayofweek.to_numpy() >= 5)
 
 
+def holiday_flags(timestamps: np.ndarray, timezone: str) -> np.ndarray:
+    """Whether each hour falls on a US federal holiday in market-local time.
+
+    Local, for the same reason as the hour of day: a holiday is a local calendar day, and
+    in UTC the boundary would fall several hours into the wrong day.
+    """
+    local = pd.DatetimeIndex(timestamps).tz_localize("UTC").tz_convert(timezone)
+    dates = local.normalize().tz_localize(None)
+    holidays = holidays_in_window(dates[0], dates[-1]) if dates.size else pd.DatetimeIndex([])
+    return np.isin(dates.to_numpy(), holidays.to_numpy())
+
+
 def run_corrector_ablation(
     forecaster: Forecaster,
     series: np.ndarray,
@@ -195,6 +213,7 @@ def run_corrector_ablation(
         cached = cache_base_forecasts(forecaster, series, origins, horizon, quantile_levels)
 
     local_hours, is_weekend = _calendar_columns(timestamps, timezone)
+    is_holiday = holiday_flags(timestamps, timezone)
     median_index = _median_index(quantile_levels)
 
     # Feature rows and residuals for every origin, built once and sliced per fit. The
@@ -213,6 +232,7 @@ def run_corrector_ablation(
     # before the one it is forecasting and nothing later.
     stacked_base = np.concatenate([c.quantiles for c in cached])
     stacked_actual = np.concatenate([series[c.origin : c.origin + horizon] for c in cached])
+    stacked_holiday = np.concatenate([is_holiday[c.origin : c.origin + horizon] for c in cached])
 
     # Warmup origins are excluded from every arm, including the uncorrected one, so the
     # comparison is over one window set rather than three.
@@ -229,6 +249,7 @@ def run_corrector_ablation(
         forecaster.name,
         *(f"{forecaster.name}+{spec.name}" for spec in specs),
         f"{forecaster.name}+{SCALE_ARM}",
+        f"{forecaster.name}+{HOLIDAY_ARM}",
     ]
     results = {name: BacktestResult(name, series_id, horizon, 0) for name in arm_names}
     forecasts: dict[str, list[np.ndarray]] = {name: [] for name in arm_names}
@@ -285,6 +306,25 @@ def run_corrector_ablation(
             median_index,
         )
         forecasts[f"{forecaster.name}+{SCALE_ARM}"].append(scaled)
+
+        window_holiday = is_holiday[origin : origin + horizon]
+        holiday_scaler = HolidayScaleCorrector(quantile_levels).fit(
+            stacked_base[: position * horizon],
+            stacked_actual[: position * horizon],
+            stacked_holiday[: position * horizon],
+        )
+        adjusted = holiday_scaler.predict(base, window_holiday)
+        _score(
+            results[f"{forecaster.name}+{HOLIDAY_ARM}"],
+            origin,
+            actual,
+            adjusted,
+            history,
+            season_length,
+            quantile_levels,
+            median_index,
+        )
+        forecasts[f"{forecaster.name}+{HOLIDAY_ARM}"].append(adjusted)
 
     return AblationOutput(
         results=results,

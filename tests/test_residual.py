@@ -13,6 +13,7 @@ import pytest
 from bellwether.eval.ablation import (
     LAG_HOURS,
     CachedForecast,
+    holiday_flags,
     realised_volatility,
     run_corrector_ablation,
     usable_origins,
@@ -23,6 +24,7 @@ from bellwether.forecast.residual import (
     VOLATILITY,
     WEATHER,
     WEATHER_VOLATILITY,
+    HolidayScaleCorrector,
     QuantileScaleCorrector,
     ResidualQuantileCorrector,
     apply_correction,
@@ -515,6 +517,7 @@ class TestAblation:
             "constant+volatility",
             "constant+weather+volatility",
             "constant+scale",
+            "constant+scale+holiday",
         }
         counts = {name: r.n_windows for name, r in results.items()}
         assert len(set(counts.values())) == 1, counts
@@ -635,3 +638,123 @@ class TestAblation:
         )
 
         assert counter["calls"] == 0
+
+
+class TestHolidayScaleCorrector:
+    """Scales the interval and shifts it on holidays.
+
+    Built on the scale corrector rather than the residual one deliberately: the residual
+    correctors flatten the base model's seasonal conditioning, and a holiday fix built on
+    that would inherit the damage to buy back a few days a year.
+    """
+
+    LEVELS = (0.1, 0.5, 0.9)
+
+    def _forecasts(self, n: int, half_width: float = 10.0) -> np.ndarray:
+        return np.column_stack(
+            [np.full(n, 100.0 - half_width), np.full(n, 100.0), np.full(n, 100.0 + half_width)]
+        )
+
+    def _holiday_data(self, n: int = 800, drop: float = 30.0, seed: int = 0):
+        """Demand that sits `drop` MW lower on holidays, which is one hour in ten here."""
+        rng = np.random.default_rng(seed)
+        is_holiday = np.arange(n) % 10 == 0
+        actual = 100.0 + rng.normal(scale=5.0, size=n) - np.where(is_holiday, drop, 0.0)
+        return self._forecasts(n), actual, is_holiday
+
+    def test_it_learns_the_holiday_shift(self):
+        base, actual, is_holiday = self._holiday_data(drop=30.0)
+        corrector = HolidayScaleCorrector(self.LEVELS).fit(base, actual, is_holiday)
+
+        assert corrector.offset == pytest.approx(-30.0, abs=2.0)
+
+    def test_the_shift_applies_only_to_holiday_hours(self):
+        base, actual, is_holiday = self._holiday_data()
+        corrector = HolidayScaleCorrector(self.LEVELS).fit(base, actual, is_holiday)
+
+        probe = self._forecasts(2)
+        adjusted = corrector.predict(probe, np.array([True, False]))
+        assert adjusted[0, 1] < adjusted[1, 1], "the holiday hour should shift down"
+        assert adjusted[1, 1] == pytest.approx(100.0), "an ordinary hour is untouched"
+
+    def test_it_improves_holiday_coverage(self):
+        """The point of the whole exercise, stated as a measurement."""
+        base, actual, is_holiday = self._holiday_data(drop=30.0)
+        corrector = HolidayScaleCorrector(self.LEVELS).fit(base, actual, is_holiday)
+        adjusted = corrector.predict(base, is_holiday)
+
+        before = np.mean(
+            (actual[is_holiday] >= base[is_holiday, 0])
+            & (actual[is_holiday] <= base[is_holiday, 2])
+        )
+        after = np.mean(
+            (actual[is_holiday] >= adjusted[is_holiday, 0])
+            & (actual[is_holiday] <= adjusted[is_holiday, 2])
+        )
+        assert before < 0.2
+        assert after > 0.7
+
+    def test_ordinary_hours_are_not_made_worse(self):
+        """A calendar fix that costs accuracy on the other 97% of hours is not a fix."""
+        base, actual, is_holiday = self._holiday_data()
+        corrector = HolidayScaleCorrector(self.LEVELS).fit(base, actual, is_holiday)
+        adjusted = corrector.predict(base, is_holiday)
+
+        ordinary = ~is_holiday
+        assert np.allclose(
+            adjusted[ordinary],
+            corrector_scaled := super(HolidayScaleCorrector, corrector).predict(base)[ordinary],
+        )
+        assert corrector_scaled.shape[1] == len(self.LEVELS)
+
+    def test_the_offset_nets_out_the_baseline_bias(self):
+        """The raw holiday median carries whatever bias the model has every other day.
+
+        Applying that on holidays would double-count a bias the scaling is not addressing
+        and the shift was never meant to.
+        """
+        n = 800
+        is_holiday = np.arange(n) % 10 == 0
+        # Uniformly 20 MW under-forecast, plus a further 30 MW drop on holidays.
+        actual = np.full(n, 120.0) - np.where(is_holiday, 30.0, 0.0)
+        corrector = HolidayScaleCorrector(self.LEVELS).fit(self._forecasts(n), actual, is_holiday)
+
+        assert corrector.offset == pytest.approx(-30.0, abs=1.0)
+
+    def test_too_few_holiday_hours_means_no_shift(self):
+        """Early in a run almost no holidays have been seen; a fit on one afternoon is noise."""
+        n = 400
+        is_holiday = np.arange(n) < 10
+        actual = np.full(n, 100.0) - np.where(is_holiday, 30.0, 0.0)
+        corrector = HolidayScaleCorrector(self.LEVELS).fit(self._forecasts(n), actual, is_holiday)
+
+        assert corrector.offset == 0.0
+
+    def test_mismatched_flags_are_rejected(self):
+        with pytest.raises(ValueError, match="holiday flags"):
+            HolidayScaleCorrector(self.LEVELS).fit(
+                self._forecasts(5), np.ones(5), np.zeros(4, dtype=bool)
+            )
+
+
+class TestHolidayFlags:
+    def test_thanksgiving_is_flagged_in_local_time(self):
+        stamps = np.array(
+            [np.datetime64("2024-11-28T00", "ns") + np.timedelta64(h, "h") for h in range(24)]
+        )
+        flags = holiday_flags(stamps, "America/Chicago")
+        assert flags.any()
+
+    def test_an_ordinary_week_is_not(self):
+        stamps = np.array(
+            [np.datetime64("2025-03-10T00", "ns") + np.timedelta64(h, "h") for h in range(72)]
+        )
+        assert not holiday_flags(stamps, "America/Chicago").any()
+
+    def test_the_flag_follows_local_midnight_not_utc(self):
+        """In UTC the boundary would fall several hours into the wrong day."""
+        # 2024-11-28 07:00 UTC is Thanksgiving in Chicago (01:00) and still the 27th in
+        # Los Angeles (23:00).
+        stamps = np.array([np.datetime64("2024-11-28T07", "ns")])
+        assert not holiday_flags(stamps, "America/Los_Angeles")[0]
+        assert holiday_flags(stamps, "America/Chicago")[0]
