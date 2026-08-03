@@ -1,0 +1,17 @@
+# The palette was validated against the light surface below, and only against it. A dark
+# theme is a separate set of steps that has to be selected and re-validated rather than
+# flipped automatically, and shipping an unvalidated flip is how contrast failures reach
+# production. So this app commits to one mode until the dark steps are checked.
+[theme]
+base = "light"
+backgroundColor = "#fcfcfb"
+secondaryBackgroundColor = "#f0efec"
+textColor = "#0b0b0b"
+primaryColor = "#2a78d6"
+font = "sans serif"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false

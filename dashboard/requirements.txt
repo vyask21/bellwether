@@ -1,0 +1,7 @@
+# What the Hugging Face Space installs. Deliberately small: the dashboard reads committed
+# Parquet and JSON, so it needs no DuckDB, no torch, and no EIA client. Nothing here can
+# reach a network at render time.
+streamlit>=1.40.0
+altair>=5.4.0
+pandas>=2.2.0
+pyarrow>=17.0.0

@@ -32,7 +32,8 @@ and `anthropic` is not a dependency.
 | Holiday corrector, pooled and split by observance | done, [measured twice, shipped neither](docs/RESULTS.md) |
 | Nuclear outage and energy disruption ingestion | todo |
 | Brief generation, with citation verification | done, deterministic, no API key |
-| Dashboard on Hugging Face Spaces | todo, hosting decided |
+| Findings walkthrough (Streamlit) | done, reads committed files only |
+| Deploy to Hugging Face Spaces | ready, needs credentials |
 | Scheduled refresh | todo, persistence undecided |
 
 A companion project is sketched and parked: an MCP server exposing EIA data to LLM agents,
@@ -81,6 +82,11 @@ bellwether backtest --respondent CISO --horizon 24
 
 python scripts/run_weather_ablation.py ERCO          # weather vs a calendar control
 python scripts/analyze_breaches.py ERCO --stagger 4  # where the forecast fails
+python scripts/run_holiday_arm.py CISO               # holiday shift, pooled and by class
+
+python scripts/export_snapshot.py CISO               # ~8 min, writes snapshot/
+pip install -e ".[dashboard]" && streamlit run dashboard/app.py
+python scripts/deploy_space.py                       # dry run; --push to publish
 ```
 
 Both ingest commands are idempotent. EIA restates recent values and NCEI revises its
@@ -205,6 +211,13 @@ src/bellwether/
   eval/backtest.py      Rolling-origin evaluation
   eval/ablation.py      Weather ablation against a calendar-only control
   eval/breaches.py      Interval breaches as episodes, error by hour and season
+
+dashboard/
+  app.py                The findings walkthrough, top to bottom
+  loaders.py            Committed Parquet and JSON, nothing else
+  viz.py                Validated palette and the chart builders
+
+snapshot/               Committed on purpose, ~1 MB per market. See scripts/export_snapshot.py
 ```
 
 Baselines and foundation models share one `Forecaster` protocol, so the backtest harness

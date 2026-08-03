@@ -17,6 +17,13 @@ venv/
 data/
 *.parquet
 
+# Exception: the dashboard snapshot is committed on purpose. A hosted Space cannot reach
+# DuckDB, so without it the dashboard cannot draw a single forecast. EIA and NOAA content
+# are both public domain, so redistribution is permitted with acknowledgment, which
+# snapshot/manifest.json carries. Regenerable via scripts/export_snapshot.py, so it stays
+# a cache: if it disagrees with the DuckDB store, the store wins.
+!snapshot/*.parquet
+
 # Model weights / caches
 .cache/
 models/
@@ -28,3 +35,8 @@ models/
 # OS
 .DS_Store
 Thumbs.db
+
+# Space staging directory, assembled by scripts/deploy_space.py and pushed to a separate
+# public repo. Never committed here: it is a build output, and its whole point is that its
+# contents are chosen explicitly rather than inherited.
+.space/

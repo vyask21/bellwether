@@ -26,6 +26,12 @@ forecast = [
     "chronos-forecasting>=1.4.0",
     "statsforecast>=1.7.0",
 ]
+# The dashboard runs on the committed results and snapshot alone, so it needs neither the
+# forecast extra nor DuckDB. Kept separate so the Space installs a small tree.
+dashboard = [
+    "streamlit>=1.40.0",
+    "altair>=5.4.0",
+]
 dev = [
     "pytest>=8.3.0",
     "pytest-cov>=5.0.0",

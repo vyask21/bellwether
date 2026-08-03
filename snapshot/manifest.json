@@ -1,0 +1,66 @@
+{
+  "attribution": {
+    "forecasts": "Forecasts and derived values are produced by this project, not by EIA. They are not authoritative and carry no warranty.",
+    "observations_eia": "Source: U.S. Energy Information Administration (retrieved Aug 2026)",
+    "observations_noaa": "Source: NOAA National Centers for Environmental Information, Integrated Surface Database (ISD) (retrieved Aug 2026)"
+  },
+  "generated": "2026-08-03",
+  "horizon_hours": 24,
+  "markets": {
+    "CISO": {
+      "arms": [
+        "base",
+        "holiday",
+        "holidayclass",
+        "scale"
+      ],
+      "first_period": "2024-07-31 00:00:00",
+      "forecast_rows": 61632,
+      "hours_with_temperature": 9416,
+      "last_period": "2026-07-31 00:00:00",
+      "observed_hours": 17521,
+      "scored_origins": 642,
+      "series_id": "CISO:D",
+      "timezone": "America/Los_Angeles"
+    },
+    "ERCO": {
+      "arms": [
+        "base",
+        "holiday",
+        "holidayclass",
+        "scale"
+      ],
+      "first_period": "2024-07-31 00:00:00",
+      "forecast_rows": 61632,
+      "hours_with_temperature": 9414,
+      "last_period": "2026-07-31 00:00:00",
+      "observed_hours": 17521,
+      "scored_origins": 642,
+      "series_id": "ERCO:D",
+      "timezone": "America/Chicago"
+    },
+    "PACE": {
+      "arms": [
+        "base",
+        "holiday",
+        "holidayclass",
+        "scale"
+      ],
+      "first_period": "2024-07-31 01:00:00",
+      "forecast_rows": 61632,
+      "hours_with_temperature": 9414,
+      "last_period": "2026-07-31 00:00:00",
+      "observed_hours": 17520,
+      "scored_origins": 642,
+      "series_id": "PACE:D",
+      "timezone": "America/Denver"
+    }
+  },
+  "quantile_levels": [
+    0.1,
+    0.5,
+    0.9
+  ],
+  "regenerate_with": "python scripts/export_snapshot.py <respondent>",
+  "window": "full demand history, no weather constraint"
+}
