@@ -32,8 +32,8 @@ and `anthropic` is not a dependency.
 | Holiday corrector, pooled and split by observance | done, [measured twice, shipped neither](docs/RESULTS.md) |
 | Nuclear outage and energy disruption ingestion | todo |
 | Brief generation, with citation verification | done, deterministic, no API key |
-| Findings walkthrough (Streamlit) | done, reads committed files only |
-| Deploy to Hugging Face Spaces | ready, needs credentials |
+| Findings walkthrough | done, reads committed files only |
+| Deploy to Hugging Face Spaces | done, static site, no server on the serving path |
 | Scheduled refresh | todo, persistence undecided |
 
 A companion project is sketched and parked: an MCP server exposing EIA data to LLM agents,
@@ -85,9 +85,10 @@ python scripts/analyze_breaches.py ERCO --stagger 4  # where the forecast fails
 python scripts/run_holiday_arm.py CISO               # holiday shift, pooled and by class
 
 python scripts/export_snapshot.py CISO               # ~8 min, writes snapshot/
-pip install -e ".[dashboard]" && streamlit run dashboard/app.py
+pip install -e ".[dashboard]" && streamlit run dashboard/app.py   # local renderer
 
-pip install -e ".[deploy]" && hf auth login          # a Write token, once per machine
+pip install -e ".[deploy]" && hf auth login          # once per machine
+python scripts/build_static_space.py                 # the published page, into .space/
 python scripts/deploy_space.py                       # dry run; --push to publish
 ```
 

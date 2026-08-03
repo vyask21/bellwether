@@ -162,6 +162,82 @@ def forecast_window(
     return (band + median + actual + rule).properties(title=title, height=320)
 
 
+def forecast_explorer(
+    observed_url: str, forecast_url: str, initial: int, lead_in: int = LEAD_IN_HOURS
+) -> alt.LayerChart:
+    """`forecast_window` with the origin chosen by a signal instead of by Python.
+
+    The static page has no server to re-slice a frame on every drag, so the slice moves
+    into the chart: both datasets ship whole and a filter picks the window. This is only
+    affordable because `origin` **is** the observed series' row index, so the lead-in is
+    arithmetic rather than a date join. `build_static_space.py` asserts that alignment per
+    market rather than trusting it, since a silent drift here would draw a confident chart
+    of the wrong two days.
+
+    Kept beside `forecast_window` on purpose. They are the same picture built twice, and
+    two functions a screen apart drift visibly where two files do not.
+    """
+    origin = alt.param(name="originIdx", value=int(initial))
+    forecast = alt.UrlData(
+        url=forecast_url,
+        format=alt.CsvDataFormat(
+            parse={
+                "period": "date",
+                "origin": "number",
+                "q10": "number",
+                "q50": "number",
+                "q90": "number",
+            }
+        ),
+    )
+    observed = alt.UrlData(
+        url=observed_url,
+        format=alt.CsvDataFormat(
+            parse={"period": "date", "idx": "number", "demand_mw": "number"}
+        ),
+    )
+    in_window = f"datum.idx >= originIdx - {lead_in} && datum.idx < originIdx + 24"
+
+    band = (
+        alt.Chart(forecast)
+        .transform_filter("datum.origin === originIdx")
+        .mark_area(opacity=0.18, color=SERIES[1])
+        .encode(
+            x=alt.X("period:T", title=None),
+            y=alt.Y("q10:Q", title="Demand (MW)", scale=alt.Scale(zero=False)),
+            y2="q90:Q",
+        )
+    )
+    median = (
+        alt.Chart(forecast)
+        .transform_filter("datum.origin === originIdx")
+        .mark_line(strokeWidth=2, color=SERIES[1])
+        .encode(x="period:T", y="q50:Q")
+    )
+    actual = (
+        alt.Chart(observed)
+        .transform_filter(in_window)
+        .mark_line(strokeWidth=2, color=SERIES[0])
+        .encode(x="period:T", y="demand_mw:Q")
+    )
+    hover = alt.selection_point(nearest=True, on="pointerover", fields=["period"], empty=False)
+    rule = (
+        alt.Chart(observed)
+        .transform_filter(in_window)
+        .mark_rule(color=INK_MUTED, strokeWidth=1)
+        .encode(
+            x="period:T",
+            opacity=alt.condition(hover, alt.value(0.6), alt.value(0)),
+            tooltip=[
+                alt.Tooltip("period:T", title="Hour", format="%b %d %H:%M"),
+                alt.Tooltip("demand_mw:Q", title="Actual MW", format=",.0f"),
+            ],
+        )
+        .add_params(hover)
+    )
+    return (band + median + actual + rule).properties(height=320).add_params(origin)
+
+
 def coverage_and_width(frame: pd.DataFrame) -> alt.VConcatChart:
     """Coverage and interval width as two plots, never one.
 

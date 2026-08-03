@@ -16,6 +16,7 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
+from content import FALLBACK_ATTRIBUTION
 
 MARKETS = ("CISO", "ERCO", "PACE")
 BASE_ARM = "chronos_bolt_base"
@@ -99,6 +100,120 @@ def mean_demand() -> dict[str, float]:
         if not frame.empty:
             means[market] = float(frame["demand_mw"].mean())
     return means
+
+
+def origin_labels(window: pd.DataFrame) -> dict[int, str]:
+    """Each forecast origin's calendar date, for a control that has to name one."""
+    return {
+        int(origin): pd.Timestamp(
+            window.loc[window["origin"] == origin, "period"].iloc[0]
+        ).strftime("%Y-%m-%d")
+        for origin in sorted(window["origin"].unique())
+    }
+
+
+def attribution() -> str:
+    """The source notice the snapshot carries, or the minimum one if it carries none."""
+    notice = manifest().get("attribution", {})
+    joined = " · ".join(
+        value
+        for value in (
+            notice.get("observations_eia"),
+            notice.get("observations_noaa"),
+            notice.get("forecasts"),
+        )
+        if value
+    )
+    return joined or FALLBACK_ATTRIBUTION
+
+
+def skill_frame() -> pd.DataFrame:
+    """Error reduction against each market's *best* baseline, not against a fixed one.
+
+    Taking the best means the headline can never be manufactured by comparing against the
+    weaker of two controls, which is the whole point of carrying two.
+    """
+    rows = []
+    for series_id, arms in results("backtest_results.json").items():
+        model = arms.get(BASE_ARM)
+        baselines = {k: v for k, v in arms.items() if k.startswith("seasonal_naive")}
+        if not model or not baselines:
+            continue
+        best = min(baselines.items(), key=lambda kv: kv[1]["smape"])
+        rows.append(
+            {
+                "market": series_id.split(":")[0],
+                "reduction": (1 - model["smape"] / best[1]["smape"]) * 100,
+                "baseline": ARM_LABELS.get(best[0], best[0]),
+                "mase": model["mase"],
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def operator_frame() -> pd.DataFrame:
+    """Model against the operator's own day-ahead forecast, where one is comparable."""
+    rows = []
+    for series_id, arms in results("operator_comparison.json").items():
+        if "operator_day_ahead" not in arms or BASE_ARM not in arms:
+            continue
+        for arm, metrics in arms.items():
+            rows.append(
+                {
+                    "market": series_id.split(":")[0],
+                    "arm": ARM_LABELS.get(arm, arm),
+                    "sMAPE (%)": round(metrics["smape"], 3),
+                    "MASE": round(metrics["mase"], 3),
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+def weather_frame() -> pd.DataFrame:
+    """The weather arm against the calendar-only control, never against the raw model."""
+    rows = []
+    for series_id, arms in results("weather_ablation.json").items():
+        calendar, weather = arms.get(f"{BASE_ARM}+calendar"), arms.get(f"{BASE_ARM}+weather")
+        if not calendar or not weather:
+            continue
+        rows.append(
+            {
+                "Market": series_id.split(":")[0],
+                "sMAPE change (%)": round((weather["smape"] / calendar["smape"] - 1) * 100, 1),
+                "WQL change (%)": round((weather["wql"] / calendar["wql"] - 1) * 100, 1),
+                "Coverage, calendar (%)": round(calendar["coverage_80"] * 100, 1),
+                "Coverage, weather (%)": round(weather["coverage_80"] * 100, 1),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def offsets_frame() -> pd.DataFrame:
+    """Learned holiday offset per market and observance class. The pooled one is dropped:
+    the finding is that the two classes disagree, and the average of them is what hid it."""
+    rows = [
+        {"market": series_id.split(":")[0], "observance": label, "offset": value}
+        for series_id, entry in results("holiday_arm.json").items()
+        for label, value in entry.get("learned_offsets", {}).items()
+        if label != "pooled"
+    ]
+    return pd.DataFrame(rows)
+
+
+def per_holiday_frame(market: str) -> pd.DataFrame:
+    """One market's per-holiday change against the shipped arm, signed for colour."""
+    entry = results("holiday_arm.json").get(f"{market}:D", {})
+    rows = [
+        {
+            "date": record["date"],
+            "name": record["date"],
+            "observance": record["observance"],
+            "change": record["change_vs_scale"],
+            "direction": "better" if record["change_vs_scale"] < 0 else "worse",
+        }
+        for record in entry.get("per_holiday", [])
+    ]
+    return pd.DataFrame(rows)
 
 
 def coverage_width_frame() -> pd.DataFrame:

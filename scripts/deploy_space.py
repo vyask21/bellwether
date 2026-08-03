@@ -1,4 +1,4 @@
-"""Assemble and push the public Hugging Face Space.
+"""Build and push the public Hugging Face Space.
 
 Usage:
     python scripts/deploy_space.py                      # dry run, lists what would ship
@@ -8,47 +8,40 @@ Usage:
 ## The repository is private and the Space is public
 
 Those are two different git repositories, and the Space is world-readable the moment it
-exists. So this script does not push the project with exclusions; it **builds a directory
-from an explicit allowlist and pushes only that**. The difference matters: with an
-exclusion list, a new secret ships unless someone remembers to exclude it, and the default
-outcome of forgetting is a leak. With an allowlist, a new file does not ship until someone
-names it, and the default outcome of forgetting is a missing chart.
+exists. So this script does not push the project with exclusions; **it publishes only what
+`build_static_space.py` constructs**. The difference matters: with an exclusion list, a new
+secret ships unless someone remembers to exclude it, and the default outcome of forgetting
+is a leak. With a generated tree, a file does not ship until someone writes code that emits
+it, and the default outcome of forgetting is a missing chart.
 
-A second guard runs regardless: the staged tree is scanned for anything that looks like a
-credential, and the push aborts on a hit. It exists to catch the case where the allowlist
+That replaced an explicit allowlist of repository paths and is strictly stronger, because
+there is no longer any path by which a file in the working tree reaches the Space at all.
+
+A second guard runs regardless: the built tree is scanned for anything that looks like a
+credential, and the push aborts on a hit. It exists to catch the case where the builder
 itself is edited carelessly, and it has no opinion about whether the file was intended.
+
+## Static, and why
+
+Hugging Face retired the `streamlit` Space SDK, and Gradio and Docker Spaces are not free
+on `cpu-basic`. Streamlit needed a container it was never using for anything: this
+dashboard computes nothing at render time. So the Space is a static site, which is free,
+and `build_static_space.py` compiles the same charts from the same data.
 """
 
 from __future__ import annotations
 
 import argparse
 import re
-import shutil
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+
+from build_static_space import build  # noqa: E402
+
 DEFAULT_REPO = "vyask21/bellwether"
-
-# Everything the Space contains, named one by one. Sources are repo-relative; each maps to
-# its destination inside the Space. Nothing else is copied, ever.
-ALLOWLIST: tuple[tuple[str, str], ...] = (
-    ("dashboard/app.py", "app.py"),
-    ("dashboard/loaders.py", "loaders.py"),
-    ("dashboard/viz.py", "viz.py"),
-    ("dashboard/requirements.txt", "requirements.txt"),
-    ("dashboard/README.md", "README.md"),
-    ("dashboard/.streamlit/config.toml", ".streamlit/config.toml"),
-    ("snapshot/manifest.json", "snapshot/manifest.json"),
-    ("docs/backtest_results.json", "docs/backtest_results.json"),
-    ("docs/operator_comparison.json", "docs/operator_comparison.json"),
-    ("docs/weather_ablation.json", "docs/weather_ablation.json"),
-    ("docs/breach_analysis.json", "docs/breach_analysis.json"),
-    ("docs/holiday_arm.json", "docs/holiday_arm.json"),
-)
-
-# Snapshot Parquet, by market, added separately because the set is data rather than code.
-MARKETS = ("CISO", "ERCO", "PACE")
 
 # Anything matching aborts the push. Deliberately blunt: a false positive costs a minute of
 # reading, a false negative publishes a key to the internet.
@@ -61,31 +54,27 @@ SECRET_PATTERNS = (
     re.compile(r"api[_-]?key\s*[=:]\s*['\"][A-Za-z0-9]{16,}", re.I),
 )
 
-# Extensions worth scanning as text. Parquet is binary and holds demand readings; scanning
-# it for a regex would be theatre.
-SCANNABLE = {".py", ".toml", ".md", ".json", ".txt", ".cfg", ".yaml", ".yml"}
+# Extensions worth scanning as text. The site is all text now, including its data, so the
+# scan covers every byte that ships rather than most of them.
+SCANNABLE = {
+    ".py", ".toml", ".md", ".txt", ".cfg", ".yaml", ".yml",
+    ".html", ".css", ".js", ".json", ".csv",
+}
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo", default=DEFAULT_REPO, help="Hugging Face Space id")
     parser.add_argument("--push", action="store_true", help="upload; otherwise dry run")
-    parser.add_argument("--out", default=".space", help="staging directory")
+    parser.add_argument("--out", default=".space", help="build directory")
     args = parser.parse_args()
 
     staging = ROOT / args.out
-    if staging.exists():
-        shutil.rmtree(staging)
+    built = build(staging)
 
-    staged, missing = _stage(staging)
-    if missing:
-        print("Missing sources, not shipped:")
-        for name in missing:
-            print(f"  - {name}")
-
-    print(f"\nStaged {len(staged)} files into {staging.relative_to(ROOT)}:")
+    print(f"\nBuilt {len(built)} files into {staging.relative_to(ROOT)}:")
     total = 0
-    for path in sorted(staged):
+    for path in sorted(built):
         size = path.stat().st_size
         total += size
         print(f"  {str(path.relative_to(staging)):<44}{size / 1024:>9,.0f} KB")
@@ -93,7 +82,7 @@ def main() -> int:
 
     findings = _scan(staging)
     if findings:
-        print("\nABORTED. Possible credentials in the staged tree:")
+        print("\nABORTED. Possible credentials in the built tree:")
         for path, pattern in findings:
             print(f"  {path.relative_to(staging)}: matched {pattern}")
         return 2
@@ -111,33 +100,8 @@ def main() -> int:
     return _push(staging, args.repo)
 
 
-def _stage(staging: Path) -> tuple[list[Path], list[str]]:
-    staged, missing = [], []
-    for source, destination in ALLOWLIST:
-        origin = ROOT / source
-        if not origin.exists():
-            missing.append(source)
-            continue
-        target = staging / destination
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(origin, target)
-        staged.append(target)
-
-    for market in MARKETS:
-        for kind in ("demand", "forecasts"):
-            origin = ROOT / "snapshot" / f"{kind}_{market}.parquet"
-            if not origin.exists():
-                missing.append(f"snapshot/{kind}_{market}.parquet")
-                continue
-            target = staging / "snapshot" / origin.name
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(origin, target)
-            staged.append(target)
-    return staged, missing
-
-
 def _scan(staging: Path) -> list[tuple[Path, str]]:
-    """Read every text file in the staged tree and match it against the patterns."""
+    """Read every text file in the built tree and match it against the patterns."""
     findings = []
     for path in sorted(staging.rglob("*")):
         if not path.is_file() or path.suffix.lower() not in SCANNABLE:
@@ -160,11 +124,13 @@ def _push(staging: Path, repo: str) -> int:
     try:
         whoami = api.whoami()
     except Exception as error:  # noqa: BLE001 - the message is the useful part
-        print(f"\nNot authenticated ({error}).\nRun:  huggingface-cli login")
+        print(f"\nNot authenticated ({error}).\nRun:  hf auth login")
         return 1
 
     print(f"\nAuthenticated as {whoami.get('name', '?')}. Creating or updating {repo}.")
-    api.create_repo(repo_id=repo, repo_type="space", space_sdk="streamlit", exist_ok=True)
+    # `static` is not a preference. The Hub retired the `streamlit` SDK, and Gradio and
+    # Docker Spaces require a paid subscription on free hardware.
+    api.create_repo(repo_id=repo, repo_type="space", space_sdk="static", exist_ok=True)
     api.upload_folder(
         folder_path=str(staging),
         repo_id=repo,

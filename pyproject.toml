@@ -26,16 +26,19 @@ forecast = [
     "chronos-forecasting>=1.4.0",
     "statsforecast>=1.7.0",
 ]
-# The dashboard runs on the committed results and snapshot alone, so it needs neither the
-# forecast extra nor DuckDB. Kept separate so the Space installs a small tree.
+# The local development renderer. The published Space is static HTML and installs nothing
+# at all, so this is what `streamlit run dashboard/app.py` needs and nothing else.
 dashboard = [
     "streamlit>=1.40.0",
     "altair>=5.4.0",
 ]
-# Only needed to publish the Space, never to run the dashboard. Kept out of
-# dashboard/requirements.txt so the Space does not install its own deploy tooling.
+# Only needed to build and publish the Space, never to read it. Jinja2 and markdown-it-py
+# arrive with Streamlit anyway; they are named because `build_static_space.py` imports them
+# directly, and a dependency inherited by accident is one that can vanish by accident.
 deploy = [
     "huggingface_hub>=1.0.0",
+    "jinja2>=3.1.0",
+    "markdown-it-py>=3.0.0",
 ]
 dev = [
     "pytest>=8.3.0",
