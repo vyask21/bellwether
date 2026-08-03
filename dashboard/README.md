@@ -7,7 +7,7 @@ sdk: static
 app_file: index.html
 pinned: false
 license: mit
-short_description: Probabilistic electricity demand forecasting, measured against controls
+short_description: Probabilistic demand forecasting, measured against controls
 ---
 
 # Bellwether

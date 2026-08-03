@@ -176,6 +176,16 @@ class TestTheDataItShips:
         assert "sdk: static" in card
         assert "app_file: index.html" in card
 
+    def test_the_card_passes_the_hub_metadata_limits(self, static_site):
+        """The Hub validates the card before it accepts a single file, so a card it rejects
+        fails the upload after the repository has already been created. Caught that way
+        once, at 70 characters against a limit of 60."""
+        card = (static_site / "README.md").read_text(encoding="utf-8")
+        front = card.split("---", 2)[1]
+        described = re.search(r"^short_description:\s*(.+)$", front, re.M)
+        assert described, "the card carries no short_description"
+        assert len(described.group(1).strip()) <= 60, described.group(1)
+
 
 class TestTheOriginGuard:
     """The alignment assertion is load-bearing, so it is tested rather than trusted."""
