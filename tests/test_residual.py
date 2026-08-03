@@ -11,8 +11,12 @@ import numpy as np
 import pytest
 
 from bellwether.eval.ablation import (
+    FEDERAL_ONLY,
     LAG_HOURS,
+    ORDINARY,
+    WIDELY_OBSERVED,
     CachedForecast,
+    holiday_class_flags,
     holiday_flags,
     realised_volatility,
     run_corrector_ablation,
@@ -21,9 +25,11 @@ from bellwether.eval.ablation import (
 from bellwether.eval.metrics import DEFAULT_QUANTILES
 from bellwether.forecast.residual import (
     CALENDAR_ONLY,
+    CLASS_PRIOR_HOURS,
     VOLATILITY,
     WEATHER,
     WEATHER_VOLATILITY,
+    HolidayClassScaleCorrector,
     HolidayScaleCorrector,
     QuantileScaleCorrector,
     ResidualQuantileCorrector,
@@ -518,6 +524,7 @@ class TestAblation:
             "constant+weather+volatility",
             "constant+scale",
             "constant+scale+holiday",
+            "constant+scale+holidayclass",
         }
         counts = {name: r.n_windows for name, r in results.items()}
         assert len(set(counts.values())) == 1, counts
@@ -735,6 +742,162 @@ class TestHolidayScaleCorrector:
             HolidayScaleCorrector(self.LEVELS).fit(
                 self._forecasts(5), np.ones(5), np.zeros(4, dtype=bool)
             )
+
+
+class TestHolidayClassScaleCorrector:
+    """One offset per observance class, shrunk toward the pooled one.
+
+    The pooled corrector improved 28 of 33 widely-observed holidays across three markets
+    and 10 of 27 federal-only ones. Below a coin flip on the second group is a correction
+    being applied where nothing needs correcting, which is what the split addresses.
+    """
+
+    LEVELS = (0.1, 0.5, 0.9)
+
+    def _forecasts(self, n: int, half_width: float = 10.0) -> np.ndarray:
+        return np.column_stack(
+            [np.full(n, 100.0 - half_width), np.full(n, 100.0), np.full(n, 100.0 + half_width)]
+        )
+
+    def _class_data(self, n: int = 2000, major_drop: float = 30.0, minor_drop: float = 2.0):
+        """Demand that falls hard on widely-observed holidays and barely on federal-only ones.
+
+        One hour in ten is a holiday, split evenly between the classes, which is roughly the
+        real ratio: six widely-observed federal holidays against five federal-only ones.
+        """
+        codes = np.zeros(n, dtype=np.int8)
+        codes[np.arange(n) % 20 == 0] = WIDELY_OBSERVED
+        codes[np.arange(n) % 20 == 10] = FEDERAL_ONLY
+        drop = np.where(codes == WIDELY_OBSERVED, major_drop, 0.0) + np.where(
+            codes == FEDERAL_ONLY, minor_drop, 0.0
+        )
+        return self._forecasts(n), np.full(n, 100.0) - drop, codes
+
+    def test_it_learns_a_separate_offset_per_class(self):
+        base, actual, codes = self._class_data(major_drop=30.0, minor_drop=2.0)
+        corrector = HolidayClassScaleCorrector(self.LEVELS).fit(base, actual, codes)
+
+        assert corrector.offsets[WIDELY_OBSERVED] < -20.0
+        assert corrector.offsets[FEDERAL_ONLY] > -10.0
+
+    def test_the_pooled_offset_splits_the_difference_and_fits_neither(self):
+        """Why the split exists, stated as a measurement against its own control."""
+        base, actual, codes = self._class_data(major_drop=30.0, minor_drop=0.0)
+        pooled = HolidayScaleCorrector(self.LEVELS).fit(base, actual, codes > 0)
+        split = HolidayClassScaleCorrector(self.LEVELS).fit(base, actual, codes)
+
+        minor = codes == FEDERAL_ONLY
+        pooled_error = np.abs(actual[minor] - pooled.predict(base, codes > 0)[minor, 1])
+        split_error = np.abs(actual[minor] - split.predict(base, codes)[minor, 1])
+        assert split_error.mean() < pooled_error.mean()
+        # And it does not pay for that on the holidays the pooled arm already handled.
+        major = codes == WIDELY_OBSERVED
+        assert (
+            np.abs(actual[major] - split.predict(base, codes)[major, 1]).mean()
+            <= np.abs(actual[major] - pooled.predict(base, codes > 0)[major, 1]).mean() + 1.0
+        )
+
+    def test_a_single_class_reduces_to_the_pooled_corrector(self):
+        """Shrinkage toward the pooled offset is a no-op when there is nothing to split.
+
+        This is what makes the pooled arm a fair control: with one class the two arms are
+        the same estimator, so any difference between them comes from the split alone.
+        """
+        n = 2000
+        codes = np.where(np.arange(n) % 10 == 0, WIDELY_OBSERVED, ORDINARY).astype(np.int8)
+        actual = np.full(n, 100.0) - np.where(codes > 0, 30.0, 0.0)
+        base = self._forecasts(n)
+
+        pooled = HolidayScaleCorrector(self.LEVELS).fit(base, actual, codes > 0)
+        split = HolidayClassScaleCorrector(self.LEVELS).fit(base, actual, codes)
+        assert split.offsets[WIDELY_OBSERVED] == pytest.approx(pooled.offset)
+        assert np.allclose(split.predict(base, codes), pooled.predict(base, codes > 0))
+
+    def test_a_barely_seen_class_leans_on_the_pooled_offset(self):
+        """A class estimate from one afternoon is noise; shrinkage says so by weight."""
+        n = 2000
+        codes = np.zeros(n, dtype=np.int8)
+        codes[np.arange(n) % 10 == 0] = WIDELY_OBSERVED
+        codes[:4] = FEDERAL_ONLY  # four hours, against CLASS_PRIOR_HOURS of 48
+        actual = np.full(n, 100.0) - np.where(codes == WIDELY_OBSERVED, 30.0, 0.0)
+
+        corrector = HolidayClassScaleCorrector(self.LEVELS).fit(self._forecasts(n), actual, codes)
+        weight = 4 / (4 + CLASS_PRIOR_HOURS)
+        assert corrector.offsets[FEDERAL_ONLY] == pytest.approx(
+            weight * 0.0 + (1 - weight) * corrector.offset, abs=1e-6
+        )
+
+    def test_an_unseen_class_falls_back_to_the_pooled_offset(self):
+        """Juneteenth appears late in a two-year window, and 'it is a holiday' still holds."""
+        n = 2000
+        codes = np.where(np.arange(n) % 10 == 0, WIDELY_OBSERVED, ORDINARY).astype(np.int8)
+        actual = np.full(n, 100.0) - np.where(codes > 0, 30.0, 0.0)
+        corrector = HolidayClassScaleCorrector(self.LEVELS).fit(self._forecasts(n), actual, codes)
+
+        probe = self._forecasts(2)
+        adjusted = corrector.predict(probe, np.array([FEDERAL_ONLY, ORDINARY], dtype=np.int8))
+        assert adjusted[0, 1] == pytest.approx(100.0 + corrector.offset)
+        assert adjusted[1, 1] == pytest.approx(100.0)
+
+    def test_too_few_holiday_hours_means_no_shift_at_all(self):
+        """With no pooled offset there is nothing to split, and no class offsets are made up."""
+        n = 400
+        codes = np.zeros(n, dtype=np.int8)
+        codes[:10] = WIDELY_OBSERVED
+        actual = np.full(n, 100.0) - np.where(codes > 0, 30.0, 0.0)
+        corrector = HolidayClassScaleCorrector(self.LEVELS).fit(self._forecasts(n), actual, codes)
+
+        assert corrector.offset == 0.0
+        assert corrector.offsets == {}
+
+    def test_ordinary_hours_are_untouched(self):
+        base, actual, codes = self._class_data()
+        corrector = HolidayClassScaleCorrector(self.LEVELS).fit(base, actual, codes)
+        adjusted = corrector.predict(base, codes)
+
+        ordinary = codes == ORDINARY
+        assert np.allclose(
+            adjusted[ordinary], QuantileScaleCorrector.predict(corrector, base)[ordinary]
+        )
+
+    def test_mismatched_codes_are_rejected(self):
+        with pytest.raises(ValueError, match="class codes"):
+            HolidayClassScaleCorrector(self.LEVELS).fit(
+                self._forecasts(5), np.ones(5), np.zeros(4, dtype=np.int8)
+            )
+
+
+class TestHolidayClassFlags:
+    """The split is fixed from private-sector observance, not from any result here."""
+
+    def _day(self, date: str) -> np.ndarray:
+        return np.array(
+            [np.datetime64(f"{date}T00", "ns") + np.timedelta64(h, "h") for h in range(48)]
+        )
+
+    def test_christmas_is_widely_observed(self):
+        codes = holiday_class_flags(self._day("2025-12-25"), "America/Chicago")
+        assert (codes == WIDELY_OBSERVED).any()
+        assert not (codes == FEDERAL_ONLY).any()
+
+    def test_veterans_day_is_federal_only(self):
+        codes = holiday_class_flags(self._day("2025-11-11"), "America/Chicago")
+        assert (codes == FEDERAL_ONLY).any()
+        assert not (codes == WIDELY_OBSERVED).any()
+
+    def test_an_ordinary_week_carries_no_class(self):
+        stamps = np.array(
+            [np.datetime64("2025-03-10T00", "ns") + np.timedelta64(h, "h") for h in range(72)]
+        )
+        assert not holiday_class_flags(stamps, "America/Chicago").any()
+
+    def test_the_codes_agree_with_the_plain_holiday_flag(self):
+        """Two calendars that disagreed would make the arms incomparable rather than wrong."""
+        stamps = np.array(
+            [np.datetime64("2025-01-01T00", "ns") + np.timedelta64(h, "h") for h in range(24 * 400)]
+        )
+        codes = holiday_class_flags(stamps, "America/Los_Angeles")
+        assert np.array_equal(codes > 0, holiday_flags(stamps, "America/Los_Angeles"))
 
 
 class TestHolidayFlags:

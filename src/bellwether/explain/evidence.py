@@ -27,6 +27,7 @@ move demand, which is the series being forecast. See docs/DATA_SOURCES.md.
 
 from __future__ import annotations
 
+import datetime
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -120,6 +121,41 @@ def holidays_in_window(start: pd.Timestamp, end: pd.Timestamp) -> pd.DatetimeInd
     return calendar.holidays(
         start=start.normalize() - pd.Timedelta(days=1), end=end.normalize() + pd.Timedelta(days=1)
     )
+
+
+# The six federal holidays that private employers actually close for. The split is not a
+# judgement about which holidays matter, it is about who stops working: BLS employee
+# benefits data puts paid time off for these six above 90% of private industry workers,
+# against roughly 15 to 40% for the rest. Demand follows payroll, not the federal register.
+#
+# Fixed from that external rule rather than from any result in this repository, because the
+# alternative is choosing the grouping that flatters the arm being tested.
+WIDELY_OBSERVED_HOLIDAYS = frozenset(
+    {
+        "New Year's Day",
+        "Memorial Day",
+        "Independence Day",
+        "Labor Day",
+        "Thanksgiving Day",
+        "Christmas Day",
+    }
+)
+
+
+def holiday_names_in_window(start: pd.Timestamp, end: pd.Timestamp) -> dict[datetime.date, str]:
+    """Federal holiday dates in a window, mapped to their calendar rule names.
+
+    `USFederalHolidayCalendar.holidays` returns dates and drops the names, so the rules are
+    walked individually. Names are needed because the observed dates move: Independence Day
+    lands on a Friday in 2026 and the date alone cannot say which holiday it is.
+    """
+    padded_start = start.normalize() - pd.Timedelta(days=1)
+    padded_end = end.normalize() + pd.Timedelta(days=1)
+    named = {}
+    for rule in USFederalHolidayCalendar().rules:
+        for date in rule.dates(padded_start, padded_end):
+            named[date.date()] = rule.name
+    return named
 
 
 def gather_evidence(

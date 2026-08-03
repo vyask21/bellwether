@@ -29,12 +29,14 @@ and `anthropic` is not a dependency.
 | NOAA weather ingestion | done, 14 stations, hourly temperature |
 | Corrector ablation: weather and volatility | done, [both predictions failed usefully](docs/RESULTS.md) |
 | Breach detection and error decomposition | done, [where the forecast fails](docs/RESULTS.md) |
+| Holiday corrector, pooled and split by observance | done, [measured twice, shipped neither](docs/RESULTS.md) |
 | Nuclear outage and energy disruption ingestion | todo |
 | Brief generation, with citation verification | done, deterministic, no API key |
-| Scheduled refresh and dashboard | todo |
+| Dashboard on Hugging Face Spaces | todo, hosting decided |
+| Scheduled refresh | todo, persistence undecided |
 
-A companion project is sketched but not started: an MCP server exposing EIA data to LLM
-agents, reusing this project's compliant API client. See
+A companion project is sketched and parked: an MCP server exposing EIA data to LLM agents,
+reusing this project's compliant API client. Nothing here depends on it. See
 [docs/COMPANION_MCP_SERVER.md](docs/COMPANION_MCP_SERVER.md).
 
 Current status, decisions, and next steps: [docs/STATE.md](docs/STATE.md).

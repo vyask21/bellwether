@@ -432,6 +432,91 @@ class HolidayScaleCorrector(QuantileScaleCorrector):
         return scaled + (self._offset * is_holiday.astype(float))[:, None]
 
 
+# Hours of a class that must be seen before its own offset outweighs the pooled one. Set to
+# MIN_HOLIDAY_HOURS, so a class carries its own estimate at the same point the pooled offset
+# is trusted at all. Two years give a class 250-odd hours, which is a weight near 0.85.
+CLASS_PRIOR_HOURS = MIN_HOLIDAY_HOURS
+
+
+class HolidayClassScaleCorrector(HolidayScaleCorrector):
+    """Shifts holidays by how widely each one is observed, not by one shared amount.
+
+    Its predecessor applies a single offset to every US federal holiday, and measured over
+    three markets that offset improves 28 of 33 widely-observed holidays and only 10 of 27
+    federal-only ones. Below a coin flip on the second group is the signature of a
+    correction being applied where nothing needs correcting: demand on Veterans Day looks
+    like demand on an ordinary Tuesday, so shifting it by Christmas's amount can only hurt.
+
+    So the offset is estimated per observance class, and each class estimate is shrunk
+    toward the pooled one by how many of its hours have been seen:
+
+        offset_c = w_c * (median residual on class c - median residual on ordinary hours)
+                   + (1 - w_c) * pooled_offset,     w_c = n_c / (n_c + CLASS_PRIOR_HOURS)
+
+    Shrinkage rather than a threshold, for a reason specific to this backtest. The corrector
+    refits on a growing window, so early origins have seen two or three holidays in total
+    and a class estimate from one afternoon would be noise. A hard cutoff would make the arm
+    inert until it fired; shrinkage hands weight over as the evidence arrives, and at zero
+    hours the arm is exactly its predecessor. That matters because its predecessor is the
+    control: any difference between them has to come from the split rather than from one arm
+    having a warmup the other does not.
+
+    The class assignment itself is fixed in `WIDELY_OBSERVED_HOLIDAYS` from private-sector
+    paid time off, an external labour statistic, and is not fitted here.
+    """
+
+    def __init__(self, quantile_levels: tuple[float, ...] = DEFAULT_QUANTILES) -> None:
+        super().__init__(quantile_levels)
+        self._offsets: dict[int, float] = {}
+
+    @property
+    def offsets(self) -> dict[int, float]:
+        """Megawatts to shift by, per observance class. Empty when the pooled offset is zero."""
+        return dict(self._offsets)
+
+    def fit(  # type: ignore[override]
+        self, base_quantiles: np.ndarray, actual: np.ndarray, holiday_class: np.ndarray
+    ) -> HolidayClassScaleCorrector:
+        """Learn scale factors from all hours, and one shrunk shift per observance class."""
+        if holiday_class.size != actual.size:
+            raise ValueError(f"Got {holiday_class.size} class codes and {actual.size} actuals")
+        super().fit(base_quantiles, actual, holiday_class > 0)
+
+        self._offsets = {}
+        residual = actual - base_quantiles[:, _median_index(self.quantile_levels)]
+        ordinary = residual[holiday_class == 0]
+        # A zero pooled offset means too few holiday hours to shift at all, and splitting
+        # what is already nothing would only invent per-class estimates from less evidence.
+        if self._offset == 0.0 or ordinary.size == 0:
+            return self
+
+        ordinary_median = float(np.median(ordinary))
+        for code in np.unique(holiday_class[holiday_class > 0]):
+            own = residual[holiday_class == code]
+            weight = own.size / (own.size + CLASS_PRIOR_HOURS)
+            raw = float(np.median(own)) - ordinary_median
+            self._offsets[int(code)] = weight * raw + (1.0 - weight) * self._offset
+        return self
+
+    def predict(  # type: ignore[override]
+        self, base_quantiles: np.ndarray, holiday_class: np.ndarray
+    ) -> np.ndarray:
+        """Scale, then shift each holiday hour by its class offset.
+
+        A class absent from training falls back to the pooled offset rather than to zero.
+        Juneteenth first appears late in a two-year window, and the evidence that it is a
+        holiday at all is stronger than any estimate of how much it is observed.
+        """
+        scaled = QuantileScaleCorrector.predict(self, base_quantiles)
+        shift = np.array(
+            [
+                0.0 if code == 0 else self._offsets.get(int(code), self._offset)
+                for code in holiday_class
+            ]
+        )
+        return scaled + shift[:, None]
+
+
 # Below this the base model emitted no usable spread at that level, so no scale can be read.
 _ZERO_SPREAD_TOLERANCE = 1e-9
 

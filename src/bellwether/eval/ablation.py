@@ -48,12 +48,17 @@ from bellwether.eval.metrics import (
     smape,
     weighted_quantile_loss,
 )
-from bellwether.explain.evidence import holidays_in_window
+from bellwether.explain.evidence import (
+    WIDELY_OBSERVED_HOLIDAYS,
+    holiday_names_in_window,
+    holidays_in_window,
+)
 from bellwether.forecast.base import Forecaster
 from bellwether.forecast.residual import (
     ALL_SPECS,
     DEFAULT_MIN_TRAIN_ORIGINS,
     FeatureSpec,
+    HolidayClassScaleCorrector,
     HolidayScaleCorrector,
     QuantileScaleCorrector,
     ResidualQuantileCorrector,
@@ -69,6 +74,16 @@ SCALE_ARM = "scale"
 # The scale arm plus a calendar the base model cannot see. Kept separate from `scale` so
 # the holiday effect is measured against a corrector identical in every other respect.
 HOLIDAY_ARM = "scale+holiday"
+
+# The same calendar split by how widely each holiday is actually observed. Its control is
+# HOLIDAY_ARM rather than SCALE_ARM: the question is whether splitting the shift helps, not
+# whether shifting helps, and those were tangled in the first version of this experiment.
+HOLIDAY_CLASS_ARM = "scale+holidayclass"
+
+# Observance codes. Ordinary is zero so `codes > 0` recovers the plain holiday flag.
+ORDINARY = 0
+WIDELY_OBSERVED = 1
+FEDERAL_ONLY = 2
 
 log = logging.getLogger(__name__)
 
@@ -183,6 +198,26 @@ def holiday_flags(timestamps: np.ndarray, timezone: str) -> np.ndarray:
     return np.isin(dates.to_numpy(), holidays.to_numpy())
 
 
+def holiday_class_flags(timestamps: np.ndarray, timezone: str) -> np.ndarray:
+    """Which observance class each hour falls in: 0 ordinary, 1 widely observed, 2 federal only.
+
+    Codes rather than names, because the corrector estimates one offset per class and the
+    class count is what has to stay small. Two classes over two years give each of them
+    roughly 250 holiday hours to be estimated from; eleven named holidays would give 48.
+    """
+    local = pd.DatetimeIndex(timestamps).tz_localize("UTC").tz_convert(timezone)
+    dates = local.normalize().tz_localize(None)
+    if not dates.size:
+        return np.zeros(len(timestamps), dtype=np.int8)
+
+    named = holiday_names_in_window(dates[0], dates[-1])
+    classes = {
+        date: (WIDELY_OBSERVED if name in WIDELY_OBSERVED_HOLIDAYS else FEDERAL_ONLY)
+        for date, name in named.items()
+    }
+    return np.array([classes.get(d.date(), ORDINARY) for d in dates], dtype=np.int8)
+
+
 def run_corrector_ablation(
     forecaster: Forecaster,
     series: np.ndarray,
@@ -223,6 +258,7 @@ def run_corrector_ablation(
 
     local_hours, is_weekend = _calendar_columns(timestamps, timezone)
     is_holiday = holiday_flags(timestamps, timezone)
+    holiday_class = holiday_class_flags(timestamps, timezone)
     median_index = _median_index(quantile_levels)
 
     # Feature rows and residuals for every origin, built once and sliced per fit. The
@@ -242,6 +278,7 @@ def run_corrector_ablation(
     stacked_base = np.concatenate([c.quantiles for c in cached])
     stacked_actual = np.concatenate([series[c.origin : c.origin + horizon] for c in cached])
     stacked_holiday = np.concatenate([is_holiday[c.origin : c.origin + horizon] for c in cached])
+    stacked_class = np.concatenate([holiday_class[c.origin : c.origin + horizon] for c in cached])
 
     # Warmup origins are excluded from every arm, including the uncorrected one, so the
     # comparison is over one window set rather than three.
@@ -259,6 +296,7 @@ def run_corrector_ablation(
         *(f"{forecaster.name}+{spec.name}" for spec in specs),
         f"{forecaster.name}+{SCALE_ARM}",
         f"{forecaster.name}+{HOLIDAY_ARM}",
+        f"{forecaster.name}+{HOLIDAY_CLASS_ARM}",
     ]
     results = {name: BacktestResult(name, series_id, horizon, 0) for name in arm_names}
     forecasts: dict[str, list[np.ndarray]] = {name: [] for name in arm_names}
@@ -334,6 +372,24 @@ def run_corrector_ablation(
             median_index,
         )
         forecasts[f"{forecaster.name}+{HOLIDAY_ARM}"].append(adjusted)
+
+        class_scaler = HolidayClassScaleCorrector(quantile_levels).fit(
+            stacked_base[: position * horizon],
+            stacked_actual[: position * horizon],
+            stacked_class[: position * horizon],
+        )
+        by_class = class_scaler.predict(base, holiday_class[origin : origin + horizon])
+        _score(
+            results[f"{forecaster.name}+{HOLIDAY_CLASS_ARM}"],
+            origin,
+            actual,
+            by_class,
+            history,
+            season_length,
+            quantile_levels,
+            median_index,
+        )
+        forecasts[f"{forecaster.name}+{HOLIDAY_CLASS_ARM}"].append(by_class)
 
     return AblationOutput(
         results=results,
