@@ -86,6 +86,8 @@ python scripts/run_holiday_arm.py CISO               # holiday shift, pooled and
 
 python scripts/export_snapshot.py CISO               # ~8 min, writes snapshot/
 pip install -e ".[dashboard]" && streamlit run dashboard/app.py
+
+pip install -e ".[deploy]" && hf auth login          # a Write token, once per machine
 python scripts/deploy_space.py                       # dry run; --push to publish
 ```
 

@@ -32,6 +32,11 @@ dashboard = [
     "streamlit>=1.40.0",
     "altair>=5.4.0",
 ]
+# Only needed to publish the Space, never to run the dashboard. Kept out of
+# dashboard/requirements.txt so the Space does not install its own deploy tooling.
+deploy = [
+    "huggingface_hub>=1.0.0",
+]
 dev = [
     "pytest>=8.3.0",
     "pytest-cov>=5.0.0",
