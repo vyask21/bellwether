@@ -122,7 +122,7 @@ def cache_base_forecasts(
 
 def usable_origins(
     series: np.ndarray,
-    temperature: np.ndarray,
+    temperature: np.ndarray | None,
     horizon: int,
     initial_train_size: int,
     step: int = 24,
@@ -134,6 +134,11 @@ def usable_origins(
     partway through for a reason that applies to only one arm. The weather requirement
     reaches back an extra 24 hours beyond the forecast window, since the day-over-day
     temperature change needs the same hours from the day before.
+
+    `temperature=None` drops the weather requirement, for experiments whose arms do not
+    use it. That roughly doubles the usable period, since NCEI's archive ends eleven months
+    before EIA's data does, and it means the run is on a **different window** from every
+    weather-scored result. Any comparison across the two compares windows, not models.
     """
     origins = []
     for origin in range(initial_train_size, series.size - horizon + 1, step):
@@ -147,10 +152,11 @@ def usable_origins(
             continue
         if origin < LAG_HOURS:
             continue
-        if not np.all(np.isfinite(temperature[target])):
-            continue
-        if not np.all(np.isfinite(temperature[lagged])):
-            continue
+        if temperature is not None:
+            if not np.all(np.isfinite(temperature[target])):
+                continue
+            if not np.all(np.isfinite(temperature[lagged])):
+                continue
         origins.append(origin)
     return origins
 
@@ -181,7 +187,7 @@ def run_corrector_ablation(
     forecaster: Forecaster,
     series: np.ndarray,
     timestamps: np.ndarray,
-    temperature: np.ndarray,
+    temperature: np.ndarray | None,
     *,
     series_id: str,
     timezone: str,
@@ -200,6 +206,9 @@ def run_corrector_ablation(
     whether it does, and the interval breaches that the explanation layer works from live
     in the individual hours rather than in the aggregate.
     """
+    if temperature is None and any(spec.use_weather for spec in specs):
+        raise ValueError("Weather arms were requested without a temperature series")
+
     origins = usable_origins(
         series, temperature, horizon, initial_train_size, season_length=season_length
     )
