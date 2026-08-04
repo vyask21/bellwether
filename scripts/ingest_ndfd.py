@@ -36,6 +36,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from bellwether.ingest.ndfd import (  # noqa: E402
     ARCHIVE_START,
+    MAX_STEP_HOURS,
     NDFDClient,
     extract_station_forecasts,
     select_issuance,
@@ -57,9 +58,15 @@ def main() -> int:
         help="take the freshest run published at or before this UTC hour (default 12)",
     )
     parser.add_argument(
+        "--max-step",
+        type=int,
+        default=MAX_STEP_HOURS,
+        help=f"decode projections out to this many hours ahead (default {MAX_STEP_HOURS})",
+    )
+    parser.add_argument(
         "--skip-stored",
         action="store_true",
-        help="skip days that already have rows, so an interrupted backfill resumes",
+        help="skip days already stored out to --max-step, so an interrupted backfill resumes",
     )
     args = parser.parse_args()
 
@@ -75,7 +82,7 @@ def main() -> int:
 
     total_rows, fetched, skipped, missing = 0, 0, 0, []
     with connect() as conn, NDFDClient() as client:
-        stored = _days_already_stored(conn) if args.skip_stored else set()
+        stored = _days_already_stored(conn, args.max_step) if args.skip_stored else set()
         for day in _days(args.start, args.end):
             if day in stored:
                 skipped += 1
@@ -90,7 +97,7 @@ def main() -> int:
                 # not an error. Recorded and reported rather than silently skipped.
                 missing.append(day)
                 continue
-            rows = extract_station_forecasts(client.fetch(chosen.key), stations)
+            rows = extract_station_forecasts(client.fetch(chosen.key), stations, args.max_step)
             written = upsert_weather_forecasts(conn, rows)
             total_rows += written
             fetched += 1
@@ -112,9 +119,25 @@ def main() -> int:
     return 0
 
 
-def _days_already_stored(conn) -> set[date]:
+def _days_already_stored(conn, max_step: int) -> set[date]:
+    """Days already ingested **out to the requested projection**, not merely present.
+
+    A day stored under a shorter limit is not done. Treating presence as completeness is
+    how raising `--max-step` would silently skip every day it was meant to extend, which is
+    exactly what happened when the limit went from 27 to 36.
+
+    The date is taken in UTC. `CAST(timestamptz AS DATE)` uses the session timezone, which
+    in MST puts a run issued after 17:00 local on the previous calendar day.
+    """
+    conn.execute("SET TimeZone='UTC'")
     rows = conn.execute(
-        "SELECT DISTINCT CAST(issued_at AS DATE) AS day FROM weather_forecasts"
+        """
+        SELECT CAST(issued_at AS DATE) AS day
+        FROM weather_forecasts
+        GROUP BY 1
+        HAVING max(datediff('hour', issued_at, valid_at)) >= ?
+        """,
+        [max_step - 3],  # 3-hourly grid: the last stamp at or below the limit
     ).fetchall()
     return {row[0] for row in rows}
 

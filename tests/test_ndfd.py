@@ -225,14 +225,30 @@ class TestMessageSplitting:
 
 
 class TestProjectionLimit:
-    def test_it_decodes_only_the_horizon_the_backtest_scores(self):
-        """Two thirds of every file is projections beyond a 24 hour horizon, and decoding
-        is the whole cost of the ingest. The limit is the difference between a nine hour
-        backfill and a nineteen hour one."""
+    """The limit is measured from the issuance, not from the horizon.
+
+    A first pass reasoned from the 24 hour horizon, capped at +27, and covered 6 of every
+    24 window hours. Decoding is the whole cost of the ingest, so the temptation to trim
+    this is real and the arithmetic below is what makes trimming safe.
+    """
+
+    # A window opens at 00:00 UTC and is served by the previous day's 12:00 UTC run, the
+    # operationally correct day-ahead choice, so its first hour already sits at lead 12.
+    ORIGIN_LEAD = 12
+    HORIZON = 24
+
+    def test_it_reaches_the_end_of_a_window_it_did_not_open(self):
         from bellwether.ingest import ndfd
 
-        assert ndfd.MAX_STEP_HOURS == 27
-        assert ndfd.MAX_STEP_HOURS >= 24, "a 24 hour horizon needs a projection covering it"
+        assert ndfd.MAX_STEP_HOURS >= self.ORIGIN_LEAD + self.HORIZON - 1
+
+    def test_it_reaches_the_closing_stamp_a_window_interpolates_against(self):
+        """Hour 23 sits between the +33 and +36 stamps. Without the later one it would have
+        to borrow the next run's opening stamp, which is a fresher forecast."""
+        from bellwether.ingest import ndfd
+
+        assert ndfd.MAX_STEP_HOURS >= self.ORIGIN_LEAD + self.HORIZON
+        assert ndfd.MAX_STEP_HOURS % 3 == 0, "NDFD publishes on a 3 hourly grid"
 
 
 class TestExtraction:

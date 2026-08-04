@@ -97,13 +97,18 @@ RETRYABLE_STATUS_CODES = frozenset({429, 500, 502, 503, 504})
 # GRIB2 encodes 2 metre temperature in Kelvin.
 KELVIN_OFFSET = 273.15
 
-# Projections to decode, in hours ahead. The file carries +3 to +60 and the backtest scores
-# a 24 hour horizon, so two thirds of every file is for an experiment this project does not
-# run. Decoding is the entire cost here, about 0.33s per station per projection against a
-# 1.3s download, so this is the difference between a nine hour backfill and a nineteen hour
-# one. Raise it and re-run the range if a longer horizon is ever scored; the archive is not
-# going anywhere.
-MAX_STEP_HOURS = 27
+# Projections to decode, in hours ahead. The file carries +3 to +60 and decoding is the
+# entire cost of the ingest, about 0.33s per station per projection against a 1.3s
+# download, so this bound is most of the runtime.
+#
+# **36, not 27.** The horizon is 24 hours, but the lead that matters is measured from the
+# *issuance*, not from the start of the window. A backtest origin sits at 00:00 UTC and the
+# freshest run it may honestly see is the previous day's 12:00 UTC one, so its window spans
+# leads 12 to 35. A first pass capped this at 27 by reasoning from the horizon, and covered
+# 6 of every 24 hours. +36 also lands exactly on the window's closing hour, which is the
+# right endpoint needed to interpolate the 3-hourly grid up to hour 23 without borrowing a
+# stamp from the next run.
+MAX_STEP_HOURS = 36
 
 # GRIB2 section 0: the marker, then two reserved bytes, discipline, edition, and the total
 # message length as a big-endian 8 byte integer. Sixteen bytes in all.

@@ -248,6 +248,115 @@ def load_market_temperature(
         return np.where(weight_total > 0, weighted_sum / weight_total, np.nan)
 
 
+def load_market_forecast_temperature(
+    conn: duckdb.DuckDBPyConnection,
+    respondent: str,
+    timestamps: np.ndarray,
+    origin_hour: int = 0,
+) -> np.ndarray:
+    """Population-weighted **forecast** temperature, on the caller's hourly grid.
+
+    The observed counterpart answers "what was the temperature at this hour". This answers
+    a harder question: "what did the forecaster expect this hour to be, using only what had
+    been published when the window opened". Those differ, and the difference is the whole
+    point of the arm this feeds.
+
+    ## Which run each hour is allowed to see
+
+    Backtest origins advance 24 hours and sit at `origin_hour` UTC. Every hour in a window
+    is served by the freshest run issued **at or before that window's origin**, so no hour
+    is ever described by a forecast published after the forecaster would have had to commit.
+    Taking the freshest run per *hour* instead would quietly hand later hours a fresher
+    forecast, which is the same leak as using observations and looks like skill.
+
+    ## Why a window is filled from one run only
+
+    NDFD publishes CONUS temperature every three hours, so a run supplies nine stamps across
+    a 24 hour window: its opening hour, seven interior ones, and the closing hour at lead
+    +36. Interpolation happens strictly between stamps of that one run. The tempting
+    shortcut is to borrow the next run's opening stamp to close the window, which is both a
+    different forecast and a fresher one, so the last two hours of every window would be
+    scored against information the window never had.
+
+    Hours with no covering run come back as NaN, and `usable_origins` drops those windows
+    for every arm at once rather than for this one.
+    """
+    stations = stations_for(respondent)
+    weights = {s.station_id: float(s.population) for s in stations}
+    placeholders = ", ".join("?" for _ in stations)
+
+    conn.execute("SET TimeZone='UTC'")
+    rows = conn.execute(
+        f"""
+        SELECT issued_at, valid_at, station_id, temperature_c
+        FROM weather_forecasts
+        WHERE station_id IN ({placeholders})
+          AND temperature_c IS NOT NULL
+        ORDER BY issued_at, valid_at
+        """,
+        [s.station_id for s in stations],
+    ).fetchall()
+
+    # run -> hour -> station -> temperature
+    by_run: dict[np.datetime64, dict[np.datetime64, dict[str, float]]] = {}
+    for issued_at, valid_at, station_id, temperature in rows:
+        run = np.datetime64(issued_at.replace(tzinfo=None), "ns")
+        hour = np.datetime64(valid_at.replace(tzinfo=None), "ns")
+        by_run.setdefault(run, {}).setdefault(hour, {})[station_id] = float(temperature)
+    runs = np.array(sorted(by_run), dtype="datetime64[ns]")
+
+    out = np.full(timestamps.size, np.nan, dtype=float)
+    if runs.size == 0:
+        return out
+
+    hour_of_day = timestamps.astype("datetime64[h]").astype(int) % 24
+    starts = np.flatnonzero(hour_of_day == origin_hour)
+
+    for start in starts:
+        origin = timestamps[start]
+        stop = min(start + 24, timestamps.size)
+        # The freshest run published at or before this window's origin, and nothing later.
+        eligible = np.searchsorted(runs, origin, side="right") - 1
+        if eligible < 0:
+            continue
+        stamps = by_run[runs[eligible]]
+
+        known_hours, known_values = [], []
+        for hour in sorted(stamps):
+            weighted = _weighted_temperature(stamps[hour], weights)
+            if weighted is not None:
+                known_hours.append(hour)
+                known_values.append(weighted)
+        if len(known_hours) < 2:
+            continue
+
+        grid = timestamps[start:stop]
+        known = np.array(known_hours, dtype="datetime64[ns]")
+        # Outside the run's own stamps there is nothing to interpolate between, and
+        # extrapolating a temperature off the end of a forecast is inventing one.
+        inside = (grid >= known[0]) & (grid <= known[-1])
+        if not inside.any():
+            continue
+        out[start:stop][inside] = np.interp(
+            grid[inside].astype("int64"),
+            known.astype("int64"),
+            np.array(known_values, dtype=float),
+        )
+    return out
+
+
+def _weighted_temperature(readings: dict[str, float], weights: dict[str, float]) -> float | None:
+    """Population-weighted mean over whichever stations reported, or None if none did.
+
+    Renormalised over the stations present, so an absent station shifts the average toward
+    the remaining cities rather than dragging it toward zero.
+    """
+    total = sum(weights[sid] for sid in readings if sid in weights)
+    if total <= 0:
+        return None
+    return sum(value * weights[sid] for sid, value in readings.items() if sid in weights) / total
+
+
 def weather_coverage_report(conn: duckdb.DuckDBPyConnection) -> list[dict]:
     """Per-station hourly coverage: the weather counterpart to `coverage_report`."""
     rows = conn.execute(
