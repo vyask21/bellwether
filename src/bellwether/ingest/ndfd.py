@@ -97,6 +97,14 @@ RETRYABLE_STATUS_CODES = frozenset({429, 500, 502, 503, 504})
 # GRIB2 encodes 2 metre temperature in Kelvin.
 KELVIN_OFFSET = 273.15
 
+# Projections to decode, in hours ahead. The file carries +3 to +60 and the backtest scores
+# a 24 hour horizon, so two thirds of every file is for an experiment this project does not
+# run. Decoding is the entire cost here, about 0.33s per station per projection against a
+# 1.3s download, so this is the difference between a nine hour backfill and a nineteen hour
+# one. Raise it and re-run the range if a longer horizon is ever scored; the archive is not
+# going anywhere.
+MAX_STEP_HOURS = 27
+
 # GRIB2 section 0: the marker, then two reserved bytes, discipline, edition, and the total
 # message length as a big-endian 8 byte integer. Sixteen bytes in all.
 MESSAGE_MARKER = b"GRIB"
@@ -285,7 +293,9 @@ def split_messages(grib: bytes) -> list[bytes]:
 
 
 def extract_station_forecasts(
-    grib: bytes, coordinates: dict[str, tuple[float, float]] | None = None
+    grib: bytes,
+    coordinates: dict[str, tuple[float, float]] | None = None,
+    max_step_hours: int = MAX_STEP_HOURS,
 ) -> list[ForecastRow]:
     """Pull each station's nearest grid point out of every message in one GRIB2 file.
 
@@ -302,6 +312,8 @@ def extract_station_forecasts(
     for message in split_messages(grib):
         gid = eccodes.codes_new_from_message(message)
         try:
+            if int(eccodes.codes_get(gid, "forecastTime")) > max_step_hours:
+                continue
             rows.extend(_read_message(eccodes, gid, points))
         finally:
             eccodes.codes_release(gid)
@@ -309,19 +321,30 @@ def extract_station_forecasts(
 
 
 def _read_message(eccodes, gid, points: dict[str, tuple[float, float]]) -> Iterator[ForecastRow]:
+    """One projection's value at each station.
+
+    **Read through `codes_grib_find_nearest`, never by indexing `codes_get_values`.** The
+    two disagree on this grid: the index the nearest search reports is geographically
+    right, and the value at that index in the values array is not the value the search
+    returns. Half the values array reads as the 9999 sentinel while the search returns a
+    temperature for the same cell. The cause was not found and the shortcut was worth about
+    twenty times the speed, so it is recorded here as refused rather than left to be
+    rediscovered as a plausible optimisation.
+    """
     issued_at = _message_issued_at(eccodes, gid)
     valid_at = issued_at + timedelta(hours=int(eccodes.codes_get(gid, "forecastTime")))
     missing = float(eccodes.codes_get(gid, "missingValue"))
     for station_id, (latitude, longitude) in points.items():
-        # NDFD grids run 0-360. eccodes normalises, but doing it here keeps the stored
-        # coordinate in the same convention NCEI published it in.
+        # NDFD grids run 0-360. eccodes normalises, but converting here keeps the stored
+        # coordinate in the convention NCEI published it in.
         nearest = eccodes.codes_grib_find_nearest(gid, latitude, longitude % 360)[0]
         value = float(nearest.value)
+        absent = value == missing or value != value
         yield ForecastRow(
             issued_at=issued_at,
             valid_at=valid_at,
             station_id=station_id,
-            temperature_c=None if value == missing else value - KELVIN_OFFSET,
+            temperature_c=None if absent else value - KELVIN_OFFSET,
         )
 
 

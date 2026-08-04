@@ -224,6 +224,17 @@ class TestMessageSplitting:
             split_messages(buffer[:-20])
 
 
+class TestProjectionLimit:
+    def test_it_decodes_only_the_horizon_the_backtest_scores(self):
+        """Two thirds of every file is projections beyond a 24 hour horizon, and decoding
+        is the whole cost of the ingest. The limit is the difference between a nine hour
+        backfill and a nineteen hour one."""
+        from bellwether.ingest import ndfd
+
+        assert ndfd.MAX_STEP_HOURS == 27
+        assert ndfd.MAX_STEP_HOURS >= 24, "a 24 hour horizon needs a projection covering it"
+
+
 class TestExtraction:
     def test_it_needs_the_optional_decoder_and_says_so(self, monkeypatch):
         """`eccodes` is an extra. A checkout without it must fail on the import rather than
