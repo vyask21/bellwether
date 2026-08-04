@@ -73,10 +73,19 @@ class TestTheWalkthroughIsWhole:
         """`content.py` is only a single source if both renderers actually read all of it."""
         assert _plain(value) in _plain(page), name
 
-    @pytest.mark.parametrize("heading", [
-        text.S1_HEADING, text.S2_HEADING, text.S4_HEADING, text.S5_HEADING,
-        text.S6_HEADING, text.S7_HEADING, text.S8_HEADING, text.METHOD_HEADING,
-    ])
+    @pytest.mark.parametrize(
+        "heading",
+        [
+            text.S1_HEADING,
+            text.S2_HEADING,
+            text.S4_HEADING,
+            text.S5_HEADING,
+            text.S6_HEADING,
+            text.S7_HEADING,
+            text.S8_HEADING,
+            text.METHOD_HEADING,
+        ],
+    )
     def test_every_section_has_its_heading(self, heading, page):
         assert heading in page
 
@@ -192,9 +201,7 @@ class TestTheOriginGuard:
 
     def _frames(self, shift: int = 0):
         periods = pd.date_range("2025-01-01", periods=96, freq="h")
-        observed = pd.DataFrame(
-            {"idx": range(96), "period": periods, "demand_mw": range(96)}
-        )
+        observed = pd.DataFrame({"idx": range(96), "period": periods, "demand_mw": range(96)})
         forecast = pd.DataFrame(
             {
                 "origin": [24] * 24 + [48] * 24,

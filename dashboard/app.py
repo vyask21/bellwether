@@ -141,18 +141,14 @@ with tab_hour:
     frame = data.profile_frame("mae", "by_local_hour")
     if not frame.empty:
         x_title, y_title = text.S5_HOUR_AXES
-        st.altair_chart(
-            viz.profile(frame, "bucket", x_title, "value", y_title), width="stretch"
-        )
+        st.altair_chart(viz.profile(frame, "bucket", x_title, "value", y_title), width="stretch")
         table_view(frame.round(3), text.S5_HOUR_TABLE)
     st.markdown(text.S5_HOUR_PROSE)
 with tab_month:
     frame = data.profile_frame("coverage", "by_month")
     if not frame.empty:
         x_title, y_title = text.S5_MONTH_AXES
-        st.altair_chart(
-            viz.profile(frame, "bucket", x_title, "value", y_title), width="stretch"
-        )
+        st.altair_chart(viz.profile(frame, "bucket", x_title, "value", y_title), width="stretch")
         table_view(frame.round(3), text.S5_MONTH_TABLE)
     st.markdown(text.S5_MONTH_PROSE)
 

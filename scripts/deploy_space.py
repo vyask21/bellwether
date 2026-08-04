@@ -37,9 +37,6 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "scripts"))
-
-from build_static_space import build  # noqa: E402
 
 DEFAULT_REPO = "vyask21/bellwether"
 
@@ -57,8 +54,18 @@ SECRET_PATTERNS = (
 # Extensions worth scanning as text. The site is all text now, including its data, so the
 # scan covers every byte that ships rather than most of them.
 SCANNABLE = {
-    ".py", ".toml", ".md", ".txt", ".cfg", ".yaml", ".yml",
-    ".html", ".css", ".js", ".json", ".csv",
+    ".py",
+    ".toml",
+    ".md",
+    ".txt",
+    ".cfg",
+    ".yaml",
+    ".yml",
+    ".html",
+    ".css",
+    ".js",
+    ".json",
+    ".csv",
 }
 
 
@@ -70,7 +77,7 @@ def main() -> int:
     args = parser.parse_args()
 
     staging = ROOT / args.out
-    built = build(staging)
+    built = _builder().build(staging)
 
     print(f"\nBuilt {len(built)} files into {staging.relative_to(ROOT)}:")
     total = 0
@@ -98,6 +105,20 @@ def main() -> int:
         return 0
 
     return _push(staging, args.repo)
+
+
+def _builder():
+    """The site builder, imported on use rather than on import.
+
+    It reaches the dashboard's dependencies, and this module's other half is a credential
+    scanner that needs none of them. Importing at module scope coupled the two, so a
+    checkout with no Streamlit could not import the scanner to test it. CI is exactly that
+    checkout, and it failed at collection rather than on anything it was trying to test.
+    """
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import build_static_space
+
+    return build_static_space
 
 
 def _scan(staging: Path) -> list[tuple[Path, str]]:

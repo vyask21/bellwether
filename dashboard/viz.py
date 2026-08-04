@@ -192,9 +192,7 @@ def forecast_explorer(
     )
     observed = alt.UrlData(
         url=observed_url,
-        format=alt.CsvDataFormat(
-            parse={"period": "date", "idx": "number", "demand_mw": "number"}
-        ),
+        format=alt.CsvDataFormat(parse={"period": "date", "idx": "number", "demand_mw": "number"}),
     )
     in_window = f"datum.idx >= originIdx - {lead_in} && datum.idx < originIdx + 24"
 

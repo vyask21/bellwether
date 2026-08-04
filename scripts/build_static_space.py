@@ -122,12 +122,8 @@ def _write_market_data(out: Path, market: str) -> tuple[list[Path], dict]:
 
     demand_path = out / "data" / f"observed_{market}.csv"
     forecast_path = out / "data" / f"forecast_{market}.csv"
-    observed.to_csv(
-        demand_path, index=False, date_format="%Y-%m-%dT%H:%M", float_format="%.0f"
-    )
-    forecasts.to_csv(
-        forecast_path, index=False, date_format="%Y-%m-%dT%H:%M", float_format="%.0f"
-    )
+    observed.to_csv(demand_path, index=False, date_format="%Y-%m-%dT%H:%M", float_format="%.0f")
+    forecasts.to_csv(forecast_path, index=False, date_format="%Y-%m-%dT%H:%M", float_format="%.0f")
 
     labels = data.origin_labels(forecasts)
     values = sorted(labels)
@@ -244,7 +240,7 @@ def _table(frame: pd.DataFrame, decimals: int) -> str:
         rows.append(f"<tr>{cells}</tr>")
     return (
         f'<div class="table-wrap"><table><thead><tr>{head}</tr></thead>'
-        f'<tbody>{"".join(rows)}</tbody></table></div>'
+        f"<tbody>{''.join(rows)}</tbody></table></div>"
     )
 
 
@@ -282,9 +278,7 @@ def _write_page(out: Path, specs: dict, origins: dict, tables: dict) -> Path:
         caption=text.SNAPSHOT_CAPTION.format(generated=generated),
         specs=json.dumps(specs, separators=(",", ":")),
         origins=json.dumps(origins, separators=(",", ":")),
-        titles=json.dumps(
-            {m: text.S3_TITLE for m in data.MARKETS}, separators=(",", ":")
-        ),
+        titles=json.dumps({m: text.S3_TITLE for m in data.MARKETS}, separators=(",", ":")),
         headings=json.dumps(
             {m: text.S3_HEADING.format(market=m) for m in data.MARKETS},
             separators=(",", ":"),
