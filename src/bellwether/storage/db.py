@@ -22,6 +22,7 @@ from bellwether.attribution import (
 )
 from bellwether.config import SNAPSHOT_DIR, settings
 from bellwether.ingest.eia import ObservationRow
+from bellwether.ingest.ndfd import ForecastRow
 from bellwether.ingest.noaa import WeatherRow
 
 SCHEMA = """
@@ -52,6 +53,24 @@ CREATE TABLE IF NOT EXISTS weather_observations (
     quality_code  VARCHAR,
     ingested_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (observed_at, station_id, report_type)
+);
+
+-- NOAA's *forecast* temperature, from NDFD. Agency content like `weather_observations`,
+-- but a different claim: what was expected, published at a stated time, rather than what
+-- was measured. It is kept apart from both neighbours on purpose. Folding it into
+-- `weather_observations` would let a forecast be read back as a measurement, which is the
+-- exact leak this project is trying to close by using it at all.
+--
+-- `issued_at` is in the key rather than merely recorded. The same hour is forecast many
+-- times as the runs advance, and which run a model may see depends on its own origin, so
+-- a table that kept only the latest could not answer the question the experiment asks.
+CREATE TABLE IF NOT EXISTS weather_forecasts (
+    issued_at     TIMESTAMPTZ NOT NULL,  -- when NOAA published the run
+    valid_at      TIMESTAMPTZ NOT NULL,  -- the hour it describes
+    station_id    VARCHAR     NOT NULL,
+    temperature_c DOUBLE,
+    ingested_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (issued_at, valid_at, station_id)
 );
 
 -- Derived data. Not EIA content and never attributed to EIA. Kept in its own table so a
@@ -173,6 +192,45 @@ def upsert_weather_observations(
                 row.quality_code,
             )
         )
+        if len(batch) >= batch_size:
+            flush(batch)
+            written += len(batch)
+            batch = []
+
+    flush(batch)
+    written += len(batch)
+    return written
+
+
+def upsert_weather_forecasts(
+    conn: duckdb.DuckDBPyConnection,
+    rows: Iterable[ForecastRow],
+    batch_size: int = 10_000,
+) -> int:
+    """Insert forecast temperatures idempotently, replacing any row for the same key.
+
+    A published NDFD run is immutable, so unlike the observation archive this should never
+    actually change a stored value. Written as a replace anyway, so re-running an
+    interrupted backfill over a window it already covered costs time rather than a
+    constraint violation.
+    """
+    written = 0
+    batch: list[tuple] = []
+
+    def flush(records: list[tuple]) -> None:
+        if not records:
+            return
+        conn.executemany(
+            """
+            INSERT OR REPLACE INTO weather_forecasts
+                (issued_at, valid_at, station_id, temperature_c)
+            VALUES (?, ?, ?, ?)
+            """,
+            records,
+        )
+
+    for row in rows:
+        batch.append((row.issued_at, row.valid_at, row.station_id, row.temperature_c))
         if len(batch) >= batch_size:
             flush(batch)
             written += len(batch)

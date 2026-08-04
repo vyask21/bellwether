@@ -30,6 +30,7 @@ and `anthropic` is not a dependency.
 | Corrector ablation: weather and volatility | done, [both predictions failed usefully](docs/RESULTS.md) |
 | Breach detection and error decomposition | done, [where the forecast fails](docs/RESULTS.md) |
 | Holiday corrector, pooled and split by observance | done, [measured twice, shipped neither](docs/RESULTS.md) |
+| NDFD forecast temperature ingestion | built, backfill not yet run |
 | Nuclear outage and energy disruption ingestion | todo |
 | Brief generation, with citation verification | done, deterministic, no API key |
 | Findings walkthrough | done, reads committed files only |
@@ -83,6 +84,9 @@ bellwether backtest --respondent CISO --horizon 24
 python scripts/run_weather_ablation.py ERCO          # weather vs a calendar control
 python scripts/analyze_breaches.py ERCO --stagger 4  # where the forecast fails
 python scripts/run_holiday_arm.py CISO               # holiday shift, pooled and by class
+
+pip install -e ".[ndfd]"                             # eccodes, a GRIB2 decoder
+python scripts/ingest_ndfd.py --start 2024-07-31 --end 2026-07-31 --skip-stored
 
 python scripts/export_snapshot.py CISO               # ~8 min, writes snapshot/
 pip install -e ".[dashboard]" && streamlit run dashboard/app.py   # local renderer
