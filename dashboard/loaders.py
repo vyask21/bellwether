@@ -238,6 +238,27 @@ def offsets_frame() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+# The class the hour-profile finding is about. The federal-only profile is estimated from
+# holidays that mostly turn out not to be holidays for demand, so its shape is a shape of
+# very little and putting it on the same axes would invite reading it as the same kind of
+# thing.
+PROFILED_CLASS = "widely observed"
+
+
+def hour_profile_frame() -> pd.DataFrame:
+    """The holiday offset learned per local hour, on widely-observed holidays.
+
+    The chart is the finding: a flat line here would say the scalar shift was the right
+    shape after all, and it is not flat anywhere.
+    """
+    rows = [
+        {"market": series_id.split(":")[0], "hour": int(hour), "offset": value}
+        for series_id, entry in results("holiday_arm.json").items()
+        for hour, value in entry.get("learned_hour_profile", {}).get(PROFILED_CLASS, {}).items()
+    ]
+    return pd.DataFrame(rows).sort_values(["market", "hour"]) if rows else pd.DataFrame()
+
+
 def per_holiday_frame(market: str) -> pd.DataFrame:
     """One market's per-holiday change against the shipped arm, signed for colour."""
     entry = results("holiday_arm.json").get(f"{market}:D", {})

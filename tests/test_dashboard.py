@@ -128,6 +128,22 @@ class TestResultFrames:
         assert abs(forecast / observed) > 0.75, "less than three quarters of the gain survives"
         assert abs(degraded - observed) < 0.2, "the coarse cadence has started costing something"
 
+    def test_the_hour_profile_covers_every_hour_in_every_market(self):
+        frame = data.hour_profile_frame()
+        for market in data.MARKETS:
+            hours = sorted(frame[frame["market"] == market]["hour"])
+            assert hours == list(range(24)), market
+
+    def test_the_holiday_shape_is_not_flat(self):
+        """The finding the chart is drawn to show. A scalar shift being the wrong shape is
+        the claim, and a flat profile in any market would withdraw it there."""
+        frame = data.hour_profile_frame()
+        for market in data.MARKETS:
+            offsets = frame[frame["market"] == market]["offset"]
+            overnight = offsets[frame["hour"].isin(range(5))].mean()
+            deepest = offsets.min()
+            assert deepest < overnight * 2, market
+
     def test_holiday_offsets_carry_both_observance_classes(self):
         holiday = data.results("holiday_arm.json")
         for series_id, entry in holiday.items():

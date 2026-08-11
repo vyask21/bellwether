@@ -54,6 +54,7 @@ from bellwether.eval.ablation import (
     FEDERAL_ONLY,
     HOLIDAY_ARM,
     HOLIDAY_CLASS_ARM,
+    HOLIDAY_HOUR_ARM,
     SCALE_ARM,
     WIDELY_OBSERVED,
     cache_base_forecasts,
@@ -64,7 +65,7 @@ from bellwether.eval.ablation import (
 )
 from bellwether.eval.metrics import DEFAULT_QUANTILES, _quantile_index
 from bellwether.eval.operator import BA_TIMEZONES
-from bellwether.forecast.residual import HolidayClassScaleCorrector
+from bellwether.forecast.residual import HolidayClassScaleCorrector, HolidayHourScaleCorrector
 from bellwether.storage.db import connect
 from bellwether.storage.queries import load_series
 
@@ -115,6 +116,7 @@ def main() -> None:
         "scale": f"{base.name}+{SCALE_ARM}",
         "pooled": f"{base.name}+{HOLIDAY_ARM}",
         "class": f"{base.name}+{HOLIDAY_CLASS_ARM}",
+        "hour": f"{base.name}+{HOLIDAY_HOUR_ARM}",
     }
     errors = {}
     for key, arm in arms.items():
@@ -136,19 +138,23 @@ def main() -> None:
         row["change_vs_scale"] = row["mae_class"] - row["mae_scale"]
         row["change_vs_pooled"] = row["mae_class"] - row["mae_pooled"]
         row["pooled_change_vs_scale"] = row["mae_pooled"] - row["mae_scale"]
+        # The hour arm's control is the class arm, for the same reason the class arm's is
+        # the pooled one: the question is whether the shape helps, not whether shifting does.
+        row["hour_change_vs_class"] = row["mae_hour"] - row["mae_class"]
+        row["hour_change_vs_scale"] = row["mae_hour"] - row["mae_scale"]
         per_holiday.append(row)
 
     n = len(per_holiday)
     print(
         f"\n{'holiday':<12}{'observance':>16}{'+scale':>10}{'+holiday':>10}"
-        f"{'+class':>10}{'class-pooled':>14}"
+        f"{'+class':>10}{'+hour':>10}{'hour-class':>12}"
     )
     for h in per_holiday:
-        mark = "  better" if h["change_vs_pooled"] < 0 else "  worse"
+        mark = "  better" if h["hour_change_vs_class"] < 0 else "  worse"
         print(
             f"{h['date']:<12}{h['observance']:>16}{h['mae_scale']:>10.0f}"
-            f"{h['mae_pooled']:>10.0f}{h['mae_class']:>10.0f}"
-            f"{h['change_vs_pooled']:>+14.0f}{mark}"
+            f"{h['mae_pooled']:>10.0f}{h['mae_class']:>10.0f}{h['mae_hour']:>10.0f}"
+            f"{h['hour_change_vs_class']:>+12.0f}{mark}"
         )
 
     summary = {}
@@ -164,10 +170,28 @@ def main() -> None:
     print("\nclass arm against pooled arm, by observance:")
     _print_counts(head_to_head)
 
+    for label, field in (
+        ("hour arm against class arm", "hour_change_vs_class"),
+        ("hour arm against +scale", "hour_change_vs_scale"),
+    ):
+        counts = _counts_by_class(per_holiday, field)
+        summary[field] = counts
+        print(f"\n{label}, by observance:")
+        _print_counts(counts)
+
     pooled_mae_change = float(np.mean(errors["class"][on_holiday] - errors["scale"][on_holiday]))
     versus_pooled = float(np.mean(errors["class"][on_holiday] - errors["pooled"][on_holiday]))
+    hour_vs_class = float(np.mean(errors["hour"][on_holiday] - errors["class"][on_holiday]))
+    hour_vs_scale = float(np.mean(errors["hour"][on_holiday] - errors["scale"][on_holiday]))
     print(f"\nholiday-hour MAE change, class arm vs +scale:  {pooled_mae_change:+.0f} MW")
     print(f"holiday-hour MAE change, class arm vs pooled:  {versus_pooled:+.0f} MW")
+    print(f"holiday-hour MAE change, hour arm vs class:    {hour_vs_class:+.0f} MW")
+    print(f"holiday-hour MAE change, hour arm vs +scale:   {hour_vs_scale:+.0f} MW")
+
+    # The shape it learned, reported per hour so the claim in finding 19 can be read off
+    # rather than inferred: a flat profile would say the scalar was the right shape after all.
+    scale_mae = float(np.mean(errors["scale"][on_holiday]))
+    print(f"\nholiday-hour MAE on +scale: {scale_mae:.0f} MW")
 
     # Refit once on everything the last origin saw, purely to report what the arm learned.
     # Not used for scoring: the scored arms each refit on their own history.
@@ -183,6 +207,36 @@ def main() -> None:
     for label, value in learned.items():
         print(f"  {label:<22}{value:>+10.0f} MW")
 
+    stacked_hours = np.concatenate(
+        [
+            pd.DatetimeIndex(series.timestamps[c.origin : c.origin + 24])
+            .tz_localize("UTC")
+            .tz_convert(timezone)
+            .hour.to_numpy()
+            for c in cached
+        ]
+    )
+    shaped = HolidayHourScaleCorrector(DEFAULT_QUANTILES).fit(
+        stacked_base,
+        np.concatenate([series.values[c.origin : c.origin + 24] for c in cached]),
+        np.concatenate([classes[c.origin : c.origin + 24] for c in cached]),
+        stacked_hours,
+    )
+    profile = {
+        CLASS_LABELS[code]: {
+            str(hour): value for (c, hour), value in sorted(shaped.profile.items()) if c == code
+        }
+        for code in CLASS_LABELS
+    }
+    print("\nhour profile learned on the full window (MW):")
+    print(f"  {'hour':<6}" + "".join(f"{label:>18}" for label in CLASS_LABELS.values()))
+    for hour in range(24):
+        cells = "".join(
+            f"{profile[label].get(str(hour), float('nan')):>+18.0f}"
+            for label in CLASS_LABELS.values()
+        )
+        print(f"  {hour:<6}{cells}")
+
     out_path = Path(args.out)
     existing = json.loads(out_path.read_text()) if out_path.exists() else {}
     existing[series.series_id] = {
@@ -193,7 +247,11 @@ def main() -> None:
         "sign_tests": summary,
         "class_mae_change_vs_scale": pooled_mae_change,
         "class_mae_change_vs_pooled": versus_pooled,
+        "hour_mae_change_vs_class": hour_vs_class,
+        "hour_mae_change_vs_scale": hour_vs_scale,
+        "scale_holiday_mae": scale_mae,
         "learned_offsets": {"pooled": final.offset, **learned},
+        "learned_hour_profile": profile,
         "per_holiday": per_holiday,
     }
     out_path.parent.mkdir(parents=True, exist_ok=True)

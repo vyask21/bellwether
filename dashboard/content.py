@@ -202,14 +202,33 @@ S7_PROSE = (
     "those days down because Christmas dragged the shared estimate with it."
 )
 S7_CLOSING = (
-    "**It was measured twice and shipped neither time.** Against no calendar at all only "
-    "CISO shows a market-level win, worth 17.6% of its holiday error, and corrected for "
-    "three markets that does not clear the bar. The honest reason is not caution: it is "
-    "that a single scalar shift over 24 hours is the wrong shape. Load barely moves "
-    "overnight and falls hard through the working day, so one number over-corrects the "
-    "small hours to reach the large ones."
+    "**It was measured twice and shipped neither time**, and the stated reason was that a "
+    "single scalar shift over 24 hours is the wrong shape: load barely moves overnight and "
+    "falls hard through the working day, so one number over-corrects the small hours to "
+    "reach the large ones. That was a diagnosis rather than a measurement, so it was tested."
 )
+S7_SHAPE_PROSE = (
+    "**The diagnosis was right, and it was not what was blocking anything.** A third arm "
+    "learns an offset per hour rather than per day, and the shape it finds is larger than "
+    "the scalar implied. On a widely-observed holiday ERCO is 132 MW below normal overnight "
+    "and 2,315 below at 08:00, a 17.6x swing that no single number can express; CISO runs "
+    "714 against 2,080. The arm beats the one it replaces in **all three** markets, which is "
+    "more than that arm could say for itself, and improves 27 of 33 widely-observed "
+    "holidays.\n\n"
+    "**It still does not ship, and the third measurement is the one that explains why.** "
+    "Against no calendar at all, CISO wins clearly, at 26.4% of its holiday error. ERCO and "
+    "PACE improve on 12 of 20 holidays each, which is a coin flip. The giveaway is that on "
+    "ERCO the *entire* calendar family fails the same way: 11 of 20 for the flat arm, 11 for "
+    "the split one, 12 for this one. What is missing there is not a better corrector but a "
+    "holiday effect worth correcting, and no amount of shaping manufactures one.\n\n"
+    "Three arms, three declines, and the reason changed. The first two were declined because "
+    "they might have been the wrong correction. This one is the right correction and is "
+    "declined because two of three markets do not need it, which leaves exactly one live "
+    "option: a holiday arm for California alone."
+)
+S7_SHAPE_TABLE = "Table view: the learned hour profile"
 S7_OFFSETS_TABLE = "Table view: learned offsets"
+S7_SHAPE_AXES = ("Local hour", "Holiday offset (MW), widely observed holidays")
 S7_HOLIDAY_TABLE = "Table view: {market} per-holiday change"
 
 # ----------------------------------------------------------------------------------------

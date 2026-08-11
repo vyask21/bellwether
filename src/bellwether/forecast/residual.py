@@ -517,6 +517,118 @@ class HolidayClassScaleCorrector(HolidayScaleCorrector):
         return scaled + shift[:, None]
 
 
+# Observations a single (class, hour) cell needs before its own median outweighs its class
+# offset. Set higher against its evidence than CLASS_PRIOR_HOURS is against class evidence:
+# two years hold about a dozen hours per cell at the end of the window and fewer than five
+# for most of it, a median over four points is not an estimate, and the thing it shrinks
+# toward here is already a measured offset rather than a guess.
+HOUR_PRIOR_HOURS = 8
+
+
+class HolidayHourScaleCorrector(HolidayClassScaleCorrector):
+    """Shifts each holiday hour by its own amount rather than the whole day by one.
+
+    Built from the failure of both predecessors rather than from a new idea. A scalar shift
+    is the wrong *shape* for a holiday: load barely moves overnight and falls hard through
+    the working day, so one number per holiday over-corrects the small hours to reach the
+    large ones. That is the most likely reason widening the offset on major holidays bought
+    so little, and unlike a finer calendar it needs no more holidays to estimate, only more
+    hours within the ones already recorded.
+
+        profile[c,h] = w * (median residual on class c at hour h
+                            - median residual on ordinary days at hour h)
+                       + (1 - w) * offset_c,        w = n / (n + HOUR_PRIOR_HOURS)
+
+    **The baseline is hour-matched, and that is the design rather than a detail.** The base
+    model's residual has a diurnal shape of its own on perfectly ordinary days, and
+    subtracting a single all-hours ordinary median would sweep that shape into the profile
+    and then apply it on holidays only. The arm would look like it had learned a holiday
+    shape while having learned the model's own evening bias, which is the same class of
+    mistake as reporting a corrector's property as the base model's.
+
+    Shrinkage toward the class offset for the same reason its parent shrinks toward the
+    pooled one: at zero hours in a cell this arm **is** the class arm, so any difference
+    between them comes from the hour shape rather than from one arm having a warmup the
+    other does not. The fallback chain when a cell was never seen runs cell, then class,
+    then pooled, so an hour first observed at scoring time is still shifted by the best
+    estimate available rather than by nothing.
+
+    One deliberate departure from its parents. They stop when the pooled offset comes out
+    at exactly zero, treating that as the signal that too few holidays have been seen. Here
+    the gate is the holiday hour count itself, because a day whose average effect is zero
+    can still have a large shape, and that case is not an edge case: it is the strongest
+    version of the argument for shaping at all.
+    """
+
+    def __init__(
+        self,
+        quantile_levels: tuple[float, ...] = DEFAULT_QUANTILES,
+        prior_hours: int = HOUR_PRIOR_HOURS,
+    ) -> None:
+        super().__init__(quantile_levels)
+        self._prior_hours = prior_hours
+        self._profile: dict[tuple[int, int], float] = {}
+
+    @property
+    def profile(self) -> dict[tuple[int, int], float]:
+        """Megawatts to shift by, per (observance class, local hour)."""
+        return dict(self._profile)
+
+    def fit(  # type: ignore[override]
+        self,
+        base_quantiles: np.ndarray,
+        actual: np.ndarray,
+        holiday_class: np.ndarray,
+        local_hour: np.ndarray,
+    ) -> HolidayHourScaleCorrector:
+        """Learn scale factors, a shift per class, and a shrunk shift per class and hour."""
+        if local_hour.size != actual.size:
+            raise ValueError(f"Got {local_hour.size} local hours and {actual.size} actuals")
+        super().fit(base_quantiles, actual, holiday_class)
+
+        self._profile = {}
+        residual = actual - base_quantiles[:, _median_index(self.quantile_levels)]
+        ordinary = holiday_class == 0
+
+        # Gated on holiday hours seen, not on whether the pooled offset came out non-zero.
+        # Its parents conflate the two, which is harmless for them and would be a hole here:
+        # a day whose average effect is zero can still have a large shape, up in the morning
+        # and down in the afternoon, and that case is the arm's whole reason to exist. The
+        # warmup gate is the same one the pooled offset uses, so no arm gets a head start.
+        if np.count_nonzero(holiday_class > 0) < MIN_HOLIDAY_HOURS or not np.any(ordinary):
+            return self
+
+        for code in np.unique(holiday_class[holiday_class > 0]):
+            class_offset = self._offsets.get(int(code), self._offset)
+            for hour in np.unique(local_hour[holiday_class == code]):
+                cell = residual[(holiday_class == code) & (local_hour == hour)]
+                matched = residual[ordinary & (local_hour == hour)]
+                if cell.size == 0 or matched.size == 0:
+                    continue
+                weight = cell.size / (cell.size + self._prior_hours)
+                raw = float(np.median(cell)) - float(np.median(matched))
+                shrunk = weight * raw + (1.0 - weight) * class_offset
+                self._profile[(int(code), int(hour))] = shrunk
+        return self
+
+    def predict(  # type: ignore[override]
+        self, base_quantiles: np.ndarray, holiday_class: np.ndarray, local_hour: np.ndarray
+    ) -> np.ndarray:
+        """Scale, then shift each holiday hour by its own learned amount."""
+        scaled = QuantileScaleCorrector.predict(self, base_quantiles)
+        shift = np.array(
+            [
+                0.0
+                if code == 0
+                else self._profile.get(
+                    (int(code), int(hour)), self._offsets.get(int(code), self._offset)
+                )
+                for code, hour in zip(holiday_class, local_hour, strict=True)
+            ]
+        )
+        return scaled + shift[:, None]
+
+
 # Below this the base model emitted no usable spread at that level, so no scale can be read.
 _ZERO_SPREAD_TOLERANCE = 1e-9
 

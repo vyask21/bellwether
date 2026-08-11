@@ -26,10 +26,12 @@ from bellwether.eval.metrics import DEFAULT_QUANTILES
 from bellwether.forecast.residual import (
     CALENDAR_ONLY,
     CLASS_PRIOR_HOURS,
+    HOUR_PRIOR_HOURS,
     VOLATILITY,
     WEATHER,
     WEATHER_VOLATILITY,
     HolidayClassScaleCorrector,
+    HolidayHourScaleCorrector,
     HolidayScaleCorrector,
     QuantileScaleCorrector,
     ResidualQuantileCorrector,
@@ -501,7 +503,7 @@ class TestAblation:
         )
         return series, timestamps, temperature
 
-    def test_all_three_arms_cover_identical_windows(self):
+    def test_every_arm_covers_identical_windows(self):
         """Comparing arms scored on different window sets compares window sets."""
         series, timestamps, temperature = self._inputs()
 
@@ -525,11 +527,12 @@ class TestAblation:
             "constant+scale",
             "constant+scale+holiday",
             "constant+scale+holidayclass",
+            "constant+scale+holidayhour",
         }
         counts = {name: r.n_windows for name, r in results.items()}
         assert len(set(counts.values())) == 1, counts
         origins = [tuple(w.origin_index for w in r.windows) for r in results.values()]
-        assert origins[0] == origins[1] == origins[2]
+        assert len(set(origins)) == 1, "the arms were scored on different origins"
 
         # The retained forecasts must line up with the origins they were scored on, since
         # the breach analysis pairs them positionally.
@@ -864,6 +867,180 @@ class TestHolidayClassScaleCorrector:
         with pytest.raises(ValueError, match="class codes"):
             HolidayClassScaleCorrector(self.LEVELS).fit(
                 self._forecasts(5), np.ones(5), np.zeros(4, dtype=np.int8)
+            )
+
+
+class TestHolidayHourScaleCorrector:
+    """One offset per class and hour, shrunk toward the class offset.
+
+    Finding 19: a scalar shift over 24 hours over-corrects the small hours to reach the
+    large ones, because load barely moves overnight and falls hard through the working day.
+    """
+
+    LEVELS = (0.1, 0.5, 0.9)
+
+    def _forecasts(self, n: int, half_width: float = 10.0) -> np.ndarray:
+        return np.column_stack(
+            [np.full(n, 100.0 - half_width), np.full(n, 100.0), np.full(n, 100.0 + half_width)]
+        )
+
+    def _shaped_data(self, days: int = 120, night: float = 2.0, working: float = 40.0):
+        """A holiday every fifth day, with a drop that is small at night and large by day.
+
+        The shape is the whole point: an arm that learns one number per day cannot express
+        it, and this is the smallest data that says so.
+        """
+        n = days * 24
+        hours = np.tile(np.arange(24), days)
+        codes = np.zeros(n, dtype=np.int8)
+        is_holiday = np.repeat(np.arange(days) % 5 == 0, 24)
+        codes[is_holiday] = WIDELY_OBSERVED
+
+        working_hours = (hours >= 9) & (hours < 18)
+        drop = np.where(working_hours, working, night)
+        actual = np.full(n, 100.0) - np.where(codes > 0, drop, 0.0)
+        return self._forecasts(n), actual, codes, hours
+
+    def test_it_learns_a_different_shift_for_night_and_working_hours(self):
+        base, actual, codes, hours = self._shaped_data()
+        corrector = HolidayHourScaleCorrector(self.LEVELS).fit(base, actual, codes, hours)
+
+        assert corrector.profile[(WIDELY_OBSERVED, 3)] > -20.0, "overnight barely moves"
+        assert corrector.profile[(WIDELY_OBSERVED, 12)] < -25.0, "midday falls hard"
+
+    def test_it_beats_the_flat_arm_on_data_with_a_shape(self):
+        """The claim finding 19 makes, as a measurement against the arm it replaces."""
+        base, actual, codes, hours = self._shaped_data()
+        flat = HolidayClassScaleCorrector(self.LEVELS).fit(base, actual, codes)
+        shaped = HolidayHourScaleCorrector(self.LEVELS).fit(base, actual, codes, hours)
+
+        holiday = codes > 0
+        flat_error = np.abs(actual[holiday] - flat.predict(base, codes)[holiday, 1])
+        shaped_error = np.abs(actual[holiday] - shaped.predict(base, codes, hours)[holiday, 1])
+        assert shaped_error.mean() < flat_error.mean()
+
+    def test_the_ordinary_baseline_is_hour_matched(self):
+        """The design decision, stated as the failure it prevents.
+
+        The base model here is biased by hour on perfectly ordinary days and holidays are
+        no different from ordinary days at all. An arm that subtracted a single all-hours
+        ordinary median would read that diurnal bias as a holiday shape and apply it on
+        holidays only. The correct answer is a profile of zeros.
+        """
+        days, n = 120, 120 * 24
+        hours = np.tile(np.arange(24), days)
+        codes = np.zeros(n, dtype=np.int8)
+        codes[np.repeat(np.arange(days) % 5 == 0, 24)] = WIDELY_OBSERVED
+
+        # A diurnal bias present on every day, holiday or not.
+        actual = np.full(n, 100.0) + np.where((hours >= 9) & (hours < 18), -40.0, 2.0)
+        corrector = HolidayHourScaleCorrector(self.LEVELS).fit(
+            self._forecasts(n), actual, codes, hours
+        )
+        for hour in (3, 12, 20):
+            assert corrector.profile[(WIDELY_OBSERVED, hour)] == pytest.approx(0.0, abs=1e-6)
+
+    def test_a_shape_whose_day_average_is_zero_is_still_learned(self):
+        """The strongest case for shaping, and the one its parents cannot see at all.
+
+        Demand runs above forecast all morning and below it all afternoon by the same
+        amount, so the whole-day offset is zero and the flat arms correctly learn nothing.
+        There is still a large shape, and an arm that gated on the offset being non-zero
+        would report no holiday effect on a holiday that visibly has one.
+        """
+        days, n = 200, 200 * 24
+        hours = np.tile(np.arange(24), days)
+        codes = np.zeros(n, dtype=np.int8)
+        codes[np.repeat(np.arange(days) % 5 == 0, 24)] = WIDELY_OBSERVED
+
+        swing = np.where(hours < 12, 30.0, -30.0)
+        actual = np.full(n, 100.0) + np.where(codes > 0, swing, 0.0)
+        base = self._forecasts(n)
+
+        flat = HolidayClassScaleCorrector(self.LEVELS).fit(base, actual, codes)
+        shaped = HolidayHourScaleCorrector(self.LEVELS).fit(base, actual, codes, hours)
+
+        assert flat.offset == pytest.approx(0.0, abs=1e-6), "the day average really is zero"
+        assert shaped.profile[(WIDELY_OBSERVED, 6)] > 20.0
+        assert shaped.profile[(WIDELY_OBSERVED, 18)] < -20.0
+
+        holiday = codes > 0
+        flat_error = np.abs(actual[holiday] - flat.predict(base, codes)[holiday, 1])
+        shaped_error = np.abs(actual[holiday] - shaped.predict(base, codes, hours)[holiday, 1])
+        assert shaped_error.mean() < flat_error.mean() / 2
+
+    def test_a_barely_seen_cell_leans_on_its_class_offset(self):
+        base, actual, codes, hours = self._shaped_data()
+        # Blank every holiday at hour 7 except two, leaving that cell almost unevidenced.
+        keep = np.flatnonzero((codes > 0) & (hours == 7))[:2]
+        thin = (codes > 0) & (hours == 7)
+        thin[keep] = False
+        codes = codes.copy()
+        codes[thin] = ORDINARY
+
+        corrector = HolidayHourScaleCorrector(self.LEVELS).fit(base, actual, codes, hours)
+        weight = 2 / (2 + HOUR_PRIOR_HOURS)
+        class_offset = corrector.offsets[WIDELY_OBSERVED]
+        cell = corrector.profile[(WIDELY_OBSERVED, 7)]
+        assert abs(cell - class_offset) < abs(weight * 100), "a thin cell stays near its class"
+
+    def test_with_no_shape_it_matches_the_arm_it_extends(self):
+        """What makes the class arm a fair control: with a flat holiday the two agree.
+
+        Not exactly equal, since a per-cell median over a handful of hours is noisier than
+        one over the whole class, but the arm must not invent a shape where none exists.
+        """
+        days, n = 200, 200 * 24
+        hours = np.tile(np.arange(24), days)
+        codes = np.zeros(n, dtype=np.int8)
+        codes[np.repeat(np.arange(days) % 5 == 0, 24)] = WIDELY_OBSERVED
+        actual = np.full(n, 100.0) - np.where(codes > 0, 30.0, 0.0)
+        base = self._forecasts(n)
+
+        flat = HolidayClassScaleCorrector(self.LEVELS).fit(base, actual, codes)
+        shaped = HolidayHourScaleCorrector(self.LEVELS).fit(base, actual, codes, hours)
+        assert np.allclose(shaped.predict(base, codes, hours), flat.predict(base, codes), atol=1e-6)
+
+    def test_an_unseen_cell_falls_back_through_class_to_pooled(self):
+        base, actual, codes, hours = self._shaped_data()
+        corrector = HolidayHourScaleCorrector(self.LEVELS).fit(base, actual, codes, hours)
+
+        probe = self._forecasts(2)
+        adjusted = corrector.predict(
+            probe,
+            np.array([FEDERAL_ONLY, ORDINARY], dtype=np.int8),
+            np.array([12, 12]),
+        )
+        assert adjusted[0, 1] == pytest.approx(100.0 + corrector.offset)
+        assert adjusted[1, 1] == pytest.approx(100.0)
+
+    def test_too_few_holiday_hours_means_no_profile_at_all(self):
+        n = 400
+        hours = np.tile(np.arange(24), n // 24 + 1)[:n]
+        codes = np.zeros(n, dtype=np.int8)
+        codes[:10] = WIDELY_OBSERVED
+        actual = np.full(n, 100.0) - np.where(codes > 0, 30.0, 0.0)
+
+        corrector = HolidayHourScaleCorrector(self.LEVELS).fit(
+            self._forecasts(n), actual, codes, hours
+        )
+        assert corrector.offset == 0.0
+        assert corrector.profile == {}
+
+    def test_ordinary_hours_are_untouched(self):
+        base, actual, codes, hours = self._shaped_data()
+        corrector = HolidayHourScaleCorrector(self.LEVELS).fit(base, actual, codes, hours)
+        adjusted = corrector.predict(base, codes, hours)
+
+        ordinary = codes == ORDINARY
+        assert np.allclose(
+            adjusted[ordinary], QuantileScaleCorrector.predict(corrector, base)[ordinary]
+        )
+
+    def test_mismatched_hours_are_rejected(self):
+        with pytest.raises(ValueError, match="local hours"):
+            HolidayHourScaleCorrector(self.LEVELS).fit(
+                self._forecasts(5), np.ones(5), np.zeros(5, dtype=np.int8), np.zeros(4)
             )
 
 

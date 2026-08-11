@@ -188,6 +188,13 @@ def _charts(origins: dict) -> tuple[dict, dict]:
     specs["offsets"] = _spec(viz.learned_offsets(offsets))
     tables["offsets"] = _table(offsets, 0)
 
+    shape = data.hour_profile_frame()
+    # Not through `_axes`, which assumes the value column is called `value`. This frame
+    # carries megawatts under its own name rather than a generic one.
+    shape_x, shape_y = text.S7_SHAPE_AXES
+    specs["shape"] = _spec(viz.profile(shape, "hour", shape_x, "offset", shape_y))
+    tables["shape"] = _table(shape, 0)
+
     for market in data.MARKETS:
         holidays = data.per_holiday_frame(market)
         specs[f"holidays_{market}"] = _spec(viz.paired_holidays(holidays))
@@ -563,6 +570,11 @@ TEMPLATE = """<!doctype html>
   </figure>
   {% endfor %}
   {{ prose(text.S7_CLOSING) }}
+  <figure class="chart">
+    <div class="chart-box" id="chart-shape"></div>
+    <details><summary>{{ text.S7_SHAPE_TABLE }}</summary>{{ tables.shape }}</details>
+  </figure>
+  {{ prose(text.S7_SHAPE_PROSE) }}
 </section>
 
 <section>

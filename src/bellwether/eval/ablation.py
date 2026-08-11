@@ -59,6 +59,7 @@ from bellwether.forecast.residual import (
     DEFAULT_MIN_TRAIN_ORIGINS,
     FeatureSpec,
     HolidayClassScaleCorrector,
+    HolidayHourScaleCorrector,
     HolidayScaleCorrector,
     QuantileScaleCorrector,
     ResidualQuantileCorrector,
@@ -79,6 +80,11 @@ HOLIDAY_ARM = "scale+holiday"
 # HOLIDAY_ARM rather than SCALE_ARM: the question is whether splitting the shift helps, not
 # whether shifting helps, and those were tangled in the first version of this experiment.
 HOLIDAY_CLASS_ARM = "scale+holidayclass"
+
+# The same calendar again, shaped over the hours of the day instead of applied flat across
+# them. Its control is HOLIDAY_CLASS_ARM, for the same reason: the question is whether the
+# shape helps, and it degrades to that arm exactly when no cell has evidence.
+HOLIDAY_HOUR_ARM = "scale+holidayhour"
 
 # Observance codes. Ordinary is zero so `codes > 0` recovers the plain holiday flag.
 ORDINARY = 0
@@ -279,6 +285,7 @@ def run_corrector_ablation(
     stacked_actual = np.concatenate([series[c.origin : c.origin + horizon] for c in cached])
     stacked_holiday = np.concatenate([is_holiday[c.origin : c.origin + horizon] for c in cached])
     stacked_class = np.concatenate([holiday_class[c.origin : c.origin + horizon] for c in cached])
+    stacked_hour = np.concatenate([local_hours[c.origin : c.origin + horizon] for c in cached])
 
     # Warmup origins are excluded from every arm, including the uncorrected one, so the
     # comparison is over one window set rather than three.
@@ -297,6 +304,7 @@ def run_corrector_ablation(
         f"{forecaster.name}+{SCALE_ARM}",
         f"{forecaster.name}+{HOLIDAY_ARM}",
         f"{forecaster.name}+{HOLIDAY_CLASS_ARM}",
+        f"{forecaster.name}+{HOLIDAY_HOUR_ARM}",
     ]
     results = {name: BacktestResult(name, series_id, horizon, 0) for name in arm_names}
     forecasts: dict[str, list[np.ndarray]] = {name: [] for name in arm_names}
@@ -390,6 +398,29 @@ def run_corrector_ablation(
             median_index,
         )
         forecasts[f"{forecaster.name}+{HOLIDAY_CLASS_ARM}"].append(by_class)
+
+        hour_scaler = HolidayHourScaleCorrector(quantile_levels).fit(
+            stacked_base[: position * horizon],
+            stacked_actual[: position * horizon],
+            stacked_class[: position * horizon],
+            stacked_hour[: position * horizon],
+        )
+        by_hour = hour_scaler.predict(
+            base,
+            holiday_class[origin : origin + horizon],
+            local_hours[origin : origin + horizon],
+        )
+        _score(
+            results[f"{forecaster.name}+{HOLIDAY_HOUR_ARM}"],
+            origin,
+            actual,
+            by_hour,
+            history,
+            season_length,
+            quantile_levels,
+            median_index,
+        )
+        forecasts[f"{forecaster.name}+{HOLIDAY_HOUR_ARM}"].append(by_hour)
 
     return AblationOutput(
         results=results,

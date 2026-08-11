@@ -201,6 +201,14 @@ if not per_holiday.empty:
 
 st.markdown(text.S7_CLOSING)
 
+shape = data.hour_profile_frame()
+if not shape.empty:
+    x_title, y_title = text.S7_SHAPE_AXES
+    st.altair_chart(viz.profile(shape, "hour", x_title, "offset", y_title), width="stretch")
+    table_view(shape.round(0), text.S7_SHAPE_TABLE)
+
+st.markdown(text.S7_SHAPE_PROSE)
+
 st.divider()
 
 # ----------------------------------------------------------------------------------------

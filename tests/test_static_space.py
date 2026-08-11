@@ -122,12 +122,14 @@ def specs(page) -> dict:
 
 
 class TestEveryChartIsThere:
-    def test_all_twelve_charts_are_embedded(self, specs):
-        expected = {"skill", "coverage", "models", "hours", "months", "offsets"}
+    def test_all_thirteen_charts_are_embedded(self, specs):
+        expected = {"skill", "coverage", "models", "hours", "months", "offsets", "shape"}
         expected |= {f"{kind}_{m}" for kind in ("holidays", "forecast") for m in MARKETS}
         assert set(specs) == expected
 
-    @pytest.mark.parametrize("name", ["skill", "coverage", "models", "hours", "months", "offsets"])
+    @pytest.mark.parametrize(
+        "name", ["skill", "coverage", "models", "hours", "months", "offsets", "shape"]
+    )
     def test_a_fixed_chart_carries_its_data_rather_than_a_url(self, name, specs):
         """These are tens of rows. Inlining them means the page draws before it fetches."""
         spec = specs[name]
@@ -146,9 +148,9 @@ class TestEveryChartIsThere:
         documented relief is a reachable table. A touch device has no hover at all."""
         charts = page.count('class="chart-box"')
         tables = page.count("<summary>")
-        assert charts == 12
-        # Nine table views under charts, plus the method note, which is also a disclosure.
-        assert tables >= 10
+        assert charts == 13
+        # Ten table views under charts, plus the method note, which is also a disclosure.
+        assert tables >= 11
 
     def test_no_value_is_only_obtainable_from_a_chart(self, page):
         """The tables are the record. If the Vega CDN fails the page must still carry the
