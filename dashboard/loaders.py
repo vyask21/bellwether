@@ -25,6 +25,7 @@ BASE_ARM = "chronos_bolt_base"
 # decode "chronos_bolt_base+scale+holidayclass" is not reading the finding.
 ARM_LABELS = {
     "chronos_bolt_base": "Chronos-Bolt",
+    "timesfm_2p5_200m": "TimesFM 2.5",
     "chronos_bolt_base+scale": "+ scale",
     "chronos_bolt_base+calendar": "+ calendar",
     "chronos_bolt_base+weather": "+ weather",
@@ -268,6 +269,43 @@ def coverage_width_frame() -> pd.DataFrame:
                 continue
             width = metrics.get("width_80")
             if width is None or market not in means:
+                continue
+            rows.append(
+                {
+                    "market": market,
+                    "arm": ARM_LABELS.get(arm, arm),
+                    "coverage": metrics["coverage_80"] * 100,
+                    "width_pct": width / means[market] * 100,
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+# The two foundation models, in the order the finding reads: the champion, then the one
+# brought in to find out which of its properties were its own.
+MODEL_ARMS = ("chronos_bolt_base", "timesfm_2p5_200m")
+
+
+def model_comparison_frame() -> pd.DataFrame:
+    """Both foundation models on the same windows, coverage against width.
+
+    Deliberately the same shape as `coverage_width_frame`, because it draws through the
+    same chart. The finding is that two models miss coverage in the same markets in the
+    same direction, and that is the picture that chart already makes: a second row of dots
+    landing in the same left to right order as the first.
+
+    Width comes from the backtest record rather than from the ablation, so both models are
+    read off one window set. The two files score different windows and a calibration
+    comparison across them would be a comparison of window sets.
+    """
+    backtest, means = results("backtest_results.json"), mean_demand()
+    rows = []
+    for series_id, arms in backtest.items():
+        market = series_id.split(":")[0]
+        for arm in MODEL_ARMS:
+            metrics = arms.get(arm) or {}
+            width = metrics.get("width_80")
+            if width is None or "coverage_80" not in metrics or market not in means:
                 continue
             rows.append(
                 {

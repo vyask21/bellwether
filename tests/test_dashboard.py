@@ -76,6 +76,29 @@ class TestResultFrames:
         for market in data.MARKETS:
             assert len(frame[frame["market"] == market]) == buckets, market
 
+    @needs_snapshot
+    def test_both_models_are_present_with_a_width_in_every_market(self):
+        """The width is the load-bearing column. The July entries had none, and a coverage
+        comparison without one is the reading this whole section warns against."""
+        frame = data.model_comparison_frame()
+        assert len(frame) == len(data.MARKETS) * len(data.MODEL_ARMS)
+        assert (frame["width_pct"] > 0).all()
+        assert (frame["coverage"].between(50, 100)).all()
+
+    @needs_snapshot
+    def test_the_two_models_agree_on_which_market_is_hardest_to_calibrate(self):
+        """Finding 21 itself. If a re-measurement ever breaks the shared ordering, the
+        prose claiming the defect belongs to the grid is no longer supported."""
+        frame = data.model_comparison_frame()
+        ordering = {
+            arm: list(group.sort_values("coverage")["market"])
+            for arm, group in frame.groupby("arm")
+        }
+        assert len(ordering) == 2
+        first, second = ordering.values()
+        assert first == second, ordering
+        assert first[-1] == "CISO", "CISO was the best calibrated market for both models"
+
     def test_the_forecast_ablation_has_all_three_arms_in_every_market(self):
         frame = data.forecast_frame()
         assert set(frame["Market"]) == set(data.MARKETS)

@@ -88,6 +88,31 @@ S4_PROSE = (
     "for anyone acting on it."
 )
 S4_TABLE = "Table view: coverage and width"
+S4_MODELS_PROSE = (
+    "**A second model, and the defect stays where it was.** Every distributional claim on "
+    "this page rested on one checkpoint, and a level error a few points under nominal is "
+    "exactly the kind of thing that could belong to the model or to the grid. TimesFM 2.5 "
+    "(200M parameters, trained by different people on a different corpus) was run against "
+    "Chronos-Bolt (205M) on the same 702 windows, the same 24 hour horizon, and the same "
+    "2,048 hours of context. Matching the context matters: TimesFM accepts far more, and "
+    "letting it read years where the other reads days would compare two amounts of evidence "
+    "and report the difference as a difference of method.\n\n"
+    "Chronos-Bolt wins on accuracy in all three markets, by 4.0% of sMAPE on PACE, 8.3% on "
+    "ERCO and 10.7% on CISO, with WQL and MASE agreeing everywhere. **That is the smaller "
+    "half of the result.** The larger half is that both models land under nominal on ERCO "
+    "and PACE and both land closest on CISO. The ordering of the three markets by "
+    "calibration difficulty survives a change of checkpoint, which is what a property of "
+    "the grid looks like and not what a property of a model looks like."
+)
+S4_MODELS_CLOSING = (
+    "**And this section's own rule earns its keep on California.** Read from the coverage "
+    "column alone, TimesFM's 80.2% beats Chronos-Bolt's 79.6% and CISO is the one market "
+    "where the challenger calibrates better. Read with the width beside it, CISO is the "
+    "market where it pays most for the appearance: that half point costs a band 12.9% "
+    "wider. On ERCO no such care is needed, where it covers 2.5 points less on a band 6.4% "
+    "wider, which is worse in both directions at once."
+)
+S4_MODELS_TABLE = "Table view: the two foundation models"
 
 # ----------------------------------------------------------------------------------------
 S5_HEADING = "5. Where the forecast actually fails"

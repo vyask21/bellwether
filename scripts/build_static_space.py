@@ -172,6 +172,10 @@ def _charts(origins: dict) -> tuple[dict, dict]:
     specs["coverage"] = _spec(viz.coverage_and_width(coverage))
     tables["coverage"] = _table(coverage, 2)
 
+    models = data.model_comparison_frame()
+    specs["models"] = _spec(viz.coverage_and_width(models))
+    tables["models"] = _table(models, 2)
+
     hours = data.profile_frame("mae", "by_local_hour")
     specs["hours"] = _spec(viz.profile(hours, "bucket", *_axes(text.S5_HOUR_AXES)))
     tables["hours"] = _table(hours, 3)
@@ -500,6 +504,12 @@ TEMPLATE = """<!doctype html>
     <details><summary>{{ text.S4_TABLE }}</summary>{{ tables.coverage }}</details>
   </figure>
   {{ prose(text.S4_PROSE) }}
+  {{ prose(text.S4_MODELS_PROSE) }}
+  <figure class="chart">
+    <div class="chart-box" id="chart-models"></div>
+    <details><summary>{{ text.S4_MODELS_TABLE }}</summary>{{ tables.models }}</details>
+  </figure>
+  {{ prose(text.S4_MODELS_CLOSING) }}
 </section>
 
 <section>

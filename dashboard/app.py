@@ -131,6 +131,15 @@ if not cw.empty:
 
 st.markdown(text.S4_PROSE)
 
+st.markdown(text.S4_MODELS_PROSE)
+
+models = data.model_comparison_frame()
+if not models.empty:
+    st.altair_chart(viz.coverage_and_width(models), width="stretch")
+    table_view(models.round(2), text.S4_MODELS_TABLE)
+
+st.markdown(text.S4_MODELS_CLOSING)
+
 st.divider()
 
 # ----------------------------------------------------------------------------------------
