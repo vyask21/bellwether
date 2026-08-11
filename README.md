@@ -24,7 +24,7 @@ and `anthropic` is not a dependency.
 | Rolling-origin backtest (MASE, WQL, coverage) | done |
 | Seasonal-naive baselines | done, see [results](docs/RESULTS.md) |
 | Chronos-Bolt vs baselines | done, [wins on all metrics](docs/RESULTS.md) |
-| TimesFM comparison | todo |
+| TimesFM comparison | done, [Chronos wins on accuracy, both miss coverage the same way](docs/RESULTS.md) |
 | Operator baseline (EIA `DF` series) | done, [splits by market](docs/RESULTS.md) |
 | NOAA weather ingestion | done, 14 stations, hourly temperature |
 | Corrector ablation: weather and volatility | done, [both predictions failed usefully](docs/RESULTS.md) |

@@ -3,7 +3,8 @@
 Split per market and written incrementally so a long run can be resumed rather than
 restarted, and so a partial run still leaves usable results on disk.
 
-Usage: python scripts/run_backtest.py CISO [--chronos] [--out docs/backtest_results.json]
+Usage: python scripts/run_backtest.py CISO [--chronos] [--timesfm]
+       [--out docs/backtest_results.json]
 """
 
 from __future__ import annotations
@@ -28,6 +29,7 @@ def main() -> None:
     parser.add_argument("--series-type", default="D")
     parser.add_argument("--horizon", type=int, default=24)
     parser.add_argument("--chronos", action="store_true")
+    parser.add_argument("--timesfm", action="store_true")
     parser.add_argument("--out", default="docs/backtest_results.json")
     args = parser.parse_args()
 
@@ -39,6 +41,10 @@ def main() -> None:
         from bellwether.forecast.chronos import ChronosBolt
 
         models.append(ChronosBolt())
+    if args.timesfm:
+        from bellwether.forecast.timesfm import TimesFM
+
+        models.append(TimesFM())
 
     out_path = Path(args.out)
     existing = json.loads(out_path.read_text()) if out_path.exists() else {}

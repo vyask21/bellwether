@@ -25,6 +25,10 @@ forecast = [
     "torch>=2.4.0",
     "chronos-forecasting>=1.4.0",
     "statsforecast>=1.7.0",
+    # TimesFM's torch build. The `flax` extra pulls jax[cuda] instead, which is the thing
+    # this machine cannot support; `[torch]` adds the package alone and reuses the torch
+    # that Chronos already needs.
+    "timesfm[torch]>=2.0.2",
 ]
 # Reading NDFD forecast temperature, and nothing else in this project, needs a GRIB2
 # decoder. NOAA recommends `grib2io`, which has no Windows wheel and fails to build from
