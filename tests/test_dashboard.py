@@ -76,6 +76,35 @@ class TestResultFrames:
         for market in data.MARKETS:
             assert len(frame[frame["market"] == market]) == buckets, market
 
+    def test_the_forecast_ablation_has_all_three_arms_in_every_market(self):
+        frame = data.forecast_frame()
+        assert set(frame["Market"]) == set(data.MARKETS)
+        for market in data.MARKETS:
+            arms = frame[frame["Market"] == market]["Temperature"]
+            assert list(arms) == list(data.FORECAST_ARMS.values()), market
+
+    def test_the_control_is_identical_in_every_pass(self):
+        """What makes the three arms comparable at all. Each pass re-scores the calendar-only
+        control, and they agree only if all three saw the same windows. If this ever drifts,
+        the percentages in the section are differences between different window sets."""
+        for series_id, arms in data.results("forecast_ablation.json").items():
+            controls = {
+                arm: metrics["smape"] for arm, metrics in arms.items() if arm.endswith("+calendar")
+            }
+            assert len(controls) == 3, series_id
+            assert len(set(controls.values())) == 1, (series_id, controls)
+
+    def test_a_real_forecast_keeps_most_of_the_gain_on_the_market_that_has_one(self):
+        """The finding the new half of section 6 is built on. ERCO is the only market with a
+        weather effect large enough to lose anything measurable, so it is where the claim
+        lives: four fifths of the ceiling, and resolution costing nothing."""
+        frame = data.forecast_frame().set_index(["Market", "Temperature"])
+        erco = frame.loc["ERCO"]["sMAPE change (%)"]
+        observed, degraded, forecast = (erco[label] for label in data.FORECAST_ARMS.values())
+        assert observed < forecast < 0, "the forecast arm has left the gap it was measured in"
+        assert abs(forecast / observed) > 0.75, "less than three quarters of the gain survives"
+        assert abs(degraded - observed) < 0.2, "the coarse cadence has started costing something"
+
     def test_holiday_offsets_carry_both_observance_classes(self):
         holiday = data.results("holiday_arm.json")
         for series_id, entry in holiday.items():

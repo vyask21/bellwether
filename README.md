@@ -30,7 +30,8 @@ and `anthropic` is not a dependency.
 | Corrector ablation: weather and volatility | done, [both predictions failed usefully](docs/RESULTS.md) |
 | Breach detection and error decomposition | done, [where the forecast fails](docs/RESULTS.md) |
 | Holiday corrector, pooled and split by observance | done, [measured twice, shipped neither](docs/RESULTS.md) |
-| NDFD forecast temperature ingestion | built, backfill not yet run |
+| NDFD forecast temperature ingestion | done, 731 days backfilled, [validated against the observations](docs/DATA_SOURCES.md) |
+| Forecast vs observed temperature, three arms | done, [four fifths of the weather gain survives](docs/RESULTS.md) |
 | Nuclear outage and energy disruption ingestion | todo |
 | Brief generation, with citation verification | done, deterministic, no API key |
 | Findings walkthrough | done, reads committed files only |
@@ -112,16 +113,18 @@ profile and names the wrong hours.
 |---|---|
 | [EIA v2 API](https://www.eia.gov/opendata/) | Hourly demand, day-ahead forecast, net generation, interchange |
 | [NOAA NCEI Integrated Surface Database](https://www.ncei.noaa.gov/products/land-based-station/integrated-surface-database) | Hourly observed temperature, 14 stations |
-| [NOAA/NWS API](https://www.weather.gov/documentation/services-web-api) | Temperature forecasts, weather alerts (planned) |
+| [NOAA NDFD archive](https://registry.opendata.aws/noaa-ndfd/) (`s3://noaa-ndfd-pds/wmo/`) | Archived forecast temperature, 3-hourly, for scoring a weather corrector on what was actually available |
+| [NOAA/NWS API](https://www.weather.gov/documentation/services-web-api) | Live forecasts and weather alerts (planned) |
 | EIA nuclear outages, energy disruptions | Evidence for briefs (planned) |
 
-Weather comes from two NOAA surfaces because they answer different questions. NCEI
-archives observations permanently after quality control, which is what a backtest needs
-and what is ingested today. NWS carries the live forecast, which is what a running
-day-ahead forecast will need, and retains about a week of observations, so it cannot
-substitute. NCEI's quality-control pass is also why it lags: its archive currently ends in
-August 2025 while EIA demand runs to the present, so weather experiments are scoped to the
-overlap.
+Weather comes from three NOAA surfaces because they answer different questions. NCEI
+archives observations permanently after quality control, which is what a backtest needs.
+The NDFD archive keeps the forecasts as they were published, which is what scoring a
+weather corrector honestly needs: each window sees only the run issued before it opened.
+NWS carries the live forecast a running system would call and retains about a week of
+observations, so it can substitute for neither. NCEI's quality-control pass is also why it
+lags: its archive currently ends in August 2025 while EIA demand runs to the present, so
+weather experiments are scoped to the overlap.
 
 Scoped to three balancing authorities out of the 83 the API lists: CISO (California ISO),
 ERCO (ERCOT), and PACE (PacifiCorp East). No state is a unit in this data. Also scoped to

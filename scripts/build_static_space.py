@@ -198,6 +198,7 @@ def _charts(origins: dict) -> tuple[dict, dict]:
 
     tables["operator"] = _table(data.operator_frame(), 3)
     tables["weather"] = _table(data.weather_frame(), 1)
+    tables["forecast_arms"] = _table(data.forecast_frame(), 1)
     return specs, tables
 
 
@@ -530,6 +531,9 @@ TEMPLATE = """<!doctype html>
   {{ prose(text.S6_LEDE) }}
   {{ tables.weather }}
   {{ prose(text.S6_PROSE) }}
+  {{ prose(text.S6_FORECAST_LEDE) }}
+  {{ tables.forecast_arms }}
+  {{ prose(text.S6_FORECAST_PROSE) }}
 </section>
 
 <section>

@@ -188,6 +188,43 @@ def weather_frame() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+# The three temperature series the forecast ablation scores, in the order the finding reads:
+# perfect foresight, the same series at the forecast's cadence, and the forecast itself. The
+# middle one exists because a forecast arm differs from an observed arm in two ways at once,
+# and without it the shortfall would be split between two causes with no way to say which.
+FORECAST_ARMS = {
+    "observed": "Observed",
+    "degraded": "Observed, 3-hourly",
+    "forecast": "NDFD forecast",
+}
+
+
+def forecast_frame() -> pd.DataFrame:
+    """The three-arm forecast ablation, each arm against the control scored in its own pass.
+
+    Every pass carries its own calendar-only control and all three come out identical,
+    which is the check that the arms saw the same windows. Dividing by the control from the
+    same pass rather than by one borrowed from another keeps that property load-bearing: if
+    a pass ever drifts, the number moves instead of quietly reading off the wrong windows.
+    """
+    rows = []
+    for series_id, arms in results("forecast_ablation.json").items():
+        for prefix, label in FORECAST_ARMS.items():
+            control = arms.get(f"{prefix}:{BASE_ARM}+calendar")
+            weather = arms.get(f"{prefix}:{BASE_ARM}+weather")
+            if not control or not weather:
+                continue
+            rows.append(
+                {
+                    "Market": series_id.split(":")[0],
+                    "Temperature": label,
+                    "sMAPE change (%)": round((weather["smape"] / control["smape"] - 1) * 100, 1),
+                    "Coverage (%)": round(weather["coverage_80"] * 100, 1),
+                }
+            )
+    return pd.DataFrame(rows)
+
+
 def offsets_frame() -> pd.DataFrame:
     """Learned holiday offset per market and observance class. The pooled one is dropped:
     the finding is that the two classes disagree, and the average of them is what hid it."""

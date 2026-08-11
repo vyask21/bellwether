@@ -165,6 +165,14 @@ if not weather.empty:
 
 st.markdown(text.S6_PROSE)
 
+st.markdown(text.S6_FORECAST_LEDE)
+
+forecast_arms = data.forecast_frame()
+if not forecast_arms.empty:
+    st.dataframe(forecast_arms, width="stretch", hide_index=True)
+
+st.markdown(text.S6_FORECAST_PROSE)
+
 st.divider()
 
 # ----------------------------------------------------------------------------------------

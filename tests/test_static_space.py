@@ -99,6 +99,13 @@ class TestTheWalkthroughIsWhole:
         for market in MARKETS:
             assert text.S3_HEADING.format(market=market) in page
 
+    def test_the_forecast_ablation_ships_its_numbers_and_not_only_its_prose(self, page):
+        """The claim is a comparison of three arms, so the arms have to be on the page. The
+        prose test above would pass on a section that asserts four fifths and shows none."""
+        for label in ("Observed, 3-hourly", "NDFD forecast"):
+            assert label in page
+        assert "sMAPE change (%)" in page
+
     def test_the_withdrawn_claims_survive_the_port(self, page):
         """A results page that reports only what survived is not reporting, and a rewrite
         is exactly where the embarrassing section quietly fails to get carried over."""
