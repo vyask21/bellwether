@@ -25,6 +25,7 @@ and `anthropic` is not a dependency.
 | Seasonal-naive baselines | done, see [results](docs/RESULTS.md) |
 | Chronos-Bolt vs baselines | done, [wins on all metrics](docs/RESULTS.md) |
 | TimesFM comparison | done, [Chronos wins on accuracy, both miss coverage the same way](docs/RESULTS.md) |
+| Chronos-Bolt small vs base | done, [nine tenths of the gain for a third of the compute](docs/RESULTS.md) |
 | Operator baseline (EIA `DF` series) | done, [splits by market](docs/RESULTS.md) |
 | NOAA weather ingestion | done, 14 stations, hourly temperature |
 | Corrector ablation: weather and volatility | done, [both predictions failed usefully](docs/RESULTS.md) |
@@ -36,7 +37,7 @@ and `anthropic` is not a dependency.
 | Brief generation, with citation verification | done, deterministic, no API key |
 | Findings walkthrough | done, reads committed files only |
 | Deploy to Hugging Face Spaces | done, static site, no server on the serving path |
-| Scheduled refresh | todo, persistence undecided |
+| Scheduled refresh | built, weekly, against a 2.0 MB committed Parquet store; never yet fired |
 
 A companion project is sketched and parked: an MCP server exposing EIA data to LLM agents,
 reusing this project's compliant API client. Nothing here depends on it. See
@@ -88,6 +89,9 @@ python scripts/run_holiday_arm.py CISO               # holiday shift, pooled and
 
 pip install -e ".[ndfd]"                             # eccodes, a GRIB2 decoder
 python scripts/ingest_ndfd.py --start 2024-07-31 --end 2026-07-31 --skip-stored
+
+python scripts/sync_store.py dump                    # mirror the source tables to store/
+python scripts/sync_store.py restore                 # rebuild a database from that mirror
 
 python scripts/export_snapshot.py CISO               # ~8 min, writes snapshot/
 pip install -e ".[dashboard]" && streamlit run dashboard/app.py   # local renderer
@@ -195,6 +199,13 @@ installs with pip, identical on Windows, Linux, and CI, keeps the repo clone-and
 DuckDB is single-writer. The ingest job writes and exports a Parquet snapshot; concurrent
 readers use the snapshot.
 
+The database file itself is not committed, but its three source tables are, as
+`store/*.parquet` — 2.0 MB against a 35 MB database. That exists for the weekly refresh,
+which runs on a machine that has never seen this repository before: it rebuilds a database
+from the store in seconds rather than re-ingesting two years from two agencies. Model
+output is not in the store; it is reproduced by re-running the harness. Both exports sort
+by primary key, so a file changes only when the data does.
+
 ## Development
 
 ```bash
@@ -210,7 +221,7 @@ src/bellwether/
   config.py             Settings from .env
   ingest/eia.py         Paginating EIA v2 client
   ingest/noaa.py        NCEI hourly weather client, station registry and weights
-  storage/db.py         Schema, idempotent upsert, Parquet snapshots
+  storage/db.py         Schema, idempotent upsert, sorted Parquet export and restore
   storage/queries.py    Gap-aware series loading, weather gridding and weighting
   forecast/base.py      Forecaster protocol
   forecast/baseline.py  Seasonal-naive with empirical residual quantiles
@@ -228,6 +239,10 @@ dashboard/
   viz.py                Validated palette and the chart builders
 
 snapshot/               Committed on purpose, ~1 MB per market. See scripts/export_snapshot.py
+store/                  The source tables as Parquet, 2.0 MB. See scripts/sync_store.py
+.github/workflows/
+  ci.yml                Lint, format gate, tests on 3.11 and 3.12
+  refresh.yml           Weekly: restore, ingest, dump, re-export, commit
 ```
 
 Baselines and foundation models share one `Forecaster` protocol, so the backtest harness
