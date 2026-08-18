@@ -77,7 +77,7 @@ class TestResultFrames:
             assert len(frame[frame["market"] == market]) == buckets, market
 
     @needs_snapshot
-    def test_both_models_are_present_with_a_width_in_every_market(self):
+    def test_every_checkpoint_is_present_with_a_width_in_every_market(self):
         """The width is the load-bearing column. The July entries had none, and a coverage
         comparison without one is the reading this whole section warns against."""
         frame = data.model_comparison_frame()
@@ -86,18 +86,31 @@ class TestResultFrames:
         assert (frame["coverage"].between(50, 100)).all()
 
     @needs_snapshot
-    def test_the_two_models_agree_on_which_market_is_hardest_to_calibrate(self):
-        """Finding 21 itself. If a re-measurement ever breaks the shared ordering, the
-        prose claiming the defect belongs to the grid is no longer supported."""
+    def test_the_checkpoints_agree_on_which_market_is_hardest_to_calibrate(self):
+        """Findings 21 and 23 together. If a re-measurement ever breaks the shared ordering,
+        the prose claiming the defect belongs to the grid is no longer supported.
+
+        Written over however many checkpoints `MODEL_ARMS` carries rather than over two,
+        because the point of the claim is that it keeps surviving another one.
+        """
         frame = data.model_comparison_frame()
         ordering = {
-            arm: list(group.sort_values("coverage")["market"])
+            arm: tuple(group.sort_values("coverage")["market"])
             for arm, group in frame.groupby("arm")
         }
-        assert len(ordering) == 2
-        first, second = ordering.values()
-        assert first == second, ordering
-        assert first[-1] == "CISO", "CISO was the best calibrated market for both models"
+        assert len(ordering) == len(data.MODEL_ARMS)
+        assert len(set(ordering.values())) == 1, ordering
+        assert next(iter(ordering.values()))[-1] == "CISO", "CISO is best calibrated for all"
+
+    def test_the_small_checkpoint_keeps_most_of_the_gain_in_every_market(self):
+        """Finding 23, and the numbers section 4 states in prose. A table that drifted out
+        of this range would leave the page asserting figures the data no longer carries."""
+        frame = data.retention_frame()
+        assert len(frame) == len(data.MARKETS)
+        kept = frame[["MASE gain kept (%)", "WQL gain kept (%)"]]
+        assert kept.min().min() >= 85, "the page says 89 to 95%"
+        assert kept.max().max() <= 100, "keeping more than all of it would be a new finding"
+        assert (frame["80% width vs base (%)"] > 0).all(), "less sharp in every market"
 
     def test_the_forecast_ablation_has_all_three_arms_in_every_market(self):
         frame = data.forecast_frame()

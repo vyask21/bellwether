@@ -302,20 +302,31 @@ def coverage_width_frame() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-# The two foundation models, in the order the finding reads: the champion, then the one
-# brought in to find out which of its properties were its own.
-MODEL_ARMS = ("chronos_bolt_base", "timesfm_2p5_200m")
+# The three checkpoints, in the order the findings read: the champion, the one brought in
+# to find out which of its properties were its own, and the small one brought in to find out
+# how much of the champion was its size.
+MODEL_ARMS = ("chronos_bolt_base", "chronos_bolt_small", "timesfm_2p5_200m")
+
+# Parameter counts ride in the labels here and nowhere else. Section 1 compares a model
+# against baselines, where "Chronos-Bolt" is the whole of what a reader needs; this chart
+# compares checkpoints against each other, where size is the variable under test and a
+# legend that omits it makes the picture unreadable.
+MODEL_LABELS = {
+    "chronos_bolt_base": "Chronos-Bolt base (205M)",
+    "chronos_bolt_small": "Chronos-Bolt small (48M)",
+    "timesfm_2p5_200m": "TimesFM 2.5 (200M)",
+}
 
 
 def model_comparison_frame() -> pd.DataFrame:
-    """Both foundation models on the same windows, coverage against width.
+    """Every checkpoint on the same windows, coverage against width.
 
     Deliberately the same shape as `coverage_width_frame`, because it draws through the
-    same chart. The finding is that two models miss coverage in the same markets in the
-    same direction, and that is the picture that chart already makes: a second row of dots
-    landing in the same left to right order as the first.
+    same chart. The finding is that the checkpoints miss coverage in the same markets in
+    the same direction, and that is the picture that chart already makes: each further row
+    of dots landing in the same left to right order as the first.
 
-    Width comes from the backtest record rather than from the ablation, so both models are
+    Width comes from the backtest record rather than from the ablation, so every model is
     read off one window set. The two files score different windows and a calibration
     comparison across them would be a comparison of window sets.
     """
@@ -331,11 +342,45 @@ def model_comparison_frame() -> pd.DataFrame:
             rows.append(
                 {
                     "market": market,
-                    "arm": ARM_LABELS.get(arm, arm),
+                    "arm": MODEL_LABELS.get(arm, ARM_LABELS.get(arm, arm)),
                     "coverage": metrics["coverage_80"] * 100,
                     "width_pct": width / means[market] * 100,
                 }
             )
+    return pd.DataFrame(rows)
+
+
+def retention_frame() -> pd.DataFrame:
+    """How much of the base checkpoint's gain a checkpoint a quarter its size keeps.
+
+    Measured as a fraction of the *gain over the daily seasonal naive*, not as a ratio of
+    the metrics themselves. A MASE of 0.410 against 0.390 reads as a 5% difference, which
+    understates what was actually bought: both models sit far below the baseline, and the
+    question is what share of that distance the small one covers. It is 93%.
+
+    No runtime column. The backtest record carries `seconds` and they are not comparable
+    across sessions: the same code on the same windows measured 1.6x apart a fortnight
+    apart, with byte-identical output. The compute claim is made in prose, as a ratio
+    within one session, which is the only form of it that has ever reproduced.
+    """
+    rows = []
+    for series_id, arms in results("backtest_results.json").items():
+        naive = arms.get("seasonal_naive_daily")
+        base, small = arms.get("chronos_bolt_base"), arms.get("chronos_bolt_small")
+        if not naive or not base or not small:
+            continue
+        rows.append(
+            {
+                "Market": series_id.split(":")[0],
+                "MASE gain kept (%)": round(
+                    (naive["mase"] - small["mase"]) / (naive["mase"] - base["mase"]) * 100, 1
+                ),
+                "WQL gain kept (%)": round(
+                    (naive["wql"] - small["wql"]) / (naive["wql"] - base["wql"]) * 100, 1
+                ),
+                "80% width vs base (%)": round((small["width_80"] / base["width_80"] - 1) * 100, 1),
+            }
+        )
     return pd.DataFrame(rows)
 
 

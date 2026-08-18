@@ -207,6 +207,7 @@ def _charts(origins: dict) -> tuple[dict, dict]:
             )
         )
 
+    tables["retention"] = _table(data.retention_frame(), 1)
     tables["operator"] = _table(data.operator_frame(), 3)
     tables["weather"] = _table(data.weather_frame(), 1)
     tables["forecast_arms"] = _table(data.forecast_frame(), 1)
@@ -517,6 +518,9 @@ TEMPLATE = """<!doctype html>
     <details><summary>{{ text.S4_MODELS_TABLE }}</summary>{{ tables.models }}</details>
   </figure>
   {{ prose(text.S4_MODELS_CLOSING) }}
+  {{ prose(text.S4_SMALL_LEDE) }}
+  {{ tables.retention }}
+  {{ prose(text.S4_SMALL_PROSE) }}
 </section>
 
 <section>

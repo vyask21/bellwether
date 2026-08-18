@@ -102,7 +102,10 @@ S4_MODELS_PROSE = (
     "half of the result.** The larger half is that both models land under nominal on ERCO "
     "and PACE and both land closest on CISO. The ordering of the three markets by "
     "calibration difficulty survives a change of checkpoint, which is what a property of "
-    "the grid looks like and not what a property of a model looks like."
+    "the grid looks like and not what a property of a model looks like.\n\n"
+    "A third checkpoint is on the chart below, Chronos-Bolt at 48M parameters against its "
+    "own 205M sibling. It is drawn here because it was scored on the same windows and is "
+    "read with the same rule, and it is the subject of the paragraphs underneath."
 )
 S4_MODELS_CLOSING = (
     "**And this section's own rule earns its keep on California.** Read from the coverage "
@@ -112,7 +115,33 @@ S4_MODELS_CLOSING = (
     "wider. On ERCO no such care is needed, where it covers 2.5 points less on a band 6.4% "
     "wider, which is worse in both directions at once."
 )
-S4_MODELS_TABLE = "Table view: the two foundation models"
+S4_MODELS_TABLE = "Table view: the three checkpoints"
+
+S4_SMALL_LEDE = (
+    "**Four fifths of the parameters buy a tenth of the margin.** The small checkpoint "
+    "carries 48M against base's 205M and read the same 702 windows with the same 2,048 "
+    "hours of context. Measured as the share of base's gain over the daily seasonal naive "
+    "that it keeps, rather than as a ratio of the metrics themselves, it holds 90.8% on "
+    "ERCO, 93.0% on CISO and 95.3% on PACE, with WQL agreeing to within a point everywhere. "
+    "It also beats TimesFM 2.5 on MASE, WQL and sMAPE in all three markets on a quarter of "
+    "the parameters, which removes the equal-budget condition the comparison above was "
+    "careful to impose and leaves that ordering standing anyway."
+)
+S4_SMALL_PROSE = (
+    "**On the interval it buys nothing, and this section's rule catches it a third time.** "
+    "CISO's 81.4% is the first above-nominal coverage figure anywhere on this page, and it "
+    "costs a band 10.1% wider. ERCO and PACE are flat on coverage, 77.3% against 77.4% and "
+    "79.1% against 79.1%, on bands 4.8% and 2.7% wider: less sharp everywhere and no better "
+    "conditioned. The market ordering survives the third checkpoint as well, ERCO worst and "
+    "CISO best, so the level error above has now held across two training corpora, two "
+    "architectures and a 4x parameter range.\n\n"
+    "**None of this is a reason to change the shipped model.** The small checkpoint ran "
+    "3.1x faster in the session that measured it, and nothing here is compute bound: a "
+    "day-ahead forecast has hours to make a prediction that takes under a second. It would "
+    "matter somewhere that is bound, which the weekly refresh may turn out to be. That "
+    "speed figure is a within-session ratio on purpose, because accuracy in this project "
+    "has reproduced exactly three times and runtime has never reproduced once."
+)
 
 # ----------------------------------------------------------------------------------------
 S5_HEADING = "5. Where the forecast actually fails"

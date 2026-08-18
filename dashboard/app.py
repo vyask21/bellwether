@@ -140,6 +140,14 @@ if not models.empty:
 
 st.markdown(text.S4_MODELS_CLOSING)
 
+st.markdown(text.S4_SMALL_LEDE)
+
+retention = data.retention_frame()
+if not retention.empty:
+    st.dataframe(retention, width="stretch", hide_index=True)
+
+st.markdown(text.S4_SMALL_PROSE)
+
 st.divider()
 
 # ----------------------------------------------------------------------------------------
