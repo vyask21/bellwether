@@ -1,0 +1,128 @@
+# Scheduled refresh.
+#
+# The persistence question this answers: a runner is ephemeral and the DuckDB store is
+# gitignored, so there is nothing here to top up unless the repository carries one. It
+# does, as `store/*.parquet` — 2.2 MB against the 35 MB database. The loop is restore,
+# ingest the last fortnight, dump, re-export the dashboard cache, commit.
+#
+# Order matters and is not arbitrary. The restore replaces on the primary key, so it
+# would overwrite a fresher ingest with a stale stored row; ingesting strictly after the
+# restore is what keeps the newest published figure. See tests/test_store.py.
+name: Refresh
+
+on:
+  schedule:
+    # Mondays, 09:17 UTC. Off the hour on purpose: Actions queues scheduled jobs hardest
+    # at exact-hour marks, and a refresh has no deadline worth competing for one.
+    - cron: "17 9 * * 1"
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "How far back to re-pull. EIA restates recent values, so this overlaps."
+        default: "14"
+      rebuild_snapshot:
+        description: "Re-run the forecasts behind the dashboard cache. The slow half."
+        type: boolean
+        default: true
+
+# One refresh at a time. Two runs would race on the same branch and the loser would be
+# rejected on push after having done all of the forecasting.
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+      NWS_USER_AGENT: ${{ secrets.NWS_USER_AGENT }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      DAYS: ${{ github.event.inputs.days || '14' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        # The CPU wheel is named explicitly. On Linux a bare `pip install torch` resolves
+        # to the CUDA build, which is roughly 2.5 GB of driver payload for a runner that
+        # has no GPU and will run Chronos on its cores regardless.
+        run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -e ".[forecast,deploy]"
+
+      - name: Cache model weights
+        # Chronos-Bolt base is about 200 MB and never changes. Downloading it weekly is
+        # the single largest avoidable cost in this job.
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-chronos-bolt-base
+
+      - name: Restore the database from the committed store
+        run: python scripts/sync_store.py restore
+
+      - name: Ingest EIA demand and the operator's day-ahead forecast
+        run: |
+          for market in CISO ERCO PACE; do
+            for series in D DF; do
+              bellwether ingest --respondent "$market" --series-type "$series" --days "$DAYS"
+            done
+          done
+
+      - name: Ingest NOAA temperature
+        # NCEI's archive lags live weather by months, so this routinely returns nothing new
+        # and that is not a failure. It is run anyway because the lag is the thing that
+        # changes: the archive catches up in bursts.
+        run: |
+          for market in CISO ERCO PACE; do
+            bellwether ingest-weather --respondent "$market" --days "$DAYS"
+          done
+
+      - name: Write the store back
+        run: python scripts/sync_store.py dump
+
+      - name: Show what landed
+        run: bellwether status
+
+      - name: Rebuild the dashboard cache
+        if: ${{ github.event.inputs.rebuild_snapshot != 'false' }}
+        # The expensive half: the base model forecasts every origin again, per market. One
+        # market per invocation, matching how these are run by hand, so a timeout leaves
+        # two markets refreshed rather than none.
+        run: |
+          for market in CISO ERCO PACE; do
+            python scripts/export_snapshot.py "$market"
+          done
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add store snapshot
+          if git diff --staged --quiet; then
+            echo "Nothing changed: no new observations and no new forecasts." >> "$GITHUB_STEP_SUMMARY"
+          else
+            git commit -m "Refresh: top up observations and re-export the snapshot"
+            git push
+            echo "Committed a refreshed store." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Publish to the Space
+        # Skipped unless an HF_TOKEN secret exists. The credential this project has used so
+        # far is an interactive OAuth session that expires 2026-09-02, which a runner
+        # cannot hold; publishing needs a Write token minted for it. Until one is set the
+        # repository refreshes and the Space stays where it was, which is a visible gap
+        # rather than a silent one.
+        if: ${{ env.HF_TOKEN != '' }}
+        run: python scripts/deploy_space.py --push
