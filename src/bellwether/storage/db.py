@@ -20,7 +20,7 @@ from bellwether.attribution import (
     eia_acknowledgment,
     noaa_acknowledgment,
 )
-from bellwether.config import SNAPSHOT_DIR, settings
+from bellwether.config import SNAPSHOT_DIR, STORE_DIR, settings
 from bellwether.ingest.eia import ObservationRow
 from bellwether.ingest.ndfd import ForecastRow
 from bellwether.ingest.noaa import WeatherRow
@@ -241,7 +241,31 @@ def upsert_weather_forecasts(
     return written
 
 
-EXPORTABLE_TABLES = frozenset({"observations", "weather_observations", "forecasts"})
+EXPORTABLE_TABLES = frozenset(
+    {"observations", "weather_observations", "weather_forecasts", "forecasts"}
+)
+
+# The tables a scheduled run has to be able to rebuild from, in the order they restore.
+# `forecasts` is excluded deliberately: it is model output, regenerable from the three
+# source tables, and the one table whose contents would grow without bound in a repo.
+SOURCE_TABLES = ("observations", "weather_observations", "weather_forecasts")
+
+# Each table's primary key, used to sort every export.
+#
+# Without this a snapshot is only as ordered as the table happened to be, and a table
+# rebuilt by `restore_table` is not in insertion order at all. Two consequences, both
+# discovered by round-tripping rather than by reading: the same 187,084 rows re-exported
+# 50% larger, because zstd compresses a clustered timestamp column and not a scattered
+# one, and the bytes changed on every cycle. The second is the expensive one. A scheduled
+# refresh decides whether to commit by asking git whether anything differs, so an export
+# that reshuffles itself would commit a fresh megabyte every week and call it a data
+# update. Sorting makes the file a function of the contents alone.
+_EXPORT_ORDER = {
+    "observations": ("period", "respondent", "series_type"),
+    "weather_observations": ("observed_at", "station_id", "report_type"),
+    "weather_forecasts": ("issued_at", "valid_at", "station_id"),
+    "forecasts": ("origin", "period", "respondent", "series_type", "model_name", "quantile"),
+}
 
 
 def export_snapshot(
@@ -265,10 +289,78 @@ def export_snapshot(
     out_dir = directory or SNAPSHOT_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
     target = out_dir / f"{table}.parquet"
-    conn.execute(f"COPY {table} TO '{target.as_posix()}' (FORMAT PARQUET, COMPRESSION ZSTD)")
+    order = ", ".join(_EXPORT_ORDER[table])
+    conn.execute(
+        f"COPY (SELECT * FROM {table} ORDER BY {order}) "  # noqa: S608 - table is allowlisted
+        f"TO '{target.as_posix()}' (FORMAT PARQUET, COMPRESSION ZSTD)"
+    )
 
     _write_attribution(conn, out_dir, table)
     return target
+
+
+def restore_table(
+    conn: duckdb.DuckDBPyConnection,
+    table: str = "observations",
+    directory: Path | None = None,
+) -> int:
+    """Load a Parquet mirror back into its table, returning the rows read.
+
+    The inverse of `export_snapshot`, and the half that makes an ephemeral runner viable:
+    a fresh checkout has no DuckDB file, and this rebuilds one from the committed store in
+    seconds rather than re-ingesting two years from two agencies.
+
+    Written as INSERT OR REPLACE against the primary key rather than a table swap, so
+    restoring over a store that is already populated converges instead of duplicating, and
+    so a restore that races a partial ingest cannot lose the newer row for a key it does
+    not carry. `ingested_at` rides along in the file rather than defaulting to now(), which
+    is what keeps the exported acknowledgments dated from the ingest and not from the
+    restore.
+
+    A missing file is not an error. The first scheduled run has no store to read, and a
+    table that was never ingested locally should not stop the other two from restoring.
+    """
+    if table not in EXPORTABLE_TABLES:
+        raise ValueError(
+            f"Refusing to restore unknown table {table!r}; expected {EXPORTABLE_TABLES}"
+        )
+
+    source = (directory or STORE_DIR) / f"{table}.parquet"
+    if not source.exists():
+        return 0
+
+    # Columns are named rather than SELECT *: COPY wrote them in table order, but a
+    # positional insert would silently misfile every value if a column were ever added to
+    # the schema ahead of a stored file being regenerated.
+    columns = [
+        row[0]
+        for row in conn.execute(
+            "SELECT column_name FROM information_schema.columns "
+            "WHERE table_name = ? ORDER BY ordinal_position",
+            [table],
+        ).fetchall()
+    ]
+    projection = ", ".join(f'"{column}"' for column in columns)
+
+    conn.execute(
+        f"INSERT OR REPLACE INTO {table} ({projection}) "  # noqa: S608 - table is allowlisted
+        f"SELECT {projection} FROM read_parquet('{source.as_posix()}')"
+    )
+    counted = conn.execute(f"SELECT count(*) FROM read_parquet('{source.as_posix()}')").fetchone()[
+        0
+    ]
+    return int(counted)
+
+
+def restore_store(conn: duckdb.DuckDBPyConnection, directory: Path | None = None) -> dict[str, int]:
+    """Rebuild every source table from the committed store."""
+    return {table: restore_table(conn, table, directory) for table in SOURCE_TABLES}
+
+
+def dump_store(conn: duckdb.DuckDBPyConnection, directory: Path | None = None) -> dict[str, Path]:
+    """Write every source table to the committed store, attribution alongside."""
+    out_dir = directory or STORE_DIR
+    return {table: export_snapshot(conn, table, out_dir) for table in SOURCE_TABLES}
 
 
 def _write_attribution(conn: duckdb.DuckDBPyConnection, out_dir: Path, table: str) -> None:
@@ -283,7 +375,10 @@ def _write_attribution(conn: duckdb.DuckDBPyConnection, out_dir: Path, table: st
     """
     if table == "observations":
         notice = "\n".join([_dated(conn, table, eia_acknowledgment), NOT_AFFILIATED])
-    elif table == "weather_observations":
+    elif table in ("weather_observations", "weather_forecasts"):
+        # NDFD joins its NOAA sibling rather than the derived branch below. It is a
+        # forecast, but it is NOAA's forecast, and the acknowledgment follows who
+        # published the content and not whether the content describes the future.
         notice = "\n".join([_dated(conn, table, noaa_acknowledgment), NOAA_NOT_AFFILIATED])
     else:
         notice = "\n".join(

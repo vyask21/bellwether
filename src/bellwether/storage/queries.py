@@ -179,6 +179,8 @@ def load_station_temperatures(
             SELECT
                 station_id,
                 temperature_c,
+                observed_at,
+                report_type,
                 {_NEAREST_HOUR_SQL} AS hour,
                 abs(epoch((observed_at AT TIME ZONE 'UTC') - {_NEAREST_HOUR_SQL}))
                     AS distance_seconds
@@ -192,8 +194,20 @@ def load_station_temperatures(
                 station_id,
                 hour,
                 temperature_c,
+                -- The trailing two keys are what make this reproducible rather than
+                -- merely repeatable. Distance alone leaves 700 exact ties in the
+                -- archive, 365 of them disagreeing on temperature: a reading at HH:53
+                -- and one at HH+1:07 are both 420s from HH+1:00, and a bare ORDER BY
+                -- then resolves them by physical row order. That is stable on one
+                -- machine and changes the moment the table is rebuilt from Parquet,
+                -- which is exactly what the committed store does on every scheduled
+                -- run. Together with the primary key these three columns are a total
+                -- order. Preferring the earlier reading is arbitrary, and it is meant
+                -- to be: the two are equally close by construction, so there is no
+                -- better answer to pick, only a fixed one.
                 row_number() OVER (
-                    PARTITION BY station_id, hour ORDER BY distance_seconds
+                    PARTITION BY station_id, hour
+                    ORDER BY distance_seconds, observed_at, report_type
                 ) AS rank
             FROM usable
         )

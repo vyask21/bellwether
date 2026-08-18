@@ -11,6 +11,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = PROJECT_ROOT / "data"
 SNAPSHOT_DIR = DATA_DIR / "snapshots"
 
+# The committed Parquet mirror of the DuckDB source tables. Distinct from SNAPSHOT_DIR,
+# which is a gitignored scratch export, and from `snapshot/`, which is the narrow
+# dashboard cache. This is the one directory that survives a machine: a scheduled run on
+# an ephemeral runner rebuilds the store from it, tops it up, and writes it back.
+STORE_DIR = PROJECT_ROOT / "store"
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
