@@ -141,6 +141,20 @@ class TestResultFrames:
             assert long > arms["chronos_bolt_base"]["mase"], series_id
             assert long > arms["chronos_bolt_small"]["mase"], series_id
 
+    def test_the_results_file_holds_demand_and_nothing_else(self):
+        """Every loader collapses `series_id` to its market with `split(":")[0]`, so a
+        second series type for the same respondent lands under the same label and the
+        charts silently gain a duplicate row per market. Net generation is measured for
+        exactly this reason and is kept in its own file. This test names the coupling: if
+        another series type is ever wanted here, the loaders must filter first.
+        """
+        backtest = data.results("backtest_results.json")
+        offenders = [series_id for series_id in backtest if not series_id.endswith(":D")]
+        assert not offenders, f"non-demand series would double-count as markets: {offenders}"
+
+        markets = [series_id.split(":")[0] for series_id in backtest]
+        assert len(markets) == len(set(markets)), "one row per market is what the charts assume"
+
     def test_the_forecast_ablation_has_all_three_arms_in_every_market(self):
         frame = data.forecast_frame()
         assert set(frame["Market"]) == set(data.MARKETS)

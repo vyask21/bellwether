@@ -16,7 +16,7 @@ import pytest
 
 from bellwether.ingest.eia import ObservationRow
 from bellwether.storage.db import connect, upsert_observations
-from bellwether.storage.queries import load_aligned_series, load_series
+from bellwether.storage.queries import Series, load_aligned_series, load_series
 
 START = datetime(2025, 1, 1, tzinfo=UTC)
 
@@ -115,3 +115,65 @@ def test_requires_at_least_one_series_type(tmp_path):
 
     with connect(path, read_only=True) as conn, pytest.raises(ValueError, match="at least one"):
         load_aligned_series(conn, "TEST", [])
+
+
+@pytest.fixture
+def wider_db(tmp_path):
+    """One series reaching further in both directions, as NG does against D."""
+    path = tmp_path / "wider.duckdb"
+    with connect(path) as conn:
+        upsert_observations(conn, _rows("D", start_hour=2, count=6, base=100.0))
+        upsert_observations(conn, _rows("NG", start_hour=0, count=10, base=200.0))
+    return path
+
+
+def test_clip_to_another_series_span_equalises_the_grid(wider_db):
+    """The reason clip exists: EIA publishes each series type on its own schedule."""
+    with connect(wider_db, read_only=True) as conn:
+        d = load_series(conn, "TEST", "D")
+        ng = load_series(conn, "TEST", "NG")
+
+    assert ng.values.size > d.values.size, "NG reaches further before clipping"
+
+    clipped = ng.clip(d.timestamps[0], d.timestamps[-1])
+
+    assert clipped.values.size == d.values.size
+    assert clipped.timestamps[0] == d.timestamps[0]
+    assert clipped.timestamps[-1] == d.timestamps[-1]
+
+
+def test_clip_keeps_values_on_their_own_timestamps(wider_db):
+    """Clipping must drop whole (timestamp, value) pairs, not slide the values."""
+    with connect(wider_db, read_only=True) as conn:
+        ng = load_series(conn, "TEST", "NG")
+
+    clipped = ng.clip(ng.timestamps[2], ng.timestamps[5])
+
+    assert clipped.values.size == 4, "both bounds are inclusive"
+    assert clipped.values[0] == ng.values[2]
+    assert clipped.values[-1] == ng.values[5]
+
+
+def test_clip_beyond_the_span_is_a_no_op(wider_db):
+    with connect(wider_db, read_only=True) as conn:
+        ng = load_series(conn, "TEST", "NG")
+
+    widened = ng.clip(ng.timestamps[0] - np.timedelta64(5, "h"), None)
+
+    assert widened.values.size == ng.values.size
+    assert widened.series_id == ng.series_id
+
+
+def test_clip_preserves_gaps_as_nan():
+    """A clipped series is still gap-filled, so window skipping still sees the holes."""
+    timestamps = np.arange(
+        "2025-01-01", "2025-01-02", np.timedelta64(1, "h"), dtype="datetime64[ns]"
+    )
+    values = np.arange(float(timestamps.size))
+    values[5] = np.nan
+    series = Series(series_id="TEST:NG", timestamps=timestamps, values=values)
+
+    clipped = series.clip(timestamps[3], timestamps[8])
+
+    assert clipped.values.size == 6
+    assert np.isnan(clipped.values[2]), "the NaN at hour 5 lands at index 2"

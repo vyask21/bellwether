@@ -4,7 +4,8 @@ Split per market and written incrementally so a long run can be resumed rather t
 restarted, and so a partial run still leaves usable results on disk.
 
 Usage: python scripts/run_backtest.py CISO [--chronos] [--chronos-small] [--timesfm]
-       [--timesfm-long] [--out docs/backtest_results.json]
+       [--timesfm-long] [--series-type NG] [--match-series D]
+       [--out docs/backtest_results.json]
 """
 
 from __future__ import annotations
@@ -37,10 +38,17 @@ def main() -> None:
         help="TimesFM on its own context ceiling rather than Chronos's, as a separate arm",
     )
     parser.add_argument("--out", default="docs/backtest_results.json")
+    parser.add_argument(
+        "--match-series",
+        help="Clip to another series type's span, so both are scored on one window set",
+    )
     args = parser.parse_args()
 
     with connect(read_only=True) as conn:
         series = load_series(conn, args.respondent, args.series_type)
+        if args.match_series:
+            reference = load_series(conn, args.respondent, args.match_series)
+            series = series.clip(reference.timestamps[0], reference.timestamps[-1])
 
     models: list = [WeeklySeasonalNaive(), DailySeasonalNaive()]
     if args.chronos:

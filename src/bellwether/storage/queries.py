@@ -29,6 +29,29 @@ class Series:
             return 1.0
         return float(np.mean(~np.isfinite(self.values)))
 
+    def clip(
+        self,
+        start: np.datetime64 | None = None,
+        end: np.datetime64 | None = None,
+    ) -> Series:
+        """Restrict to a closed timestamp window.
+
+        Two series pulled from the same store rarely share a span: EIA publishes each
+        series type on its own schedule, so net generation reaches nearer the present
+        than demand does. Scoring them on their own spans gives each a different window
+        count, and a metric compared across different windows is not a comparison.
+        """
+        mask = np.ones(self.timestamps.shape, dtype=bool)
+        if start is not None:
+            mask &= self.timestamps >= start
+        if end is not None:
+            mask &= self.timestamps <= end
+        return Series(
+            series_id=self.series_id,
+            timestamps=self.timestamps[mask],
+            values=self.values[mask],
+        )
+
 
 def load_series(
     conn: duckdb.DuckDBPyConnection,
