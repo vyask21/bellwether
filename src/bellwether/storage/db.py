@@ -21,7 +21,7 @@ from bellwether.attribution import (
     noaa_acknowledgment,
 )
 from bellwether.config import SNAPSHOT_DIR, STORE_DIR, settings
-from bellwether.ingest.eia import ObservationRow
+from bellwether.ingest.eia import ObservationRow, OutageRow
 from bellwether.ingest.ndfd import ForecastRow
 from bellwether.ingest.noaa import WeatherRow
 
@@ -73,6 +73,22 @@ CREATE TABLE IF NOT EXISTS weather_forecasts (
     PRIMARY KEY (issued_at, valid_at, station_id)
 );
 
+-- EIA content on a different route and a different shape: per generating unit rather than
+-- per balancing authority, and daily rather than hourly. Kept out of `observations`
+-- because that table's key is (period, respondent, series_type) and a reactor has no
+-- respondent. Which market a facility sits in is this project's mapping, not EIA's, so it
+-- is applied at read time and never stored here as though the agency had said it.
+CREATE TABLE IF NOT EXISTS nuclear_outages (
+    period         DATE    NOT NULL,
+    facility_id    VARCHAR NOT NULL,
+    generator      VARCHAR NOT NULL,
+    capacity_mw    DOUBLE,
+    outage_mw      DOUBLE,
+    percent_outage DOUBLE,
+    ingested_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (period, facility_id, generator)
+);
+
 -- Derived data. Not EIA content and never attributed to EIA. Kept in its own table so a
 -- forecast can never be read back as an observation.
 CREATE TABLE IF NOT EXISTS forecasts (
@@ -118,6 +134,48 @@ def connect(
         yield conn
     finally:
         conn.close()
+
+
+def upsert_nuclear_outages(
+    conn: duckdb.DuckDBPyConnection,
+    rows: Iterable[OutageRow],
+    batch_size: int = 10_000,
+) -> int:
+    """Insert outage rows idempotently. EIA restates recent days, so a re-run converges."""
+    written = 0
+    batch: list[tuple] = []
+
+    def flush(records: list[tuple]) -> None:
+        if not records:
+            return
+        conn.executemany(
+            """
+            INSERT OR REPLACE INTO nuclear_outages
+                (period, facility_id, generator, capacity_mw, outage_mw, percent_outage)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            records,
+        )
+
+    for row in rows:
+        batch.append(
+            (
+                row.period,
+                row.facility_id,
+                row.generator,
+                row.capacity_mw,
+                row.outage_mw,
+                row.percent_outage,
+            )
+        )
+        if len(batch) >= batch_size:
+            flush(batch)
+            written += len(batch)
+            batch = []
+
+    flush(batch)
+    written += len(batch)
+    return written
 
 
 def upsert_observations(
@@ -242,13 +300,24 @@ def upsert_weather_forecasts(
 
 
 EXPORTABLE_TABLES = frozenset(
-    {"observations", "weather_observations", "weather_forecasts", "forecasts"}
+    {
+        "observations",
+        "weather_observations",
+        "weather_forecasts",
+        "nuclear_outages",
+        "forecasts",
+    }
 )
 
 # The tables a scheduled run has to be able to rebuild from, in the order they restore.
 # `forecasts` is excluded deliberately: it is model output, regenerable from the three
 # source tables, and the one table whose contents would grow without bound in a repo.
-SOURCE_TABLES = ("observations", "weather_observations", "weather_forecasts")
+SOURCE_TABLES = (
+    "observations",
+    "weather_observations",
+    "weather_forecasts",
+    "nuclear_outages",
+)
 
 # Each table's primary key, used to sort every export.
 #
@@ -264,6 +333,7 @@ _EXPORT_ORDER = {
     "observations": ("period", "respondent", "series_type"),
     "weather_observations": ("observed_at", "station_id", "report_type"),
     "weather_forecasts": ("issued_at", "valid_at", "station_id"),
+    "nuclear_outages": ("period", "facility_id", "generator"),
     "forecasts": ("origin", "period", "respondent", "series_type", "model_name", "quantile"),
 }
 
@@ -373,7 +443,7 @@ def _write_attribution(conn: duckdb.DuckDBPyConnection, out_dir: Path, table: st
     Both agencies ask acknowledgments to carry a date, so a snapshot is dated from the most
     recent `ingested_at` in the table rather than from wall-clock time at export.
     """
-    if table == "observations":
+    if table in ("observations", "nuclear_outages"):
         notice = "\n".join([_dated(conn, table, eia_acknowledgment), NOT_AFFILIATED])
     elif table in ("weather_observations", "weather_forecasts"):
         # NDFD joins its NOAA sibling rather than the derived branch below. It is a

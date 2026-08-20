@@ -34,7 +34,7 @@ and `anthropic` is not a dependency.
 | NDFD forecast temperature ingestion | done, 731 days backfilled, [validated against the observations](docs/DATA_SOURCES.md) |
 | Forecast vs observed temperature, three arms | done, [four fifths of the weather gain survives](docs/RESULTS.md) |
 | Net generation as a second forecast target | done, [interchange sets how much harder it is than demand](docs/RESULTS.md) |
-| Nuclear outage and energy disruption ingestion | declined, [PACE has no reactors, so it cannot be a three-market finding](docs/STATE.md) |
+| Nuclear outage ingestion and breach test | done, ERCO and CISO, [invisible: the interval is four times the largest reactor](docs/RESULTS.md) |
 | Brief generation, with citation verification | done, deterministic, no API key |
 | Findings walkthrough | done, reads committed files only |
 | Deploy to Hugging Face Spaces | done, static site, no server on the serving path |
@@ -120,7 +120,7 @@ profile and names the wrong hours.
 | [NOAA NCEI Integrated Surface Database](https://www.ncei.noaa.gov/products/land-based-station/integrated-surface-database) | Hourly observed temperature, 14 stations |
 | [NOAA NDFD archive](https://registry.opendata.aws/noaa-ndfd/) (`s3://noaa-ndfd-pds/wmo/`) | Archived forecast temperature, 3-hourly, for scoring a weather corrector on what was actually available |
 | [NOAA/NWS API](https://www.weather.gov/documentation/services-web-api) | Live forecasts and weather alerts (planned) |
-| EIA nuclear outages | Declined. Route verified and unused: only two of three markets have reactors |
+| EIA nuclear outages | Daily outage state per generating unit, for the three reactors in ERCO and CISO. PACE has none |
 
 Weather comes from three NOAA surfaces because they answer different questions. NCEI
 archives observations permanently after quality control, which is what a backtest needs.

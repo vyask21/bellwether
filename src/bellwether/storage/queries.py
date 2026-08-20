@@ -10,6 +10,7 @@ from datetime import UTC
 import duckdb
 import numpy as np
 
+from bellwether.ingest.eia import OutageRow
 from bellwether.ingest.noaa import SUSPECT_QUALITY_CODES, stations_for
 
 log = logging.getLogger(__name__)
@@ -453,5 +454,32 @@ def coverage_report(conn: duckdb.DuckDBPyConnection) -> list[dict]:
             "last_period": r[4],
             "null_values": r[5],
         }
+        for r in rows
+    ]
+
+
+def load_outage_rows(conn: duckdb.DuckDBPyConnection) -> list[OutageRow]:
+    """Every stored nuclear outage row, oldest first.
+
+    Returned unmapped: which market a facility belongs to is this project's knowledge and
+    is applied by `bellwether.ingest.nuclear`, so the storage layer never implies EIA
+    published an attribution it did not.
+    """
+    rows = conn.execute(
+        """
+        SELECT period, facility_id, generator, capacity_mw, outage_mw, percent_outage
+        FROM nuclear_outages
+        ORDER BY period, facility_id, generator
+        """
+    ).fetchall()
+    return [
+        OutageRow(
+            period=r[0],
+            facility_id=r[1],
+            generator=r[2],
+            capacity_mw=r[3],
+            outage_mw=r[4],
+            percent_outage=r[5],
+        )
         for r in rows
     ]

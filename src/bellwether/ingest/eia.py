@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import httpx
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
@@ -22,6 +22,7 @@ log = logging.getLogger(__name__)
 
 BASE_URL = "https://api.eia.gov/v2"
 REGION_DATA_ROUTE = "electricity/rto/region-data/data/"
+NUCLEAR_OUTAGES_ROUTE = "nuclear-outages/generator-nuclear-outages/data/"
 
 # EIA caps a single response at 5,000 rows regardless of a larger `length`.
 MAX_PAGE_SIZE = 5000
@@ -62,6 +63,22 @@ class ObservationRow:
     series_type: str
     value: float | None
     value_units: str
+
+
+@dataclass(frozen=True, slots=True)
+class OutageRow:
+    """One generating unit's outage state on one day.
+
+    Daily is the finest resolution EIA publishes here, against hourly everywhere else in
+    this project, so joining it to a forecast is a join of a day onto that day's hours.
+    """
+
+    period: date
+    facility_id: str
+    generator: str
+    capacity_mw: float | None
+    outage_mw: float | None
+    percent_outage: float | None
 
 
 class EIAClient:
@@ -172,6 +189,76 @@ class EIAClient:
                 yield _parse_row(row)
 
             offset += len(rows)
+
+    def fetch_nuclear_outages(
+        self,
+        facility_ids: Sequence[str],
+        start: date,
+        end: date,
+    ) -> Iterator[OutageRow]:
+        """Yield daily outage state for the named facilities over [start, end].
+
+        Faceted by facility because the route offers no balancing-authority facet: which
+        market a reactor sits in is this project's knowledge, not EIA's. See
+        `bellwether.ingest.nuclear`.
+        """
+        if not facility_ids:
+            raise ValueError("Need at least one facility id")
+
+        offset = 0
+        total: int | None = None
+
+        while total is None or offset < total:
+            params: list[tuple[str, str]] = [
+                ("frequency", "daily"),
+                ("data[0]", "capacity"),
+                ("data[1]", "outage"),
+                ("data[2]", "percentOutage"),
+                ("start", start.isoformat()),
+                ("end", end.isoformat()),
+                ("sort[0][column]", "period"),
+                ("sort[0][direction]", "asc"),
+                ("offset", str(offset)),
+                ("length", str(MAX_PAGE_SIZE)),
+            ]
+            params.extend(("facets[facility][]", facility) for facility in facility_ids)
+
+            payload = self._get(NUCLEAR_OUTAGES_ROUTE, params)
+            body = payload.get("response", {})
+
+            if total is None:
+                total = int(body.get("total", 0))
+                log.info(
+                    "EIA nuclear outages: %s rows over %s..%s for %s",
+                    total,
+                    start,
+                    end,
+                    ",".join(facility_ids),
+                )
+
+            rows = body.get("data", [])
+            if not rows:
+                break
+
+            for row in rows:
+                yield _parse_outage_row(row)
+
+            offset += len(rows)
+
+
+def _parse_outage_row(row: dict) -> OutageRow:
+    def _number(key: str) -> float | None:
+        raw = row.get(key)
+        return None if raw is None or raw == "" else float(raw)
+
+    return OutageRow(
+        period=datetime.strptime(row["period"], "%Y-%m-%d").date(),
+        facility_id=str(row["facility"]),
+        generator=str(row["generator"]),
+        capacity_mw=_number("capacity"),
+        outage_mw=_number("outage"),
+        percent_outage=_number("percentOutage"),
+    )
 
 
 def _is_retryable(exc: BaseException) -> bool:

@@ -13,7 +13,7 @@ from datetime import UTC, datetime, timedelta
 import numpy as np
 import pytest
 
-from bellwether.ingest.eia import ObservationRow
+from bellwether.ingest.eia import ObservationRow, OutageRow
 from bellwether.ingest.ndfd import ForecastRow
 from bellwether.ingest.noaa import MARKET_STATIONS, WeatherRow
 from bellwether.storage.db import (
@@ -22,6 +22,7 @@ from bellwether.storage.db import (
     dump_store,
     restore_store,
     restore_table,
+    upsert_nuclear_outages,
     upsert_observations,
     upsert_weather_forecasts,
     upsert_weather_observations,
@@ -33,7 +34,11 @@ STATION = MARKET_STATIONS["CISO"][0].station_id
 
 
 def _populate(path):
-    """A small database carrying all three source tables."""
+    """A small database carrying every source table.
+
+    Nuclear outages are populated too, so the round-trip assertions that iterate
+    `SOURCE_TABLES` compare a real count rather than passing on an empty table.
+    """
     with connect(path) as conn:
         upsert_observations(
             conn,
@@ -71,6 +76,20 @@ def _populate(path):
                     temperature_c=11.0 + h,
                 )
                 for h in range(9)
+            ],
+        )
+        upsert_nuclear_outages(
+            conn,
+            [
+                OutageRow(
+                    period=(START + timedelta(days=d)).date(),
+                    facility_id="6145",
+                    generator="1",
+                    capacity_mw=1205.0,
+                    outage_mw=0.0 if d < 3 else 1205.0,
+                    percent_outage=0.0 if d < 3 else 100.0,
+                )
+                for d in range(6)
             ],
         )
     return path

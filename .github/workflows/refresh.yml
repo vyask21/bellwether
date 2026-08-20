@@ -72,13 +72,18 @@ jobs:
       - name: Restore the database from the committed store
         run: python scripts/sync_store.py restore
 
-      - name: Ingest EIA demand and the operator's day-ahead forecast
+      - name: Ingest EIA demand, forecast, generation and interchange
         run: |
           for market in CISO ERCO PACE; do
-            for series in D DF; do
+            for series in D DF NG TI; do
               bellwether ingest --respondent "$market" --series-type "$series" --days "$DAYS"
             done
           done
+
+      - name: Ingest EIA nuclear outages
+        # Faceted by facility rather than by market, so this is one call for every reactor
+        # the project tracks rather than one per balancing authority. PACE has none.
+        run: bellwether ingest-outages --days "$DAYS"
 
       - name: Ingest NOAA temperature
         # NCEI's archive lags live weather by months, so this routinely returns nothing new

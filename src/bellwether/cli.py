@@ -21,9 +21,15 @@ from bellwether.eval.backtest import rolling_origin_backtest
 from bellwether.forecast.baseline import DailySeasonalNaive, WeeklySeasonalNaive
 from bellwether.ingest.eia import BALANCING_AUTHORITIES, EIAClient
 from bellwether.ingest.noaa import MARKET_STATIONS, NCEIClient, stations_for
+from bellwether.ingest.nuclear import (
+    MARKETS_WITHOUT_NUCLEAR,
+    NUCLEAR_PLANTS,
+    facility_ids,
+)
 from bellwether.storage.db import (
     connect,
     export_snapshot,
+    upsert_nuclear_outages,
     upsert_observations,
     upsert_weather_observations,
 )
@@ -53,6 +59,33 @@ def ingest(
         snapshot = export_snapshot(conn)
 
     console.print(f"[green]Wrote {written:,} rows[/green] for {respondent}/{series_type}")
+    console.print(f"Snapshot: {snapshot}")
+    console.print(f"[dim]{eia_acknowledgment()}[/dim]")
+
+
+@app.command()
+def ingest_outages(
+    days: int = typer.Option(760, help="How far back to backfill from today."),
+) -> None:
+    """Pull daily nuclear outage state for the reactors in the tracked markets.
+
+    Faceted by facility because EIA's route has no balancing-authority field. Which plant
+    sits in which market is this project's mapping; see `bellwether.ingest.nuclear`.
+    """
+    end = datetime.now(UTC).date()
+    start = end - timedelta(days=days)
+
+    with EIAClient() as client, connect() as conn:
+        rows = client.fetch_nuclear_outages(facility_ids(), start, end)
+        written = upsert_nuclear_outages(conn, rows)
+        snapshot = export_snapshot(conn, table="nuclear_outages")
+
+    for plant in NUCLEAR_PLANTS:
+        console.print(f"  {plant.name} ({plant.market})")
+    for market in MARKETS_WITHOUT_NUCLEAR:
+        console.print(f"  [yellow]{market}: no nuclear generation[/yellow]")
+
+    console.print(f"[green]Wrote {written:,} rows[/green] over {start} to {end}")
     console.print(f"Snapshot: {snapshot}")
     console.print(f"[dim]{eia_acknowledgment()}[/dim]")
 
