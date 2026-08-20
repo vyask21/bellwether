@@ -103,9 +103,11 @@ S4_MODELS_PROSE = (
     "and PACE and both land closest on CISO. The ordering of the three markets by "
     "calibration difficulty survives a change of checkpoint, which is what a property of "
     "the grid looks like and not what a property of a model looks like.\n\n"
-    "A third checkpoint is on the chart below, Chronos-Bolt at 48M parameters against its "
-    "own 205M sibling. It is drawn here because it was scored on the same windows and is "
-    "read with the same rule, and it is the subject of the paragraphs underneath."
+    "Two further arms are on the chart below: Chronos-Bolt at 48M parameters against its own "
+    "205M sibling, and TimesFM re-run on its own context ceiling rather than the matched "
+    "one. Both are drawn here because they were scored on the same windows and are read "
+    "with the same rule, and each is the subject of a passage underneath. **The matched "
+    "context turns out not to be what lost**, which is the last passage in this section."
 )
 S4_MODELS_CLOSING = (
     "**And this section's own rule earns its keep on California.** Read from the coverage "
@@ -142,6 +144,37 @@ S4_SMALL_PROSE = (
     "speed figure is a within-session ratio on purpose, because accuracy in this project "
     "has reproduced exactly three times and runtime has never reproduced once."
 )
+
+S4_CONTEXT_LEDE = (
+    "**The context was not what lost.** The comparison above matched TimesFM to Chronos's "
+    "2,048 hours and said plainly that this left a question open: a model held to a rival's "
+    "limit might be losing on evidence rather than on method. So it was re-run on its own "
+    "ceiling, **16,256 hours**, 7.9 times the matched context and more history than "
+    "Chronos-Bolt is able to read at all, over the same 702 windows."
+)
+S4_CONTEXT_PROSE = (
+    "**The extra history is worth something real, small, and different in every market.** "
+    "MASE improves 4.3% on ERCO, 2.2% on CISO and 1.1% on PACE, with WQL and sMAPE moving "
+    "the same way and about as far inside each market. Three metrics agreeing within a "
+    "market is what makes it an effect; the spread between markets is what stops it being "
+    "one number, and nothing measured here predicts which end a market lands on.\n\n"
+    "**And this section's rule finally catches a model in its favour.** On ERCO coverage "
+    "rises 2.5 points onto a band that is 0.6% **narrower**, the only place on this page "
+    "where coverage has not been paid for with width. That is what running short of "
+    "evidence looks like: given more, the model became both more accurate and more certain. "
+    "On CISO and PACE the bands widen instead, 1.8% and 1.9%, for 1.7 and 1.2 points of "
+    "coverage, which is the ordinary purchase every other arm here has made; on CISO it "
+    "buys a figure that now sits 1.9 points above nominal rather than closer to it. So the "
+    "narrowing is a rescue of one badly under-covering market, not a property of longer "
+    "context.\n\n"
+    "**It still does not win.** Against Chronos-Bolt base it closes between a quarter and a "
+    "half of the accuracy gap and stops, in every market. On ERCO it arrives at exactly "
+    "base's coverage, 77.4% against 77.4%, and needs a band 5.8% wider to get there. It "
+    "does not beat the 48M checkpoint either. Eight times the evidence, read by a model "
+    "four times that size, lands behind both: the ordering in this section is a property of "
+    "the models and not of what they were allowed to read."
+)
+
 
 # ----------------------------------------------------------------------------------------
 S5_HEADING = "5. Where the forecast actually fails"

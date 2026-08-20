@@ -148,6 +148,14 @@ if not retention.empty:
 
 st.markdown(text.S4_SMALL_PROSE)
 
+st.markdown(text.S4_CONTEXT_LEDE)
+
+context = data.context_frame()
+if not context.empty:
+    st.dataframe(context, width="stretch", hide_index=True)
+
+st.markdown(text.S4_CONTEXT_PROSE)
+
 st.divider()
 
 # ----------------------------------------------------------------------------------------

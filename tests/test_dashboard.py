@@ -112,6 +112,35 @@ class TestResultFrames:
         assert kept.max().max() <= 100, "keeping more than all of it would be a new finding"
         assert (frame["80% width vs base (%)"] > 0).all(), "less sharp in every market"
 
+    def test_the_longer_context_helps_in_every_market_by_the_amount_the_page_says(self):
+        """Finding 24, and the three figures section 4 states in prose. The page names 1.1
+        to 4.3%, so a re-measurement that moved the range would leave it asserting numbers
+        the data no longer carries."""
+        frame = data.context_frame()
+        assert len(frame) == len(data.MARKETS)
+        gain = frame["MASE better by (%)"]
+        assert (gain > 0).all(), "the page says the extra history helps everywhere"
+        assert gain.min() >= 1.0 and gain.max() <= 4.5, "the page says 1.1 to 4.3%"
+        assert (frame["Coverage change (pts)"] > 0).all(), "coverage improves in all three"
+
+    def test_only_erco_gets_its_coverage_without_paying_width(self):
+        """The load-bearing claim of the passage, and the one most likely to be wrong after
+        a re-run. If a second market ever narrows, the prose calling ERCO "the only place on
+        this page" is false; if ERCO stops narrowing, the whole passage loses its point."""
+        frame = data.context_frame().set_index("Market")
+        narrowed = frame.index[frame["80% width change (%)"] < 0].tolist()
+        assert narrowed == ["ERCO"], f"the page says ERCO alone narrows, got {narrowed}"
+        assert frame.loc["ERCO", "MASE better by (%)"] == frame["MASE better by (%)"].max()
+
+    def test_the_long_arm_does_not_overtake_either_chronos_checkpoint(self):
+        """The conclusion the section closes on. Written against the raw record rather than
+        the frame, because the frame reports the change and this is about the level."""
+        backtest = data.results("backtest_results.json")
+        for series_id, arms in backtest.items():
+            long = arms["timesfm_2p5_200m_long"]["mase"]
+            assert long > arms["chronos_bolt_base"]["mase"], series_id
+            assert long > arms["chronos_bolt_small"]["mase"], series_id
+
     def test_the_forecast_ablation_has_all_three_arms_in_every_market(self):
         frame = data.forecast_frame()
         assert set(frame["Market"]) == set(data.MARKETS)

@@ -302,19 +302,29 @@ def coverage_width_frame() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-# The three checkpoints, in the order the findings read: the champion, the one brought in
-# to find out which of its properties were its own, and the small one brought in to find out
-# how much of the champion was its size.
-MODEL_ARMS = ("chronos_bolt_base", "chronos_bolt_small", "timesfm_2p5_200m")
+# The four checkpoint arms, in the order the findings read: the champion, the one brought in
+# to find out which of its properties were its own, the small one brought in to find out how
+# much of the champion was its size, and the challenger re-run on its own context ceiling to
+# find out whether the matched context was what lost.
+MODEL_ARMS = (
+    "chronos_bolt_base",
+    "chronos_bolt_small",
+    "timesfm_2p5_200m",
+    "timesfm_2p5_200m_long",
+)
 
 # Parameter counts ride in the labels here and nowhere else. Section 1 compares a model
 # against baselines, where "Chronos-Bolt" is the whole of what a reader needs; this chart
 # compares checkpoints against each other, where size is the variable under test and a
 # legend that omits it makes the picture unreadable.
+# Context rides in one label only. Every other arm reads 2,048 hours, which for the two
+# Chronos checkpoints is an architectural limit rather than a choice, so marking them would
+# imply a variable that was never varied. The one arm where context *is* the variable says so.
 MODEL_LABELS = {
     "chronos_bolt_base": "Chronos-Bolt base (205M)",
     "chronos_bolt_small": "Chronos-Bolt small (48M)",
     "timesfm_2p5_200m": "TimesFM 2.5 (200M)",
+    "timesfm_2p5_200m_long": "TimesFM 2.5 (200M, 16k context)",
 }
 
 
@@ -379,6 +389,48 @@ def retention_frame() -> pd.DataFrame:
                     (naive["wql"] - small["wql"]) / (naive["wql"] - base["wql"]) * 100, 1
                 ),
                 "80% width vs base (%)": round((small["width_80"] / base["width_80"] - 1) * 100, 1),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def context_frame() -> pd.DataFrame:
+    """What eight times the context buys the same checkpoint, per market.
+
+    Sibling of `retention_frame` and built the same way: the comparison is between two arms
+    that differ in exactly one thing, and the columns report the change rather than the two
+    levels, because the levels are already on the chart above.
+
+    Accuracy is reported as the percentage improvement in MASE, not as a share of a gain
+    over the naive. Retention asks how much of a *gain* a cheaper model keeps, which needs a
+    baseline to be a share of; this asks how much a knob moved one model, where the model's
+    own matched arm is the only reference the question wants.
+
+    Coverage is a signed point change and width a signed percentage, kept in separate
+    columns on purpose. The finding is that they move together in two markets and apart in
+    one, and a single derived number would hide exactly that.
+
+    No runtime column, for the reason given in `retention_frame` and with one addition: the
+    long arm was measured on a contended machine and its wall clock is not comparable even
+    with the matched arm in the same file.
+    """
+    rows = []
+    for series_id, arms in results("backtest_results.json").items():
+        matched, long = arms.get("timesfm_2p5_200m"), arms.get("timesfm_2p5_200m_long")
+        if not matched or not long:
+            continue
+        rows.append(
+            {
+                "Market": series_id.split(":")[0],
+                "MASE better by (%)": round(
+                    (matched["mase"] - long["mase"]) / matched["mase"] * 100, 1
+                ),
+                "Coverage change (pts)": round(
+                    (long["coverage_80"] - matched["coverage_80"]) * 100, 1
+                ),
+                "80% width change (%)": round(
+                    (long["width_80"] / matched["width_80"] - 1) * 100, 1
+                ),
             }
         )
     return pd.DataFrame(rows)
