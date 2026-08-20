@@ -4,7 +4,7 @@ Split per market and written incrementally so a long run can be resumed rather t
 restarted, and so a partial run still leaves usable results on disk.
 
 Usage: python scripts/run_backtest.py CISO [--chronos] [--chronos-small] [--timesfm]
-       [--out docs/backtest_results.json]
+       [--timesfm-long] [--out docs/backtest_results.json]
 """
 
 from __future__ import annotations
@@ -31,6 +31,11 @@ def main() -> None:
     parser.add_argument("--chronos", action="store_true")
     parser.add_argument("--chronos-small", action="store_true")
     parser.add_argument("--timesfm", action="store_true")
+    parser.add_argument(
+        "--timesfm-long",
+        action="store_true",
+        help="TimesFM on its own context ceiling rather than Chronos's, as a separate arm",
+    )
     parser.add_argument("--out", default="docs/backtest_results.json")
     args = parser.parse_args()
 
@@ -50,6 +55,13 @@ def main() -> None:
         from bellwether.forecast.timesfm import TimesFM
 
         models.append(TimesFM())
+    if args.timesfm_long:
+        # Roughly seven times the matched arm's per-window cost: the compiled graph is a
+        # fixed size, so every window pays for the full context whether it can fill it or
+        # not. About an hour a market against the matched arm's eight minutes.
+        from bellwether.forecast.timesfm import LONG_CONTEXT, TimesFM
+
+        models.append(TimesFM(context_limit=LONG_CONTEXT))
 
     out_path = Path(args.out)
     existing = json.loads(out_path.read_text()) if out_path.exists() else {}

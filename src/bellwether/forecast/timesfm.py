@@ -12,8 +12,12 @@ adds the `timesfm` package and nothing else: torch is already here for Chronos.
 **Context is capped at Chronos's limit rather than at this model's.** TimesFM 2.5 accepts a
 far longer context, and letting it read years of history where Chronos reads 2,048 hours
 would compare two different amounts of evidence and call the difference a model
-difference. The cap is a control, not a limitation, and `context_limit` lifts it for
-anyone who wants to measure what the longer context is worth as its own arm.
+difference. The cap is a control, not a limitation, and `context_limit` lifts it.
+
+That arm now exists: `LONG_CONTEXT` reads to this checkpoint's own ceiling instead, which
+is what separates what the extra history is worth from what the architecture is worth. It
+is a second arm rather than a replacement, because the matched one is what makes finding 21
+a statement about models. Both are scored over the same windows.
 
 Requires the `forecast` extra: pip install -e ".[forecast]"
 """
@@ -33,6 +37,19 @@ DEFAULT_MODEL = "google/timesfm-2.5-200m-pytorch"
 
 # Chronos-Bolt's context limit, adopted so the two models read the same history.
 MATCHED_CONTEXT = 2048
+
+# The ceiling the checkpoint enforces, and the patch length the horizon is rounded up to
+# before that ceiling is checked. Hard-coded rather than read off the definition class,
+# which lives behind the lazy import that keeps this module free of torch at import time.
+CONTEXT_CEILING = 16384
+OUTPUT_PATCH = 128
+
+# This checkpoint's own limit, for the arm that measures what the longer context buys.
+# Not the 16,360 the arithmetic suggests: a 24-hour horizon is rounded up to the 128-point
+# output patch *before* the ceiling is tested, so the real headroom is 16,256. That is also
+# a multiple of the 32-point input patch, which matters because the library rounds a ragged
+# context up rather than down -- back into the ceiling it had just cleared.
+LONG_CONTEXT = CONTEXT_CEILING - OUTPUT_PATCH
 
 # What the quantile head emits, in the order it emits them. Channel 0 of the output is the
 # mean and channels 1 to 9 are these, so the mean has to be dropped rather than mistaken
@@ -54,11 +71,36 @@ class TimesFM:
         name: str | None = None,
         model: Any | None = None,
     ) -> None:
+        if context_limit < 1:
+            raise ValueError(f"context_limit must be positive, got {context_limit}")
+        if context_limit > LONG_CONTEXT:
+            # Caught here rather than at the first forecast, where the library reports the
+            # rounded-up horizon and the arithmetic stops looking like the number asked for.
+            raise ValueError(
+                f"context_limit {context_limit} exceeds this checkpoint's {LONG_CONTEXT}: "
+                f"the {CONTEXT_CEILING} ceiling is tested against the horizon rounded up "
+                f"to {OUTPUT_PATCH}"
+            )
+
         self.model_id = model_id
         self.context_limit = context_limit
-        self.name = name or "timesfm_2p5_200m"
+        self.name = name or self._default_name(context_limit)
         self._model = model
         self._compiled_horizon = 0
+
+    @staticmethod
+    def _default_name(context_limit: int) -> str:
+        """Name the arm after the history it reads.
+
+        Two contexts must not share a name. `run_backtest.py` skips a model whose name is
+        already in the results file, so a long-context run under the matched name would
+        report success and leave the matched numbers untouched.
+        """
+        if context_limit == MATCHED_CONTEXT:
+            return "timesfm_2p5_200m"
+        if context_limit == LONG_CONTEXT:
+            return "timesfm_2p5_200m_long"
+        return f"timesfm_2p5_200m_ctx{context_limit}"
 
     @property
     def model(self) -> Any:

@@ -13,7 +13,13 @@ import pytest
 
 from bellwether.eval.metrics import DEFAULT_QUANTILES
 from bellwether.forecast.base import Forecaster
-from bellwether.forecast.timesfm import EMITTED_QUANTILES, MATCHED_CONTEXT, TimesFM
+from bellwether.forecast.timesfm import (
+    CONTEXT_CEILING,
+    EMITTED_QUANTILES,
+    LONG_CONTEXT,
+    MATCHED_CONTEXT,
+    TimesFM,
+)
 
 pytest.importorskip("timesfm", reason="requires the forecast extra")
 
@@ -152,3 +158,54 @@ def test_model_is_not_loaded_until_first_use():
     model = TimesFM()
     assert model._model is None
     assert model.name == "timesfm_2p5_200m"
+
+
+# The long-context arm. What these guard is that it stays a *second* arm: a different name,
+# a different compiled context, and a ceiling that is refused rather than silently rounded.
+
+
+@pytest.fixture
+def long_model() -> TimesFM:
+    return TimesFM(context_limit=LONG_CONTEXT, model=FakeModel())
+
+
+def test_the_long_arm_reads_to_the_checkpoint_ceiling(long_model: TimesFM):
+    long_model.predict(np.arange(20000, dtype=float), horizon=24)
+    assert long_model.model.last_inputs[0].shape == (LONG_CONTEXT,)
+    assert long_model.model.configs[0].max_context == LONG_CONTEXT
+
+
+def test_the_long_arm_is_named_apart_from_the_matched_one(long_model: TimesFM):
+    """Sharing a name would not raise anywhere. `run_backtest.py` skips a model already in
+    the results file, so the long run would print a skip and leave the matched numbers in
+    place under a heading that now claims to be about context."""
+    assert long_model.name == "timesfm_2p5_200m_long"
+    assert TimesFM(model=FakeModel()).name == "timesfm_2p5_200m"
+
+
+def test_an_intermediate_context_names_itself_after_its_length():
+    assert TimesFM(context_limit=4096, model=FakeModel()).name == "timesfm_2p5_200m_ctx4096"
+
+
+def test_a_context_beyond_the_ceiling_is_refused():
+    """The library's own error names the horizon rounded up to 128, so the number it
+    complains about is not the number that was asked for. Refused here instead, before any
+    weights load, and after a run has not spent an hour finding out."""
+    with pytest.raises(ValueError, match="exceeds this checkpoint"):
+        TimesFM(context_limit=LONG_CONTEXT + 1)
+
+    with pytest.raises(ValueError, match="must be positive"):
+        TimesFM(context_limit=0)
+
+
+def test_the_ceiling_leaves_room_for_the_rounded_up_horizon():
+    """16,256 rather than the 16,360 that 16,384 minus a 24-hour horizon suggests."""
+    assert LONG_CONTEXT + 128 == CONTEXT_CEILING
+    assert LONG_CONTEXT % 32 == 0  # or the library rounds it back up, over the ceiling
+
+
+def test_a_short_history_is_not_padded_up_to_the_long_context(long_model: TimesFM):
+    """The wrapper hands over what it has. Padding to the compiled length is the library's
+    job and it masks what it pads; doing it here would feed the model real zeros."""
+    long_model.predict(np.arange(3000, dtype=float), horizon=24)
+    assert long_model.model.last_inputs[0].shape == (3000,)
