@@ -15,11 +15,11 @@
         "scale"
       ],
       "first_period": "2024-07-31 00:00:00",
-      "forecast_rows": 61632,
+      "forecast_rows": 63840,
       "hours_with_temperature": 9416,
-      "last_period": "2026-08-23 03:00:00",
-      "observed_hours": 18076,
-      "scored_origins": 642,
+      "last_period": "2026-08-23 04:00:00",
+      "observed_hours": 18077,
+      "scored_origins": 665,
       "series_id": "CISO:D",
       "timezone": "America/Los_Angeles"
     },
@@ -31,11 +31,11 @@
         "scale"
       ],
       "first_period": "2024-07-31 00:00:00",
-      "forecast_rows": 61632,
+      "forecast_rows": 63840,
       "hours_with_temperature": 9414,
-      "last_period": "2026-08-23 03:00:00",
-      "observed_hours": 18076,
-      "scored_origins": 642,
+      "last_period": "2026-08-23 04:00:00",
+      "observed_hours": 18077,
+      "scored_origins": 665,
       "series_id": "ERCO:D",
       "timezone": "America/Chicago"
     },
@@ -47,11 +47,11 @@
         "scale"
       ],
       "first_period": "2024-07-31 01:00:00",
-      "forecast_rows": 61632,
+      "forecast_rows": 63840,
       "hours_with_temperature": 9414,
-      "last_period": "2026-08-23 03:00:00",
-      "observed_hours": 18075,
-      "scored_origins": 642,
+      "last_period": "2026-08-23 04:00:00",
+      "observed_hours": 18076,
+      "scored_origins": 665,
       "series_id": "PACE:D",
       "timezone": "America/Denver"
     }
