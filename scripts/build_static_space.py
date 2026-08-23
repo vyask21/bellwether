@@ -443,7 +443,22 @@ footer {{
 """
 
 
-TEMPLATE = """<!doctype html>
+TEMPLATE = """{% macro market_control(slot) %}
+  <div class="controls">
+    <span class="label">{{ text.MARKET_PROMPT }}</span>
+    <fieldset>
+    {% for market in markets %}
+      <label>
+        <input type="radio" name="market-{{ slot }}" value="{{ market }}"
+          data-market-input{% if loop.first %} checked{% endif %}>
+        <span class="market">{{ market }}</span>
+        <span class="place">{{ captions[market] }}</span>
+      </label>
+    {% endfor %}
+    </fieldset>
+  </div>
+{%- endmacro -%}
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -460,19 +475,6 @@ TEMPLATE = """<!doctype html>
 <h1>{{ text.TITLE }}</h1>
 <div class="lede">{{ prose(text.LEDE) }}</div>
 <p class="caption">{{ caption }}</p>
-
-<div class="controls">
-  <span class="label">{{ text.MARKET_PROMPT }}</span>
-  <fieldset>
-  {% for market in markets %}
-    <label>
-      <input type="radio" name="market" value="{{ market }}"{% if loop.first %} checked{% endif %}>
-      <span class="market">{{ market }}</span>
-      <span class="place">{{ captions[market] }}</span>
-    </label>
-  {% endfor %}
-  </fieldset>
-</div>
 
 <section>
   <h2>{{ text.S1_HEADING }}</h2>
@@ -491,6 +493,7 @@ TEMPLATE = """<!doctype html>
 
 <section>
   <h2 id="s3-heading">{{ text.S3_HEADING.format(market=markets[0]) }}</h2>
+  {{ market_control("s3") }}
   <div class="controls">
     <label class="label" for="origin">{{ text.S3_SLIDER }}</label>
     <input type="range" id="origin" min="0" step="1" value="0">
@@ -568,6 +571,7 @@ TEMPLATE = """<!doctype html>
     <details><summary>{{ text.S7_OFFSETS_TABLE }}</summary>{{ tables.offsets }}</details>
   </figure>
   {{ prose(text.S7_PROSE) }}
+  {{ market_control("s7") }}
   {% for market in markets %}
   <figure class="chart" data-market="{{ market }}"{% if not loop.first %} hidden{% endif %}>
     <div class="chart-box" id="chart-holidays-{{ market }}"></div>
@@ -700,6 +704,9 @@ function setMarket(next) {
   document.querySelectorAll("[data-market]").forEach(el => {
     el.hidden = el.dataset.market !== market;
   });
+  document.querySelectorAll("input[data-market-input]").forEach(el => {
+    el.checked = el.value === market;
+  });
   document.getElementById("s3-heading").textContent = HEADINGS[market];
   const {values, initial} = ORIGINS[market];
   if (index === null) index = initial;
@@ -710,7 +717,7 @@ function setMarket(next) {
   setOrigin(index);
 }
 
-document.querySelectorAll('input[name="market"]').forEach(input => {
+document.querySelectorAll("input[data-market-input]").forEach(input => {
   input.addEventListener("change", () => setMarket(input.value));
 });
 slider.addEventListener("input", () => {

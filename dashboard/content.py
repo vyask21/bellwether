@@ -33,7 +33,7 @@ NO_SNAPSHOT = (
     "`python scripts/export_snapshot.py <market>` has been run for each market."
 )
 
-MARKET_PROMPT = "Market for the single-market sections"
+MARKET_PROMPT = "Market for this section"
 MARKET_CAPTIONS = {
     "CISO": "California ISO",
     "ERCO": "ERCOT, Texas",

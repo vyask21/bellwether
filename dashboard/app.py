@@ -36,6 +36,33 @@ def table_view(frame: pd.DataFrame, label: str = text.TABLE_VIEW) -> None:
         st.dataframe(frame, width="stretch", hide_index=True)
 
 
+def market_control(slot: str) -> str:
+    """The market selector, rendered beside each section it scopes rather than once at the top.
+
+    Two copies and one source of truth: `st.session_state["market"]` holds the choice, and
+    each copy mirrors it in before instantiating, so moving either moves both.
+
+    It used to render once above section 1. That was a bug rather than a layout: the first
+    thing beneath it is a cross-market chart that deliberately shows all three markets, so
+    the control changed nothing a reader could see and read as broken.
+    """
+    key = f"market_{slot}"
+    st.session_state[key] = st.session_state["market"]
+
+    def _adopt() -> None:
+        st.session_state["market"] = st.session_state[key]
+
+    st.radio(
+        text.MARKET_PROMPT,
+        options=list(data.MARKETS),
+        horizontal=True,
+        captions=[text.MARKET_CAPTIONS[m] for m in data.MARKETS],
+        key=key,
+        on_change=_adopt,
+    )
+    return st.session_state["market"]
+
+
 st.title(text.TITLE)
 st.markdown(text.LEDE)
 
@@ -49,14 +76,10 @@ info = data.manifest()
 
 st.caption(text.SNAPSHOT_CAPTION.format(generated=info.get("generated", "not yet")))
 
-# One filter row, above everything it scopes. The market-specific sections below read it;
-# the cross-market comparisons deliberately ignore it and show all three.
-market = st.radio(
-    text.MARKET_PROMPT,
-    options=list(data.MARKETS),
-    horizontal=True,
-    captions=[text.MARKET_CAPTIONS[m] for m in data.MARKETS],
-)
+# The choice lives here rather than in a widget, because two widgets now read it. Only
+# sections 3 and 7 are market-scoped; every other section is a cross-market comparison and
+# ignores this entirely.
+st.session_state.setdefault("market", list(data.MARKETS)[0])
 
 st.divider()
 
@@ -88,7 +111,9 @@ st.markdown(text.S2_PROSE)
 st.divider()
 
 # ----------------------------------------------------------------------------------------
-st.header(text.S3_HEADING.format(market=market))
+st.header(text.S3_HEADING.format(market=st.session_state["market"]))
+
+market = market_control("s3")
 
 observed = data.observations(market)
 window = data.forecasts(market, "scale")
@@ -209,6 +234,8 @@ if not offsets.empty:
     table_view(offsets.round(0), text.S7_OFFSETS_TABLE)
 
 st.markdown(text.S7_PROSE)
+
+market = market_control("s7")
 
 per_holiday = data.per_holiday_frame(market)
 if not per_holiday.empty:

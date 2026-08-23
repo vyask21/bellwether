@@ -114,6 +114,51 @@ class TestTheWalkthroughIsWhole:
         assert "duck curve" in page
 
 
+class TestTheMarketControlSitsBesideWhatItScopes:
+    """It used to render once, above section 1, and section 1 is a cross-market chart.
+
+    So the control changed nothing the reader could see from where it sat, and read as
+    broken. What makes that a test rather than a matter of taste is the invariant
+    underneath it: a control belongs in the sections it scopes, and in no others.
+    """
+
+    @staticmethod
+    def _sections(page: str) -> list[str]:
+        return re.findall(r"<section>(.*?)</section>", page, re.S)
+
+    def test_the_control_is_not_rendered_outside_a_section(self, page):
+        """Anything above section 1 scopes nothing at all. That was the bug."""
+        header = page.split("<section>", 1)[0]
+        assert "data-market-input" not in header
+
+    def test_every_market_scoped_section_carries_a_control(self, page):
+        scoped = [s for s in self._sections(page) if 'data-market="' in s]
+        assert len(scoped) == 2, "sections 3 and 7 are the market-scoped ones"
+        for section in scoped:
+            assert "data-market-input" in section
+
+    def test_no_unscoped_section_carries_a_control(self, page):
+        for section in self._sections(page):
+            if "data-market-input" in section:
+                assert 'data-market="' in section
+
+    def test_each_copy_is_its_own_radio_group(self, page):
+        """Same-named radios are one group for the whole document, so two copies sharing a
+        name would leave the second one showing nothing selected."""
+        names = re.findall(r'<input type="radio" name="([^"]+)"', page)
+        assert len(names) == len(MARKETS) * 2
+        assert len(set(names)) == 2
+        for name in set(names):
+            assert names.count(name) == len(MARKETS)
+
+    def test_every_copy_offers_every_market(self, page):
+        for section in self._sections(page):
+            if "data-market-input" not in section:
+                continue
+            for market in MARKETS:
+                assert f'value="{market}"' in section
+
+
 @pytest.fixture(scope="session")
 def specs(page) -> dict:
     raw = re.search(r"^const SPECS = (\{.*\});$", page, re.M)
