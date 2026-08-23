@@ -59,9 +59,16 @@ dashboard = [
     "altair>=5.4.0",
 ]
 # Only needed to build and publish the Space, never to read it. Jinja2 and markdown-it-py
-# arrive with Streamlit anyway; they are named because `build_static_space.py` imports them
-# directly, and a dependency inherited by accident is one that can vanish by accident.
+# are named rather than inherited because `build_static_space.py` imports them directly,
+# and a dependency arrived at by accident is one that can vanish by accident.
+#
+# The dashboard extra is required, not optional: the builder imports `loaders.py` and
+# `viz.py`, which import Streamlit and Altair at module scope. That the published page
+# installs nothing does not help the machine doing the building. This was latent until
+# 2026-08-22, because the publish step skipped for want of a credential and so never
+# reached the import.
 deploy = [
+    "bellwether[dashboard]",
     "huggingface_hub>=1.0.0",
     "jinja2>=3.1.0",
     "markdown-it-py>=3.0.0",
