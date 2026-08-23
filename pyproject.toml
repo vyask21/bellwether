@@ -2,7 +2,19 @@
 name = "bellwether"
 version = "0.1.0"
 description = "Probabilistic load forecasting for the US grid, with an evidence-grounded explanation layer."
+readme = "README.md"
 requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "vyask21" }]
+keywords = ["forecasting", "electricity", "time-series", "energy", "eia", "noaa"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
 dependencies = [
     "duckdb>=1.1.0",
     "polars>=1.0.0",
@@ -19,6 +31,9 @@ dependencies = [
     "typer>=0.12.0",
     "rich>=13.7.0",
 ]
+
+[project.urls]
+Repository = "https://github.com/vyask21/bellwether"
 
 [project.optional-dependencies]
 forecast = [

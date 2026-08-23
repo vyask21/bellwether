@@ -2,7 +2,7 @@
 #
 # The persistence question this answers: a runner is ephemeral and the DuckDB store is
 # gitignored, so there is nothing here to top up unless the repository carries one. It
-# does, as `store/*.parquet` — 2.2 MB against the 35 MB database. The loop is restore,
+# does, as `store/*.parquet`, 2.6 MB against the 35 MB database. The loop is restore,
 # ingest the last fortnight, dump, re-export the dashboard cache, commit.
 #
 # Order matters and is not arbitrary. The restore replaces on the primary key, so it

@@ -24,7 +24,7 @@ data/
 # a cache: if it disagrees with the DuckDB store, the store wins.
 !snapshot/*.parquet
 
-# Exception: the Parquet mirror of the DuckDB source tables, 2.2 MB against the 35 MB
+# Exception: the Parquet mirror of the DuckDB source tables, 2.6 MB against the 35 MB
 # database. Committed because a scheduled run happens on an ephemeral runner with no
 # database to read, and because "regenerable" costs 13 hours for the NDFD table alone.
 # Written by scripts/sync_store.py. Model output is not in here; see that file.

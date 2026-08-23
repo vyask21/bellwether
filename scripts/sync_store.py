@@ -11,7 +11,7 @@ A scheduled refresh runs on an ephemeral runner with an empty checkout, so "rege
 would mean re-ingesting two years from two agencies on every run, which is slow, rude to
 the sources, and produces a store nobody can inspect.
 
-The store closes that gap. The three source tables are 2.2 MB as zstd Parquet against the
+The store closes that gap. The four source tables are 2.6 MB as zstd Parquet against the
 35 MB DuckDB file, small enough to commit, diff and keep a history of. A refresh restores
 from it, tops up the last few days, and writes it back.
 
