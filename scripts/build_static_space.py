@@ -191,11 +191,16 @@ def _charts(origins: dict) -> tuple[dict, dict]:
     shape = data.hour_profile_frame()
     # Not through `_axes`, which assumes the value column is called `value`. This frame
     # carries megawatts under its own name rather than a generic one.
-    shape_x, shape_y = text.S7_SHAPE_AXES
+    shape_x, shape_y = text.S8_SHAPE_AXES
     specs["shape"] = _spec(viz.profile(shape, "hour", shape_x, "offset", shape_y))
     tables["shape"] = _table(shape, 0)
 
+    diagnosis = data.diagnosis_frame()
+    specs["attribution"] = _spec(viz.attribution_bars(diagnosis))
+    tables["diagnosis"] = _table(diagnosis, 1)
+
     for market in data.MARKETS:
+        tables[f"episodes_{market}"] = _table(data.episode_frame(market), 0)
         holidays = data.per_holiday_frame(market)
         specs[f"holidays_{market}"] = _spec(viz.paired_holidays(holidays))
         tables[f"holidays_{market}"] = _table(holidays, 0)
@@ -557,41 +562,60 @@ TEMPLATE = """{% macro market_control(slot) %}
 <section>
   <h2>{{ text.S6_HEADING }}</h2>
   {{ prose(text.S6_LEDE) }}
-  {{ tables.weather }}
+  <figure class="chart">
+    <div class="chart-box" id="chart-attribution"></div>
+    <details><summary>{{ text.S6_TABLE }}</summary>{{ tables.diagnosis }}</details>
+  </figure>
+  {{ market_control("s6") }}
+  {% for market in markets %}
+  <figure class="chart" data-market="{{ market }}"{% if not loop.first %} hidden{% endif %}>
+    <details open>
+      <summary>{{ text.S6_EPISODE_TABLE.format(market=market) }}</summary>
+      {{ tables['episodes_' + market] }}
+    </details>
+  </figure>
+  {% endfor %}
   {{ prose(text.S6_PROSE) }}
-  {{ prose(text.S6_FORECAST_LEDE) }}
-  {{ tables.forecast_arms }}
-  {{ prose(text.S6_FORECAST_PROSE) }}
 </section>
 
 <section>
   <h2>{{ text.S7_HEADING }}</h2>
-  <figure class="chart">
-    <div class="chart-box" id="chart-offsets"></div>
-    <details><summary>{{ text.S7_OFFSETS_TABLE }}</summary>{{ tables.offsets }}</details>
-  </figure>
+  {{ prose(text.S7_LEDE) }}
+  {{ tables.weather }}
   {{ prose(text.S7_PROSE) }}
-  {{ market_control("s7") }}
-  {% for market in markets %}
-  <figure class="chart" data-market="{{ market }}"{% if not loop.first %} hidden{% endif %}>
-    <div class="chart-box" id="chart-holidays-{{ market }}"></div>
-    <details>
-      <summary>{{ text.S7_HOLIDAY_TABLE.format(market=market) }}</summary>
-      {{ tables['holidays_' + market] }}
-    </details>
-  </figure>
-  {% endfor %}
-  {{ prose(text.S7_CLOSING) }}
-  <figure class="chart">
-    <div class="chart-box" id="chart-shape"></div>
-    <details><summary>{{ text.S7_SHAPE_TABLE }}</summary>{{ tables.shape }}</details>
-  </figure>
-  {{ prose(text.S7_SHAPE_PROSE) }}
+  {{ prose(text.S7_FORECAST_LEDE) }}
+  {{ tables.forecast_arms }}
+  {{ prose(text.S7_FORECAST_PROSE) }}
 </section>
 
 <section>
   <h2>{{ text.S8_HEADING }}</h2>
+  <figure class="chart">
+    <div class="chart-box" id="chart-offsets"></div>
+    <details><summary>{{ text.S8_OFFSETS_TABLE }}</summary>{{ tables.offsets }}</details>
+  </figure>
   {{ prose(text.S8_PROSE) }}
+  {{ market_control("s8") }}
+  {% for market in markets %}
+  <figure class="chart" data-market="{{ market }}"{% if not loop.first %} hidden{% endif %}>
+    <div class="chart-box" id="chart-holidays-{{ market }}"></div>
+    <details>
+      <summary>{{ text.S8_HOLIDAY_TABLE.format(market=market) }}</summary>
+      {{ tables['holidays_' + market] }}
+    </details>
+  </figure>
+  {% endfor %}
+  {{ prose(text.S8_CLOSING) }}
+  <figure class="chart">
+    <div class="chart-box" id="chart-shape"></div>
+    <details><summary>{{ text.S8_SHAPE_TABLE }}</summary>{{ tables.shape }}</details>
+  </figure>
+  {{ prose(text.S8_SHAPE_PROSE) }}
+</section>
+
+<section>
+  <h2>{{ text.S9_HEADING }}</h2>
+  {{ prose(text.S9_PROSE) }}
 </section>
 
 <section>
@@ -624,6 +648,7 @@ const HAS_VEGA = typeof vegaEmbed !== "undefined";
 // also means the page opens without fetching two years of hours for three markets.
 const pending = Object.assign({}, {
   "chart-skill": SPECS.skill,
+  "chart-attribution": SPECS.attribution,
   "chart-coverage": SPECS.coverage,
   "chart-hours": SPECS.hours,
   "chart-months": SPECS.months,

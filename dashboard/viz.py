@@ -392,3 +392,34 @@ def skill_bars(frame: pd.DataFrame) -> alt.Chart:
         text=alt.Text("reduction:Q", format=".1f")
     )
     return (bars + labels).properties(height=150)
+
+
+def attribution_bars(frame: pd.DataFrame) -> alt.Chart:
+    """Share of a market's largest anomalies that a cause was found for.
+
+    Deliberately the same form as `skill_bars`: one series over three markets. A second
+    chart shape here would imply a second kind of quantity, and a colour per cause would
+    add a categorical scale the rest of the page does not use.
+    """
+    bars = (
+        alt.Chart(frame)
+        .mark_bar(cornerRadius=2, height=26, color=SERIES[0])
+        .encode(
+            x=alt.X(
+                "share:Q",
+                title="Largest anomalies given a candidate cause (%)",
+                scale=alt.Scale(domain=[0, 100]),
+            ),
+            y=alt.Y("market:N", title=None, sort="-x"),
+            tooltip=[
+                alt.Tooltip("market:N"),
+                alt.Tooltip("attributed:Q", title="Attributed"),
+                alt.Tooltip("episodes:Q", title="Episodes examined"),
+                alt.Tooltip("leading:N", title="Leading cause"),
+            ],
+        )
+    )
+    labels = bars.mark_text(align="left", dx=6, color=INK_SECONDARY, fontSize=11).encode(
+        text=alt.Text("share:Q", format=".0f")
+    )
+    return (bars + labels).properties(height=150)

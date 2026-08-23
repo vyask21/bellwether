@@ -15,12 +15,16 @@ buy nothing.
 from __future__ import annotations
 
 TITLE = "Bellwether"
-PAGE_TITLE = "Bellwether: forecasting electricity demand"
+PAGE_TITLE = "Bellwether: diagnosing electricity demand anomalies"
 
 LEDE = (
-    "**Does a time-series foundation model beat the people who run the grid?** "
-    "Three US balancing authorities, two years of hourly demand, everything measured "
-    "against controls rather than against nothing."
+    "**When grid demand departs from what was expected, what caused it?** "
+    "Bellwether forecasts demand with an uncertainty band, flags the hours that fall "
+    "outside it, and attributes each of those episodes to a cause computed from stored "
+    "history. Three US balancing authorities, two years of hourly data. The forecast is "
+    "the instrument rather than the argument: a band you cannot trust cannot tell you an "
+    "hour is unusual, so sections 1 to 5 establish that it can, and section 6 is what the "
+    "project is for."
 )
 
 SNAPSHOT_CAPTION = (
@@ -52,7 +56,7 @@ S1_PROSE = (
 S1_TABLE = "Table view: skill against baselines"
 
 # ----------------------------------------------------------------------------------------
-S2_HEADING = "2. Against the operator's own forecast, it splits"
+S2_HEADING = "2. A reference point: the operator's own day-ahead forecast"
 S2_PROSE = (
     "**ERCOT beats us by 31%. PacifiCorp East does not beat us, or even seasonal-naive.** "
     "That reads as forecasting investment rather than method: ERCOT runs a large, "
@@ -202,14 +206,45 @@ S5_HOUR_AXES = ("Local hour", "MAE (% of mean demand)")
 S5_MONTH_AXES = ("Month", "80% interval coverage (%)")
 
 # ----------------------------------------------------------------------------------------
-S6_HEADING = "6. Temperature buys accuracy and does not fix calibration"
+S6_HEADING = "6. What caused it: anomalies attributed to stored evidence"
 S6_LEDE = (
+    "This is the part the rest of the project exists to support. Section 5 says where the "
+    "forecast fails; this says **why**, episode by episode, with numbers a reader can check."
+)
+S6_PROSE = (
+    "Each of the ten largest episodes per market is put to three screens computed in "
+    "Python from stored data: an unusual temperature against the preceding fortnight, a "
+    "US federal holiday inside the window, and a data-quality check for values no grid "
+    "could physically produce. **A cause was found for 28 of the 30 episodes.** "
+    "Temperature leads with 23, holidays account for 4, and one episode is not a grid "
+    "event at all.\n\n"
+    "**Nothing here is generated.** Every quantity is measured, and the written brief for "
+    "each episode is checked token by token against the evidence it was given: a number "
+    "that does not trace to a measurement means the brief is rejected rather than shown. "
+    "All 30 briefs pass that check. An explanation that invents a figure is worse than no "
+    "explanation, because it reads exactly like one that did not.\n\n"
+    "**The most severe episode in the analysis is not a grid event.** It is an EIA value "
+    "of 11,819 MW sitting between two hours near 29,900. A grid does not shed and recover "
+    "60% of its load in two hours, so the screen marks it an artifact and disqualifies it "
+    "from being explained. Without that screen this page would carry a confident account "
+    "of a blackout that never happened.\n\n"
+    "**What this does not claim.** Thirty episodes is a small sample, the three screens "
+    "are the ones the detector's own output justified rather than a complete taxonomy, "
+    "and strength orders candidates rather than estimating a probability. Two PACE "
+    "episodes have no candidate at all and are reported as such."
+)
+S6_TABLE = "Table view: attribution rate by market"
+S6_EPISODE_TABLE = "Table view: {market} largest anomalies and their causes"
+
+# ----------------------------------------------------------------------------------------
+S7_HEADING = "7. Temperature buys accuracy and does not fix calibration"
+S7_LEDE = (
     "Against a **calendar-only control**, not against the raw model. That control is what "
     "makes the number mean anything: rebuilding a predictive distribution from residual "
     "quantiles is itself a recalibration, so a weather corrector scored only against the "
     "base model collects credit for work that has nothing to do with weather."
 )
-S6_PROSE = (
+S7_PROSE = (
     "**ERCOT is the most temperature-coupled market of the three by a wide margin**, and "
     "that was measured before any model was fitted: summer correlation 0.925, winter "
     "-0.694, against CISO's 0.559 and *positive* 0.254. It predicted the ordering above "
@@ -217,7 +252,7 @@ S6_PROSE = (
     "California's demand barely tracks its own weather and its winter correlation has the "
     "wrong sign. Gas heating plus behind-the-meter solar, which is the duck curve restated."
 )
-S6_FORECAST_LEDE = (
+S7_FORECAST_LEDE = (
     "**Everything above was measured with observed temperature**, which hands the corrector "
     "perfect knowledge of tomorrow and makes every weather number a ceiling. The table below "
     "replaces it with the forecast a forecaster would actually have had: NOAA's archived "
@@ -233,7 +268,7 @@ S6_FORECAST_LEDE = (
     "the observed arm below reads a few tenths off the table above, which scores more "
     "windows: the comparison that matters is within a table, never across the two."
 )
-S6_FORECAST_PROSE = (
+S7_FORECAST_PROSE = (
     "**Four fifths of the ceiling survives contact with a real forecast.** On ERCO, the only "
     "market with a large weather effect, perfect foresight cuts sMAPE 12.3% against the "
     "calendar control and a forecast available in advance cuts it 9.8%. PACE behaves the "
@@ -253,8 +288,8 @@ S6_FORECAST_PROSE = (
 )
 
 # ----------------------------------------------------------------------------------------
-S7_HEADING = "7. Holidays: the effect is real and it is confined to six days"
-S7_PROSE = (
+S8_HEADING = "8. Holidays: the effect is real and it is confined to six days"
+S8_PROSE = (
     "One offset applied to all eleven federal holidays improved 28 of 33 widely-observed "
     "holidays and only 10 of 27 federal-only ones. Below a coin flip on the second group is "
     "the signature of a correction being applied where nothing needs correcting.\n\n"
@@ -263,13 +298,13 @@ S7_PROSE = (
     "Veterans Day in Texas is not depressed at all, and the pooled version had been pushing "
     "those days down because Christmas dragged the shared estimate with it."
 )
-S7_CLOSING = (
+S8_CLOSING = (
     "**It was measured twice and shipped neither time**, and the stated reason was that a "
     "single scalar shift over 24 hours is the wrong shape: load barely moves overnight and "
     "falls hard through the working day, so one number over-corrects the small hours to "
     "reach the large ones. That was a diagnosis rather than a measurement, so it was tested."
 )
-S7_SHAPE_PROSE = (
+S8_SHAPE_PROSE = (
     "**The diagnosis was right, and it was not what was blocking anything.** A third arm "
     "learns an offset per hour rather than per day, and the shape it finds is larger than "
     "the scalar implied. On a widely-observed holiday ERCO is 132 MW below normal overnight "
@@ -288,14 +323,14 @@ S7_SHAPE_PROSE = (
     "declined because two of three markets do not need it, which leaves exactly one live "
     "option: a holiday arm for California alone."
 )
-S7_SHAPE_TABLE = "Table view: the learned hour profile"
-S7_OFFSETS_TABLE = "Table view: learned offsets"
-S7_SHAPE_AXES = ("Local hour", "Holiday offset (MW), widely observed holidays")
-S7_HOLIDAY_TABLE = "Table view: {market} per-holiday change"
+S8_SHAPE_TABLE = "Table view: the learned hour profile"
+S8_OFFSETS_TABLE = "Table view: learned offsets"
+S8_SHAPE_AXES = ("Local hour", "Holiday offset (MW), widely observed holidays")
+S8_HOLIDAY_TABLE = "Table view: {market} per-holiday change"
 
 # ----------------------------------------------------------------------------------------
-S8_HEADING = "8. Two published claims that turned out to be wrong"
-S8_PROSE = (
+S9_HEADING = "9. Two published claims that turned out to be wrong"
+S9_PROSE = (
     "Both were caught by re-measurement rather than by review, and both are kept here "
     "because a results page that reports only what survived is not reporting.\n\n"
     '**"Chronos-Bolt\'s interval is unconditional."** It is not. That measurement was taken '
@@ -319,7 +354,7 @@ METHOD_PROSE = (
     "- **Three balancing authorities out of 83**, chosen to contrast rather than to "
     "sample. No state is a unit in this data.\n"
     "- **The weather ceiling is measured, and so is the distance to it.** The headline "
-    "weather numbers use observed temperature, which is perfect foresight. Section 6 also "
+    "weather numbers use observed temperature, which is perfect foresight. Section 7 also "
     "scores the same correction against NOAA's archived forecasts, restricted to runs "
     "published before each window opened, and four fifths of the gain survives.\n"
     "- NCEI's archive ends about eleven months before EIA's data does, so weather work "

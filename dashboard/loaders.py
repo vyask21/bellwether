@@ -12,6 +12,7 @@ generated so a viewer can tell.
 from __future__ import annotations
 
 import json
+from collections import Counter
 from pathlib import Path
 
 import pandas as pd
@@ -272,6 +273,60 @@ def per_holiday_frame(market: str) -> pd.DataFrame:
         }
         for record in entry.get("per_holiday", [])
     ]
+    return pd.DataFrame(rows)
+
+
+@st.cache_data(show_spinner=False)
+def diagnosis_frame() -> pd.DataFrame:
+    """One row per market: how many of its largest anomalies got a candidate cause.
+
+    The denominator is the ten worst episodes per market, which is what
+    `analyze_breaches.py` records in full. It is a small sample and the section says so.
+    """
+    data = results("episode_explanations.json")
+    rows = []
+    for market in MARKETS:
+        entry = data.get(f"{market}:D")
+        if not entry:
+            continue
+        episodes = entry["episodes"]
+        attributed = [item for item in episodes if item["evidence"]]
+        kinds = Counter(item["evidence"][0]["kind"] for item in attributed)
+        rows.append(
+            {
+                "market": market,
+                "episodes": len(episodes),
+                "attributed": len(attributed),
+                "share": 100 * len(attributed) / len(episodes) if episodes else 0.0,
+                "leading": kinds.most_common(1)[0][0].replace("_", " ") if kinds else "none",
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+@st.cache_data(show_spinner=False)
+def episode_frame(market: str) -> pd.DataFrame:
+    """One market's largest anomalies, each with the cause the evidence layer found.
+
+    The strongest candidate is shown rather than all of them. A reader wants the cause;
+    the full candidate list is what the brief and the stored file carry.
+    """
+    entry = results("episode_explanations.json").get(f"{market}:D", {})
+    rows = []
+    for item in entry.get("episodes", []):
+        top = item["evidence"][0] if item["evidence"] else None
+        rows.append(
+            {
+                "start (UTC)": item["start"][:16].replace("T", " "),
+                "hours": item["duration_hours"],
+                "direction": item["direction"],
+                "peak (MW outside band)": round(item["peak_exceedance"]),
+                "cause": top["kind"].replace("_", " ") if top else "none found",
+                "what the data says": (
+                    top["summary"] if top else "No candidate explanation in the stored data."
+                ),
+            }
+        )
     return pd.DataFrame(rows)
 
 

@@ -1,0 +1,987 @@
+{
+  "CISO:D": {
+    "arm": "chronos_bolt_base+scale",
+    "episodes": [
+      {
+        "brief": {
+          "body": "California ISO demand ran above its 80% forecast band for 20 consecutive hours from 2025-05-09 16:00 UTC, reaching 3,475 MW outside the band at its peak. Population-weighted temperature averaged 24.7 C during the episode against 15.3 C over the preceding 14 days, an anomaly of +9.4 C. Unusual heat raises cooling load.",
+          "headline": "California ISO demand ran 20 hours above forecast during unusual heat",
+          "verified": true
+        },
+        "direction": "above",
+        "duration_hours": 20,
+        "end": "2025-05-10T11:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": 9.40140151525387,
+              "baseline_days": 14,
+              "baseline_mean_c": 15.260322111493998,
+              "consistent_with_direction": true,
+              "degree_day_change": 3.186123256162367,
+              "episode_direction": "above",
+              "episode_mean_c": 24.661723626747868,
+              "expected_direction": "above"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.7700700757626935,
+            "summary": "Population-weighted temperature averaged 24.7 C during the episode against 15.3 C over the preceding 14 days, an anomaly of +9.4 C. Unusual heat raises cooling load."
+          }
+        ],
+        "local_hour_start": 9,
+        "month": 5,
+        "peak_exceedance": 3475.2,
+        "peak_exceedance_ratio": 1.259,
+        "start": "2025-05-09T16:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "California ISO demand ran below its 80% forecast band for 22 consecutive hours from 2024-12-25 02:00 UTC, reaching 2,431 MW outside the band at its peak. The episode covers a US federal holiday (2024-12-25 local). Holidays depress commercial and industrial load, and the forecaster sees only demand history with no calendar, so it cannot anticipate one.",
+          "headline": "California ISO demand ran 22 hours below forecast on a public holiday",
+          "verified": true
+        },
+        "direction": "below",
+        "duration_hours": 22,
+        "end": "2024-12-25T23:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "consistent_with_direction": true,
+              "episode_direction": "below",
+              "holiday_dates": [
+                "2024-12-25"
+              ]
+            },
+            "is_disqualifying": false,
+            "kind": "holiday",
+            "strength": 0.9,
+            "summary": "The episode covers a US federal holiday (2024-12-25 local). Holidays depress commercial and industrial load, and the forecaster sees only demand history with no calendar, so it cannot anticipate one."
+          }
+        ],
+        "local_hour_start": 18,
+        "month": 12,
+        "peak_exceedance": 2431.3,
+        "peak_exceedance_ratio": 0.614,
+        "start": "2024-12-25T02:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "California ISO demand ran below its 80% forecast band for 25 consecutive hours from 2024-11-28 12:00 UTC, reaching 1,678 MW outside the band at its peak. The episode covers a US federal holiday (2024-11-28 local). Holidays depress commercial and industrial load, and the forecaster sees only demand history with no calendar, so it cannot anticipate one.",
+          "headline": "California ISO demand ran 25 hours below forecast on a public holiday",
+          "verified": true
+        },
+        "direction": "below",
+        "duration_hours": 25,
+        "end": "2024-11-29T12:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "consistent_with_direction": true,
+              "episode_direction": "below",
+              "holiday_dates": [
+                "2024-11-28"
+              ]
+            },
+            "is_disqualifying": false,
+            "kind": "holiday",
+            "strength": 0.9,
+            "summary": "The episode covers a US federal holiday (2024-11-28 local). Holidays depress commercial and industrial load, and the forecaster sees only demand history with no calendar, so it cannot anticipate one."
+          }
+        ],
+        "local_hour_start": 4,
+        "month": 11,
+        "peak_exceedance": 1677.5,
+        "peak_exceedance_ratio": 0.894,
+        "start": "2024-11-28T12:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "California ISO demand ran above its 80% forecast band for 11 consecutive hours from 2025-03-14 13:00 UTC, reaching 3,012 MW outside the band at its peak. Population-weighted temperature averaged 9.0 C during the episode against 12.1 C over the preceding 14 days, an anomaly of -3.1 C. Unusual cold raises heating load.",
+          "headline": "California ISO demand ran 11 hours above forecast during unusual cold",
+          "verified": true
+        },
+        "direction": "above",
+        "duration_hours": 11,
+        "end": "2025-03-14T23:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": -3.068181669805373,
+              "baseline_days": 14,
+              "baseline_mean_c": 12.087726814752175,
+              "consistent_with_direction": true,
+              "degree_day_change": 2.890161698985871,
+              "episode_direction": "above",
+              "episode_mean_c": 9.019545144946802,
+              "expected_direction": "above"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.45340908349026865,
+            "summary": "Population-weighted temperature averaged 9.0 C during the episode against 12.1 C over the preceding 14 days, an anomaly of -3.1 C. Unusual cold raises heating load."
+          }
+        ],
+        "local_hour_start": 6,
+        "month": 3,
+        "peak_exceedance": 3012.4,
+        "peak_exceedance_ratio": 1.018,
+        "start": "2025-03-14T13:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "The reported demand at 2025-07-31 21:00 UTC is 11,819 MW, against about 29,884 MW in the hours either side. A single-hour move of this size with immediate recovery is a reporting artifact, not grid behaviour, so this episode should not be explained as an event. The forecast was not wrong here, and this episode should be excluded rather than explained.",
+          "headline": "California ISO demand for this hour is not a real value",
+          "verified": true
+        },
+        "direction": "below",
+        "duration_hours": 1,
+        "end": "2025-07-31T21:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "affected_hours": 1,
+              "deviation_fraction": 0.6044974651563572,
+              "neighbour_mean_mw": 29883.5,
+              "period": "2025-07-31 21:00:00",
+              "reported_mw": 11819.0
+            },
+            "is_disqualifying": true,
+            "kind": "data_quality",
+            "strength": 1.0,
+            "summary": "The reported demand at 2025-07-31 21:00 UTC is 11,819 MW, against about 29,884 MW in the hours either side. A single-hour move of this size with immediate recovery is a reporting artifact, not grid behaviour, so this episode should not be explained as an event."
+          },
+          {
+            "facts": {
+              "anomaly_c": 7.969099787937932,
+              "baseline_days": 14,
+              "baseline_mean_c": 20.380914235059784,
+              "consistent_with_direction": false,
+              "degree_day_change": 7.294964968739208,
+              "episode_direction": "below",
+              "episode_mean_c": 28.350014022997716,
+              "expected_direction": "above"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.2,
+            "summary": "Population-weighted temperature averaged 28.4 C during the episode against 20.4 C over the preceding 14 days, an anomaly of +8.0 C. Unusual heat raises cooling load. Note this points to demand above the interval and the episode ran below it, so the anomaly does not explain this episode."
+          }
+        ],
+        "local_hour_start": 14,
+        "month": 7,
+        "peak_exceedance": 16915.7,
+        "peak_exceedance_ratio": 6.311,
+        "start": "2025-07-31T21:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "California ISO demand ran below its 80% forecast band for 12 consecutive hours from 2025-05-26 12:00 UTC, reaching 2,534 MW outside the band at its peak. The episode covers a US federal holiday (2025-05-26 local). Holidays depress commercial and industrial load, and the forecaster sees only demand history with no calendar, so it cannot anticipate one.",
+          "headline": "California ISO demand ran 12 hours below forecast on a public holiday",
+          "verified": true
+        },
+        "direction": "below",
+        "duration_hours": 12,
+        "end": "2025-05-26T23:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "consistent_with_direction": true,
+              "episode_direction": "below",
+              "holiday_dates": [
+                "2025-05-26"
+              ]
+            },
+            "is_disqualifying": false,
+            "kind": "holiday",
+            "strength": 0.9,
+            "summary": "The episode covers a US federal holiday (2025-05-26 local). Holidays depress commercial and industrial load, and the forecaster sees only demand history with no calendar, so it cannot anticipate one."
+          }
+        ],
+        "local_hour_start": 5,
+        "month": 5,
+        "peak_exceedance": 2533.7,
+        "peak_exceedance_ratio": 0.746,
+        "start": "2025-05-26T12:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "California ISO demand ran above its 80% forecast band for 14 consecutive hours from 2024-11-02 10:00 UTC, reaching 2,776 MW outside the band at its peak. No stored evidence explains this episode. The following was considered and does not account for it: Population-weighted temperature averaged 14.6 C during the episode against 17.6 C over the preceding 14 days, an anomaly of -3.0 C. Cooler than usual, so less cooling load. Note this points to demand below the interval and the episode ran above it, so the anomaly does not explain this episode.",
+          "headline": "California ISO demand ran 14 hours above forecast, cause unexplained",
+          "verified": true
+        },
+        "direction": "above",
+        "duration_hours": 14,
+        "end": "2024-11-02T23:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": -3.0306026600639164,
+              "baseline_days": 14,
+              "baseline_mean_c": 17.649781255818098,
+              "consistent_with_direction": false,
+              "degree_day_change": -0.6885825804667105,
+              "episode_direction": "above",
+              "episode_mean_c": 14.619178595754182,
+              "expected_direction": "below"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.2,
+            "summary": "Population-weighted temperature averaged 14.6 C during the episode against 17.6 C over the preceding 14 days, an anomaly of -3.0 C. Cooler than usual, so less cooling load. Note this points to demand below the interval and the episode ran above it, so the anomaly does not explain this episode."
+          }
+        ],
+        "local_hour_start": 3,
+        "month": 11,
+        "peak_exceedance": 2775.5,
+        "peak_exceedance_ratio": 1.606,
+        "start": "2024-11-02T10:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "California ISO demand ran below its 80% forecast band for 5 consecutive hours from 2025-03-18 19:00 UTC, reaching 2,866 MW outside the band at its peak. Population-weighted temperature averaged 16.2 C during the episode against 11.7 C over the preceding 14 days, an anomaly of +4.5 C. Milder than usual, so less heating load.",
+          "headline": "California ISO demand ran 5 hours below forecast in unusually mild weather",
+          "verified": true
+        },
+        "direction": "below",
+        "duration_hours": 5,
+        "end": "2025-03-18T23:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": 4.523848919370623,
+              "baseline_days": 14,
+              "baseline_mean_c": 11.651021067407692,
+              "consistent_with_direction": true,
+              "degree_day_change": -4.637170361774262,
+              "episode_direction": "below",
+              "episode_mean_c": 16.174869986778315,
+              "expected_direction": "below"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.5261924459685312,
+            "summary": "Population-weighted temperature averaged 16.2 C during the episode against 11.7 C over the preceding 14 days, an anomaly of +4.5 C. Milder than usual, so less heating load."
+          }
+        ],
+        "local_hour_start": 12,
+        "month": 3,
+        "peak_exceedance": 2865.9,
+        "peak_exceedance_ratio": 0.878,
+        "start": "2025-03-18T19:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "California ISO demand ran above its 80% forecast band for 18 consecutive hours from 2024-11-17 07:00 UTC, reaching 1,240 MW outside the band at its peak. Population-weighted temperature averaged 11.6 C during the episode against 14.8 C over the preceding 14 days, an anomaly of -3.2 C. Unusual cold raises heating load.",
+          "headline": "California ISO demand ran 18 hours above forecast during unusual cold",
+          "verified": true
+        },
+        "direction": "above",
+        "duration_hours": 18,
+        "end": "2024-11-18T00:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": -3.2271972941879525,
+              "baseline_days": 14,
+              "baseline_mean_c": 14.783888267383995,
+              "consistent_with_direction": true,
+              "degree_day_change": 2.0193439758166667,
+              "episode_direction": "above",
+              "episode_mean_c": 11.556690973196043,
+              "expected_direction": "above"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.4613598647093976,
+            "summary": "Population-weighted temperature averaged 11.6 C during the episode against 14.8 C over the preceding 14 days, an anomaly of -3.2 C. Unusual cold raises heating load."
+          }
+        ],
+        "local_hour_start": 23,
+        "month": 11,
+        "peak_exceedance": 1239.9,
+        "peak_exceedance_ratio": 0.544,
+        "start": "2024-11-17T07:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "California ISO demand ran above its 80% forecast band for 7 consecutive hours from 2025-08-06 17:00 UTC, reaching 2,267 MW outside the band at its peak. Population-weighted temperature averaged 28.9 C during the episode against 21.0 C over the preceding 14 days, an anomaly of +7.9 C. Unusual heat raises cooling load.",
+          "headline": "California ISO demand ran 7 hours above forecast during unusual heat",
+          "verified": true
+        },
+        "direction": "above",
+        "duration_hours": 7,
+        "end": "2025-08-06T23:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": 7.936603238737458,
+              "baseline_days": 14,
+              "baseline_mean_c": 20.97417245204636,
+              "consistent_with_direction": true,
+              "degree_day_change": 7.241718770469028,
+              "episode_direction": "above",
+              "episode_mean_c": 28.91077569078382,
+              "expected_direction": "above"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.6968301619368729,
+            "summary": "Population-weighted temperature averaged 28.9 C during the episode against 21.0 C over the preceding 14 days, an anomaly of +7.9 C. Unusual heat raises cooling load."
+          }
+        ],
+        "local_hour_start": 10,
+        "month": 8,
+        "peak_exceedance": 2267.3,
+        "peak_exceedance_ratio": 0.876,
+        "start": "2025-08-06T17:00:00.000000000"
+      }
+    ]
+  },
+  "ERCO:D": {
+    "arm": "chronos_bolt_base+scale",
+    "episodes": [
+      {
+        "brief": {
+          "body": "ERCOT demand ran above its 80% forecast band for 26 consecutive hours from 2025-01-05 22:00 UTC, reaching 12,384 MW outside the band at its peak. Population-weighted temperature averaged 2.8 C during the episode against 15.4 C over the preceding 14 days, an anomaly of -12.6 C. Unusual cold raises heating load.",
+          "headline": "ERCOT demand ran 26 hours above forecast during unusual cold",
+          "verified": true
+        },
+        "direction": "above",
+        "duration_hours": 26,
+        "end": "2025-01-06T23:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": -12.577940732159103,
+              "baseline_days": 14,
+              "baseline_mean_c": 15.358342128656288,
+              "consistent_with_direction": true,
+              "degree_day_change": 11.299217858998984,
+              "episode_direction": "above",
+              "episode_mean_c": 2.780401396497184,
+              "expected_direction": "above"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.85,
+            "summary": "Population-weighted temperature averaged 2.8 C during the episode against 15.4 C over the preceding 14 days, an anomaly of -12.6 C. Unusual cold raises heating load."
+          }
+        ],
+        "local_hour_start": 16,
+        "month": 1,
+        "peak_exceedance": 12384.5,
+        "peak_exceedance_ratio": 1.4,
+        "start": "2025-01-05T22:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "ERCOT demand ran above its 80% forecast band for 22 consecutive hours from 2025-01-19 02:00 UTC, reaching 11,565 MW outside the band at its peak. Population-weighted temperature averaged 1.9 C during the episode against 7.0 C over the preceding 14 days, an anomaly of -5.1 C. Unusual cold raises heating load.",
+          "headline": "ERCOT demand ran 22 hours above forecast during unusual cold",
+          "verified": true
+        },
+        "direction": "above",
+        "duration_hours": 22,
+        "end": "2025-01-19T23:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": -5.125787032991932,
+              "baseline_days": 14,
+              "baseline_mean_c": 7.0495686049806245,
+              "consistent_with_direction": true,
+              "degree_day_change": 5.047613225856237,
+              "episode_direction": "above",
+              "episode_mean_c": 1.923781571988693,
+              "expected_direction": "above"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.5562893516495966,
+            "summary": "Population-weighted temperature averaged 1.9 C during the episode against 7.0 C over the preceding 14 days, an anomaly of -5.1 C. Unusual cold raises heating load."
+          }
+        ],
+        "local_hour_start": 20,
+        "month": 1,
+        "peak_exceedance": 11564.6,
+        "peak_exceedance_ratio": 1.202,
+        "start": "2025-01-19T02:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "ERCOT demand ran above its 80% forecast band for 19 consecutive hours from 2025-02-13 01:00 UTC, reaching 8,458 MW outside the band at its peak. Population-weighted temperature averaged 3.5 C during the episode against 16.9 C over the preceding 14 days, an anomaly of -13.4 C. Unusual cold raises heating load.",
+          "headline": "ERCOT demand ran 19 hours above forecast during unusual cold",
+          "verified": true
+        },
+        "direction": "above",
+        "duration_hours": 19,
+        "end": "2025-02-13T19:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": -13.420623271998105,
+              "baseline_days": 14,
+              "baseline_mean_c": 16.91830526534657,
+              "consistent_with_direction": true,
+              "degree_day_change": 10.196649699799492,
+              "episode_direction": "above",
+              "episode_mean_c": 3.497681993348466,
+              "expected_direction": "above"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.85,
+            "summary": "Population-weighted temperature averaged 3.5 C during the episode against 16.9 C over the preceding 14 days, an anomaly of -13.4 C. Unusual cold raises heating load."
+          }
+        ],
+        "local_hour_start": 19,
+        "month": 2,
+        "peak_exceedance": 8458.2,
+        "peak_exceedance_ratio": 1.174,
+        "start": "2025-02-13T01:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "ERCOT demand ran below its 80% forecast band for 12 consecutive hours from 2025-05-26 12:00 UTC, reaching 10,294 MW outside the band at its peak. The episode covers a US federal holiday (2025-05-26 local). Holidays depress commercial and industrial load, and the forecaster sees only demand history with no calendar, so it cannot anticipate one.",
+          "headline": "ERCOT demand ran 12 hours below forecast on a public holiday",
+          "verified": true
+        },
+        "direction": "below",
+        "duration_hours": 12,
+        "end": "2025-05-26T23:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "consistent_with_direction": true,
+              "episode_direction": "below",
+              "holiday_dates": [
+                "2025-05-26"
+              ]
+            },
+            "is_disqualifying": false,
+            "kind": "holiday",
+            "strength": 0.9,
+            "summary": "The episode covers a US federal holiday (2025-05-26 local). Holidays depress commercial and industrial load, and the forecaster sees only demand history with no calendar, so it cannot anticipate one."
+          }
+        ],
+        "local_hour_start": 7,
+        "month": 5,
+        "peak_exceedance": 10294.2,
+        "peak_exceedance_ratio": 1.124,
+        "start": "2025-05-26T12:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "ERCOT demand ran above its 80% forecast band for 17 consecutive hours from 2024-12-11 00:00 UTC, reaching 6,408 MW outside the band at its peak. Population-weighted temperature averaged 6.3 C during the episode against 12.2 C over the preceding 14 days, an anomaly of -6.0 C. Unusual cold raises heating load.",
+          "headline": "ERCOT demand ran 17 hours above forecast during unusual cold",
+          "verified": true
+        },
+        "direction": "above",
+        "duration_hours": 17,
+        "end": "2024-12-11T16:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": -5.973564273149174,
+              "baseline_days": 14,
+              "baseline_mean_c": 12.247920872358566,
+              "consistent_with_direction": true,
+              "degree_day_change": 5.386595810259179,
+              "episode_direction": "above",
+              "episode_mean_c": 6.274356599209392,
+              "expected_direction": "above"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.5986782136574587,
+            "summary": "Population-weighted temperature averaged 6.3 C during the episode against 12.2 C over the preceding 14 days, an anomaly of -6.0 C. Unusual cold raises heating load."
+          }
+        ],
+        "local_hour_start": 18,
+        "month": 12,
+        "peak_exceedance": 6408.0,
+        "peak_exceedance_ratio": 1.077,
+        "start": "2024-12-11T00:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "ERCOT demand ran below its 80% forecast band for 17 consecutive hours from 2025-01-26 01:00 UTC, reaching 6,730 MW outside the band at its peak. Population-weighted temperature averaged 12.4 C during the episode against 6.0 C over the preceding 14 days, an anomaly of +6.4 C. Milder than usual, so less heating load.",
+          "headline": "ERCOT demand ran 17 hours below forecast in unusually mild weather",
+          "verified": true
+        },
+        "direction": "below",
+        "duration_hours": 17,
+        "end": "2025-01-26T17:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": 6.430679429668796,
+              "baseline_days": 14,
+              "baseline_mean_c": 5.975309714233498,
+              "consistent_with_direction": true,
+              "degree_day_change": -6.430679429668797,
+              "episode_direction": "below",
+              "episode_mean_c": 12.405989143902294,
+              "expected_direction": "below"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.6215339714834398,
+            "summary": "Population-weighted temperature averaged 12.4 C during the episode against 6.0 C over the preceding 14 days, an anomaly of +6.4 C. Milder than usual, so less heating load."
+          }
+        ],
+        "local_hour_start": 19,
+        "month": 1,
+        "peak_exceedance": 6729.6,
+        "peak_exceedance_ratio": 0.437,
+        "start": "2025-01-26T01:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "ERCOT demand ran above its 80% forecast band for 23 consecutive hours from 2025-01-20 01:00 UTC, reaching 7,105 MW outside the band at its peak. Population-weighted temperature averaged -1.4 C during the episode against 6.0 C over the preceding 14 days, an anomaly of -7.4 C. Unusual cold raises heating load.",
+          "headline": "ERCOT demand ran 23 hours above forecast during unusual cold",
+          "verified": true
+        },
+        "direction": "above",
+        "duration_hours": 23,
+        "end": "2025-01-20T23:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": -7.3802635456514984,
+              "baseline_days": 14,
+              "baseline_mean_c": 6.022392105243317,
+              "consistent_with_direction": true,
+              "degree_day_change": 7.380263545651491,
+              "episode_direction": "above",
+              "episode_mean_c": -1.3578714404081809,
+              "expected_direction": "above"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.6690131772825749,
+            "summary": "Population-weighted temperature averaged -1.4 C during the episode against 6.0 C over the preceding 14 days, an anomaly of -7.4 C. Unusual cold raises heating load."
+          },
+          {
+            "facts": {
+              "consistent_with_direction": false,
+              "episode_direction": "above",
+              "holiday_dates": [
+                "2025-01-20"
+              ]
+            },
+            "is_disqualifying": false,
+            "kind": "holiday",
+            "strength": 0.2,
+            "summary": "The episode covers a US federal holiday (2025-01-20 local). Holidays depress commercial and industrial load, and the forecaster sees only demand history with no calendar, so it cannot anticipate one. Note the episode runs above the interval, which a holiday does not explain."
+          }
+        ],
+        "local_hour_start": 19,
+        "month": 1,
+        "peak_exceedance": 7104.7,
+        "peak_exceedance_ratio": 0.583,
+        "start": "2025-01-20T01:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "ERCOT demand ran above its 80% forecast band for 24 consecutive hours from 2024-12-06 00:00 UTC, reaching 4,152 MW outside the band at its peak. Population-weighted temperature averaged 8.7 C during the episode against 13.9 C over the preceding 14 days, an anomaly of -5.2 C. Unusual cold raises heating load.",
+          "headline": "ERCOT demand ran 24 hours above forecast during unusual cold",
+          "verified": true
+        },
+        "direction": "above",
+        "duration_hours": 24,
+        "end": "2024-12-06T23:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": -5.173226421447643,
+              "baseline_days": 14,
+              "baseline_mean_c": 13.88107684772648,
+              "consistent_with_direction": true,
+              "degree_day_change": 3.757924138642858,
+              "episode_direction": "above",
+              "episode_mean_c": 8.707850426278837,
+              "expected_direction": "above"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.5586613210723821,
+            "summary": "Population-weighted temperature averaged 8.7 C during the episode against 13.9 C over the preceding 14 days, an anomaly of -5.2 C. Unusual cold raises heating load."
+          }
+        ],
+        "local_hour_start": 18,
+        "month": 12,
+        "peak_exceedance": 4152.2,
+        "peak_exceedance_ratio": 0.745,
+        "start": "2024-12-06T00:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "ERCOT demand ran above its 80% forecast band for 17 consecutive hours from 2024-11-18 00:00 UTC, reaching 4,799 MW outside the band at its peak. Population-weighted temperature averaged 23.5 C during the episode against 20.2 C over the preceding 14 days, an anomaly of +3.3 C. Unusual heat raises cooling load.",
+          "headline": "ERCOT demand ran 17 hours above forecast during unusual heat",
+          "verified": true
+        },
+        "direction": "above",
+        "duration_hours": 17,
+        "end": "2024-11-18T16:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": 3.2730515149224964,
+              "baseline_days": 14,
+              "baseline_mean_c": 20.20619858832843,
+              "consistent_with_direction": true,
+              "degree_day_change": 1.1982697887917224,
+              "episode_direction": "above",
+              "episode_mean_c": 23.479250103250926,
+              "expected_direction": "above"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.46365257574612484,
+            "summary": "Population-weighted temperature averaged 23.5 C during the episode against 20.2 C over the preceding 14 days, an anomaly of +3.3 C. Unusual heat raises cooling load."
+          }
+        ],
+        "local_hour_start": 18,
+        "month": 11,
+        "peak_exceedance": 4799.2,
+        "peak_exceedance_ratio": 1.465,
+        "start": "2024-11-18T00:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "ERCOT demand ran above its 80% forecast band for 9 consecutive hours from 2025-03-29 15:00 UTC, reaching 8,198 MW outside the band at its peak. Population-weighted temperature averaged 26.3 C during the episode against 19.5 C over the preceding 14 days, an anomaly of +6.7 C. Unusual heat raises cooling load.",
+          "headline": "ERCOT demand ran 9 hours above forecast during unusual heat",
+          "verified": true
+        },
+        "direction": "above",
+        "duration_hours": 9,
+        "end": "2025-03-29T23:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": 6.734167976066182,
+              "baseline_days": 14,
+              "baseline_mean_c": 19.546787111418496,
+              "consistent_with_direction": true,
+              "degree_day_change": 3.948532916124452,
+              "episode_direction": "above",
+              "episode_mean_c": 26.280955087484678,
+              "expected_direction": "above"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.6367083988033091,
+            "summary": "Population-weighted temperature averaged 26.3 C during the episode against 19.5 C over the preceding 14 days, an anomaly of +6.7 C. Unusual heat raises cooling load."
+          }
+        ],
+        "local_hour_start": 10,
+        "month": 3,
+        "peak_exceedance": 8197.5,
+        "peak_exceedance_ratio": 1.321,
+        "start": "2025-03-29T15:00:00.000000000"
+      }
+    ]
+  },
+  "PACE:D": {
+    "arm": "chronos_bolt_base+scale",
+    "episodes": [
+      {
+        "brief": {
+          "body": "PacifiCorp East demand ran below its 80% forecast band for 19 consecutive hours from 2025-06-21 06:00 UTC, reaching 1,316 MW outside the band at its peak. Population-weighted temperature averaged 17.5 C during the episode against 26.6 C over the preceding 14 days, an anomaly of -9.1 C. Cooler than usual, so less cooling load.",
+          "headline": "PacifiCorp East demand ran 19 hours below forecast in unusually mild weather",
+          "verified": true
+        },
+        "direction": "below",
+        "duration_hours": 19,
+        "end": "2025-06-22T00:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": -9.142039183841796,
+              "baseline_days": 14,
+              "baseline_mean_c": 26.643085918325067,
+              "consistent_with_direction": true,
+              "degree_day_change": -5.412589333726311,
+              "episode_direction": "below",
+              "episode_mean_c": 17.50104673448327,
+              "expected_direction": "below"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.7571019591920898,
+            "summary": "Population-weighted temperature averaged 17.5 C during the episode against 26.6 C over the preceding 14 days, an anomaly of -9.1 C. Cooler than usual, so less cooling load."
+          }
+        ],
+        "local_hour_start": 0,
+        "month": 6,
+        "peak_exceedance": 1315.9,
+        "peak_exceedance_ratio": 1.316,
+        "start": "2025-06-21T06:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "PacifiCorp East demand ran below its 80% forecast band for 22 consecutive hours from 2025-08-09 03:00 UTC, reaching 738 MW outside the band at its peak. Population-weighted temperature averaged 21.2 C during the episode against 27.7 C over the preceding 14 days, an anomaly of -6.5 C. Cooler than usual, so less cooling load.",
+          "headline": "PacifiCorp East demand ran 22 hours below forecast in unusually mild weather",
+          "verified": true
+        },
+        "direction": "below",
+        "duration_hours": 22,
+        "end": "2025-08-10T00:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": -6.531750772896803,
+              "baseline_days": 14,
+              "baseline_mean_c": 27.737518534546922,
+              "consistent_with_direction": true,
+              "degree_day_change": -5.276903530969736,
+              "episode_direction": "below",
+              "episode_mean_c": 21.20576776165012,
+              "expected_direction": "below"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.6265875386448401,
+            "summary": "Population-weighted temperature averaged 21.2 C during the episode against 27.7 C over the preceding 14 days, an anomaly of -6.5 C. Cooler than usual, so less cooling load."
+          }
+        ],
+        "local_hour_start": 21,
+        "month": 8,
+        "peak_exceedance": 737.9,
+        "peak_exceedance_ratio": 0.664,
+        "start": "2025-08-09T03:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "PacifiCorp East demand ran above its 80% forecast band for 21 consecutive hours from 2025-02-13 04:00 UTC, reaching 460 MW outside the band at its peak. Population-weighted temperature averaged -9.0 C during the episode against 3.7 C over the preceding 14 days, an anomaly of -12.8 C. Unusual cold raises heating load.",
+          "headline": "PacifiCorp East demand ran 21 hours above forecast during unusual cold",
+          "verified": true
+        },
+        "direction": "above",
+        "duration_hours": 21,
+        "end": "2025-02-14T00:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": -12.759731943046225,
+              "baseline_days": 14,
+              "baseline_mean_c": 3.721856563009151,
+              "consistent_with_direction": true,
+              "degree_day_change": 12.738310233151898,
+              "episode_direction": "above",
+              "episode_mean_c": -9.037875380037073,
+              "expected_direction": "above"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.85,
+            "summary": "Population-weighted temperature averaged -9.0 C during the episode against 3.7 C over the preceding 14 days, an anomaly of -12.8 C. Unusual cold raises heating load."
+          }
+        ],
+        "local_hour_start": 21,
+        "month": 2,
+        "peak_exceedance": 460.2,
+        "peak_exceedance_ratio": 0.782,
+        "start": "2025-02-13T04:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "PacifiCorp East demand ran below its 80% forecast band for 23 consecutive hours from 2025-08-08 02:00 UTC, reaching 503 MW outside the band at its peak. No stored evidence explains this episode.",
+          "headline": "PacifiCorp East demand ran 23 hours below forecast, cause unexplained",
+          "verified": true
+        },
+        "direction": "below",
+        "duration_hours": 23,
+        "end": "2025-08-09T00:00:00.000000000",
+        "evidence": [],
+        "local_hour_start": 20,
+        "month": 8,
+        "peak_exceedance": 503.2,
+        "peak_exceedance_ratio": 0.677,
+        "start": "2025-08-08T02:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "PacifiCorp East demand ran above its 80% forecast band for 23 consecutive hours from 2024-10-29 01:00 UTC, reaching 535 MW outside the band at its peak. Population-weighted temperature averaged 6.6 C during the episode against 13.5 C over the preceding 14 days, an anomaly of -6.9 C. Unusual cold raises heating load.",
+          "headline": "PacifiCorp East demand ran 23 hours above forecast during unusual cold",
+          "verified": true
+        },
+        "direction": "above",
+        "duration_hours": 23,
+        "end": "2024-10-29T23:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": -6.921148959711039,
+              "baseline_days": 14,
+              "baseline_mean_c": 13.494014627717371,
+              "consistent_with_direction": true,
+              "degree_day_change": 5.480119826164132,
+              "episode_direction": "above",
+              "episode_mean_c": 6.572865668006332,
+              "expected_direction": "above"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.6460574479855519,
+            "summary": "Population-weighted temperature averaged 6.6 C during the episode against 13.5 C over the preceding 14 days, an anomaly of -6.9 C. Unusual cold raises heating load."
+          }
+        ],
+        "local_hour_start": 19,
+        "month": 10,
+        "peak_exceedance": 535.0,
+        "peak_exceedance_ratio": 1.306,
+        "start": "2024-10-29T01:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "PacifiCorp East demand ran above its 80% forecast band for 12 consecutive hours from 2025-03-18 13:00 UTC, reaching 544 MW outside the band at its peak. Population-weighted temperature averaged 0.5 C during the episode against 4.5 C over the preceding 14 days, an anomaly of -4.1 C. Unusual cold raises heating load.",
+          "headline": "PacifiCorp East demand ran 12 hours above forecast during unusual cold",
+          "verified": true
+        },
+        "direction": "above",
+        "duration_hours": 12,
+        "end": "2025-03-19T00:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": -4.0553493236375004,
+              "baseline_days": 14,
+              "baseline_mean_c": 4.527128035122094,
+              "consistent_with_direction": true,
+              "degree_day_change": 4.055349323637502,
+              "episode_direction": "above",
+              "episode_mean_c": 0.47177871148459394,
+              "expected_direction": "above"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.5027674661818751,
+            "summary": "Population-weighted temperature averaged 0.5 C during the episode against 4.5 C over the preceding 14 days, an anomaly of -4.1 C. Unusual cold raises heating load."
+          }
+        ],
+        "local_hour_start": 7,
+        "month": 3,
+        "peak_exceedance": 543.7,
+        "peak_exceedance_ratio": 0.92,
+        "start": "2025-03-18T13:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "PacifiCorp East demand ran below its 80% forecast band for 11 consecutive hours from 2024-11-21 14:00 UTC, reaching 510 MW outside the band at its peak. Population-weighted temperature averaged 9.2 C during the episode against 4.6 C over the preceding 14 days, an anomaly of +4.6 C. Milder than usual, so less heating load.",
+          "headline": "PacifiCorp East demand ran 11 hours below forecast in unusually mild weather",
+          "verified": true
+        },
+        "direction": "below",
+        "duration_hours": 11,
+        "end": "2024-11-22T00:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": 4.592138185570695,
+              "baseline_days": 14,
+              "baseline_mean_c": 4.5633494640346,
+              "consistent_with_direction": true,
+              "degree_day_change": -4.6493772547683925,
+              "episode_direction": "below",
+              "episode_mean_c": 9.155487649605295,
+              "expected_direction": "below"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.5296069092785347,
+            "summary": "Population-weighted temperature averaged 9.2 C during the episode against 4.6 C over the preceding 14 days, an anomaly of +4.6 C. Milder than usual, so less heating load."
+          }
+        ],
+        "local_hour_start": 7,
+        "month": 11,
+        "peak_exceedance": 510.0,
+        "peak_exceedance_ratio": 1.034,
+        "start": "2024-11-21T14:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "PacifiCorp East demand ran below its 80% forecast band for 23 consecutive hours from 2025-02-14 03:00 UTC, reaching 261 MW outside the band at its peak. No stored evidence explains this episode.",
+          "headline": "PacifiCorp East demand ran 23 hours below forecast, cause unexplained",
+          "verified": true
+        },
+        "direction": "below",
+        "duration_hours": 23,
+        "end": "2025-02-15T01:00:00.000000000",
+        "evidence": [],
+        "local_hour_start": 20,
+        "month": 2,
+        "peak_exceedance": 260.9,
+        "peak_exceedance_ratio": 0.406,
+        "start": "2025-02-14T03:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "PacifiCorp East demand ran above its 80% forecast band for 15 consecutive hours from 2025-02-22 02:00 UTC, reaching 306 MW outside the band at its peak. Population-weighted temperature averaged -5.1 C during the episode against -1.5 C over the preceding 14 days, an anomaly of -3.5 C. Unusual cold raises heating load.",
+          "headline": "PacifiCorp East demand ran 15 hours above forecast during unusual cold",
+          "verified": true
+        },
+        "direction": "above",
+        "duration_hours": 15,
+        "end": "2025-02-22T16:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": -3.5433854220909264,
+              "baseline_days": 14,
+              "baseline_mean_c": -1.5469008073433752,
+              "consistent_with_direction": true,
+              "degree_day_change": 3.543385422090928,
+              "episode_direction": "above",
+              "episode_mean_c": -5.090286229434302,
+              "expected_direction": "above"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.4771692711045463,
+            "summary": "Population-weighted temperature averaged -5.1 C during the episode against -1.5 C over the preceding 14 days, an anomaly of -3.5 C. Unusual cold raises heating load."
+          }
+        ],
+        "local_hour_start": 19,
+        "month": 2,
+        "peak_exceedance": 306.0,
+        "peak_exceedance_ratio": 0.857,
+        "start": "2025-02-22T02:00:00.000000000"
+      },
+      {
+        "brief": {
+          "body": "PacifiCorp East demand ran above its 80% forecast band for 9 consecutive hours from 2025-05-12 16:00 UTC, reaching 445 MW outside the band at its peak. Population-weighted temperature averaged 29.1 C during the episode against 16.9 C over the preceding 14 days, an anomaly of +12.2 C. Unusual heat raises cooling load.",
+          "headline": "PacifiCorp East demand ran 9 hours above forecast during unusual heat",
+          "verified": true
+        },
+        "direction": "above",
+        "duration_hours": 9,
+        "end": "2025-05-13T00:00:00.000000000",
+        "evidence": [
+          {
+            "facts": {
+              "anomaly_c": 12.198364676482186,
+              "baseline_days": 14,
+              "baseline_mean_c": 16.898398473222144,
+              "consistent_with_direction": true,
+              "degree_day_change": 5.719874841547249,
+              "episode_direction": "above",
+              "episode_mean_c": 29.09676314970433,
+              "expected_direction": "above"
+            },
+            "is_disqualifying": false,
+            "kind": "temperature",
+            "strength": 0.85,
+            "summary": "Population-weighted temperature averaged 29.1 C during the episode against 16.9 C over the preceding 14 days, an anomaly of +12.2 C. Unusual heat raises cooling load."
+          }
+        ],
+        "local_hour_start": 10,
+        "month": 5,
+        "peak_exceedance": 444.8,
+        "peak_exceedance_ratio": 0.426,
+        "start": "2025-05-12T16:00:00.000000000"
+      }
+    ]
+  }
+}

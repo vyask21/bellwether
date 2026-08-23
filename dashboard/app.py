@@ -209,55 +209,75 @@ st.header(text.S6_HEADING)
 
 st.markdown(text.S6_LEDE)
 
-weather = data.weather_frame()
-if not weather.empty:
-    st.dataframe(weather, width="stretch", hide_index=True)
+diagnosis = data.diagnosis_frame()
+if not diagnosis.empty:
+    st.altair_chart(viz.attribution_bars(diagnosis), width="stretch")
+    table_view(diagnosis.round(1), text.S6_TABLE)
+
+market = market_control("s6")
+
+episodes = data.episode_frame(market)
+if not episodes.empty:
+    st.dataframe(episodes, width="stretch", hide_index=True)
 
 st.markdown(text.S6_PROSE)
-
-st.markdown(text.S6_FORECAST_LEDE)
-
-forecast_arms = data.forecast_frame()
-if not forecast_arms.empty:
-    st.dataframe(forecast_arms, width="stretch", hide_index=True)
-
-st.markdown(text.S6_FORECAST_PROSE)
 
 st.divider()
 
 # ----------------------------------------------------------------------------------------
 st.header(text.S7_HEADING)
 
-offsets = data.offsets_frame()
-if not offsets.empty:
-    st.altair_chart(viz.learned_offsets(offsets), width="stretch")
-    table_view(offsets.round(0), text.S7_OFFSETS_TABLE)
+st.markdown(text.S7_LEDE)
+
+weather = data.weather_frame()
+if not weather.empty:
+    st.dataframe(weather, width="stretch", hide_index=True)
 
 st.markdown(text.S7_PROSE)
 
-market = market_control("s7")
+st.markdown(text.S7_FORECAST_LEDE)
 
-per_holiday = data.per_holiday_frame(market)
-if not per_holiday.empty:
-    st.altair_chart(viz.paired_holidays(per_holiday), width="stretch")
-    table_view(per_holiday.round(0), text.S7_HOLIDAY_TABLE.format(market=market))
+forecast_arms = data.forecast_frame()
+if not forecast_arms.empty:
+    st.dataframe(forecast_arms, width="stretch", hide_index=True)
 
-st.markdown(text.S7_CLOSING)
-
-shape = data.hour_profile_frame()
-if not shape.empty:
-    x_title, y_title = text.S7_SHAPE_AXES
-    st.altair_chart(viz.profile(shape, "hour", x_title, "offset", y_title), width="stretch")
-    table_view(shape.round(0), text.S7_SHAPE_TABLE)
-
-st.markdown(text.S7_SHAPE_PROSE)
+st.markdown(text.S7_FORECAST_PROSE)
 
 st.divider()
 
 # ----------------------------------------------------------------------------------------
 st.header(text.S8_HEADING)
 
+offsets = data.offsets_frame()
+if not offsets.empty:
+    st.altair_chart(viz.learned_offsets(offsets), width="stretch")
+    table_view(offsets.round(0), text.S8_OFFSETS_TABLE)
+
 st.markdown(text.S8_PROSE)
+
+market = market_control("s8")
+
+per_holiday = data.per_holiday_frame(market)
+if not per_holiday.empty:
+    st.altair_chart(viz.paired_holidays(per_holiday), width="stretch")
+    table_view(per_holiday.round(0), text.S8_HOLIDAY_TABLE.format(market=market))
+
+st.markdown(text.S8_CLOSING)
+
+shape = data.hour_profile_frame()
+if not shape.empty:
+    x_title, y_title = text.S8_SHAPE_AXES
+    st.altair_chart(viz.profile(shape, "hour", x_title, "offset", y_title), width="stretch")
+    table_view(shape.round(0), text.S8_SHAPE_TABLE)
+
+st.markdown(text.S8_SHAPE_PROSE)
+
+st.divider()
+
+# ----------------------------------------------------------------------------------------
+st.header(text.S9_HEADING)
+
+st.markdown(text.S9_PROSE)
 
 st.divider()
 

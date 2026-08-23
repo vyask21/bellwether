@@ -83,6 +83,7 @@ class TestTheWalkthroughIsWhole:
             text.S6_HEADING,
             text.S7_HEADING,
             text.S8_HEADING,
+            text.S9_HEADING,
             text.METHOD_HEADING,
         ],
     )
@@ -133,7 +134,7 @@ class TestTheMarketControlSitsBesideWhatItScopes:
 
     def test_every_market_scoped_section_carries_a_control(self, page):
         scoped = [s for s in self._sections(page) if 'data-market="' in s]
-        assert len(scoped) == 2, "sections 3 and 7 are the market-scoped ones"
+        assert len(scoped) == 3, "sections 3, 6 and 8 are the market-scoped ones"
         for section in scoped:
             assert "data-market-input" in section
 
@@ -146,8 +147,8 @@ class TestTheMarketControlSitsBesideWhatItScopes:
         """Same-named radios are one group for the whole document, so two copies sharing a
         name would leave the second one showing nothing selected."""
         names = re.findall(r'<input type="radio" name="([^"]+)"', page)
-        assert len(names) == len(MARKETS) * 2
-        assert len(set(names)) == 2
+        assert len(names) == len(MARKETS) * 3
+        assert len(set(names)) == 3
         for name in set(names):
             assert names.count(name) == len(MARKETS)
 
@@ -167,13 +168,23 @@ def specs(page) -> dict:
 
 
 class TestEveryChartIsThere:
-    def test_all_thirteen_charts_are_embedded(self, specs):
-        expected = {"skill", "coverage", "models", "hours", "months", "offsets", "shape"}
+    def test_all_fourteen_charts_are_embedded(self, specs):
+        expected = {
+            "skill",
+            "attribution",
+            "coverage",
+            "models",
+            "hours",
+            "months",
+            "offsets",
+            "shape",
+        }
         expected |= {f"{kind}_{m}" for kind in ("holidays", "forecast") for m in MARKETS}
         assert set(specs) == expected
 
     @pytest.mark.parametrize(
-        "name", ["skill", "coverage", "models", "hours", "months", "offsets", "shape"]
+        "name",
+        ["skill", "attribution", "coverage", "models", "hours", "months", "offsets", "shape"],
     )
     def test_a_fixed_chart_carries_its_data_rather_than_a_url(self, name, specs):
         """These are tens of rows. Inlining them means the page draws before it fetches."""
@@ -193,9 +204,10 @@ class TestEveryChartIsThere:
         documented relief is a reachable table. A touch device has no hover at all."""
         charts = page.count('class="chart-box"')
         tables = page.count("<summary>")
-        assert charts == 13
-        # Ten table views under charts, plus the method note, which is also a disclosure.
-        assert tables >= 11
+        assert charts == 14
+        # Table views under charts, plus the three per-market episode tables and the
+        # method note, which is also a disclosure.
+        assert tables >= 15
 
     def test_no_value_is_only_obtainable_from_a_chart(self, page):
         """The tables are the record. If the Vega CDN fails the page must still carry the

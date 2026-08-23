@@ -37,6 +37,12 @@ def main() -> None:
         "--brief", action="store_true", help="Render a written brief for each episode."
     )
     parser.add_argument("--analysis", default="docs/breach_analysis.json")
+    parser.add_argument(
+        "--out",
+        help="Write the attributions to JSON as well as printing them. The dashboard "
+        "reads this file; without it an explanation exists only in a terminal that has "
+        "scrolled.",
+    )
     args = parser.parse_args()
 
     analysis = json.loads(Path(args.analysis).read_text())
@@ -55,6 +61,7 @@ def main() -> None:
     print(f"data spikes in series: {spikes.size}\n")
 
     unexplained = 0
+    written = []
     for record in recorded:
         episode = _rebuild(record)
         evidence = gather_evidence(
@@ -73,17 +80,61 @@ def main() -> None:
             marker = "!!" if item.is_disqualifying else "  "
             print(f"{marker} [{item.kind} {item.strength:.2f}] {item.summary}")
 
-        if args.brief:
+        # The brief is rendered whenever the file is being written, because a stored
+        # attribution without the sentence a reader sees is only half the record.
+        brief = None
+        if args.brief or args.out:
             brief = render_template_brief(
                 BriefContext(market=args.respondent, episode=episode, evidence=evidence)
             )
+        if args.brief and brief is not None:
             status = "verified" if brief.verification.ok else brief.verification.describe()
             print(f"\n  BRIEF ({status})")
             print(f"  {brief.headline}")
             print(f"  {brief.body}")
         print()
 
+        if args.out:
+            written.append(
+                {
+                    "start": record["start"],
+                    "end": record["end"],
+                    "duration_hours": record["duration_hours"],
+                    "direction": record["direction"],
+                    "peak_exceedance": record["peak_exceedance"],
+                    "peak_exceedance_ratio": record["peak_exceedance_ratio"],
+                    "local_hour_start": record["local_hour_start"],
+                    "month": record["month"],
+                    "evidence": [
+                        {
+                            "kind": item.kind,
+                            "summary": item.summary,
+                            "strength": item.strength,
+                            "is_disqualifying": item.is_disqualifying,
+                            "facts": item.facts,
+                        }
+                        for item in evidence
+                    ],
+                    "brief": None
+                    if brief is None
+                    else {
+                        "headline": brief.headline,
+                        "body": brief.body,
+                        "verified": brief.verification.ok,
+                    },
+                }
+            )
+
     print(f"{unexplained} of {len(recorded)} episodes had no candidate explanation")
+
+    if args.out:
+        # Merged rather than overwritten: markets are run one at a time, and a run for ERCO
+        # must not delete what the CISO run recorded.
+        path = Path(args.out)
+        existing = json.loads(path.read_text()) if path.exists() else {}
+        existing[series_id] = {"arm": args.arm, "episodes": written}
+        path.write_text(json.dumps(existing, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        print(f"wrote {len(written)} attributions for {series_id} to {path}")
 
 
 def _rebuild(record: dict) -> BreachEpisode:

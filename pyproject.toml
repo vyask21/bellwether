@@ -1,7 +1,7 @@
 [project]
 name = "bellwether"
 version = "0.1.0"
-description = "Probabilistic load forecasting for the US grid, with an evidence-grounded explanation layer."
+description = "Diagnose US electricity demand anomalies against evidence computed from stored grid and weather history."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"

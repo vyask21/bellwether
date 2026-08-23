@@ -1,38 +1,36 @@
 # Bellwether
 
-Probabilistic electricity demand forecasting for the US power grid.
+When electricity demand departs from what was expected, what caused it?
 
-Bellwether reads public grid and weather data, forecasts demand 24 hours ahead with
-uncertainty intervals, detects when demand lands outside those intervals, and explains each
-miss from measured evidence. It covers three regional grid operators over two years of
-hourly data.
+Bellwether answers that. It forecasts demand for US grid operators with an uncertainty
+band, flags the hours outside it, and attributes each episode to a cause computed from
+stored history: unusual weather, a public holiday, or a data fault.
 
-Every number in a written explanation traces back to a measurement. An explanation citing
-anything else is rejected rather than published.
+Every number in an explanation traces to a measurement. One citing anything else is
+rejected rather than published.
+
+## What it finds
+
+Across the 30 largest demand anomalies in three grids, a cause was found for 28.
+
+Temperature accounts for 23, public holidays for 4, and one is not a grid event: a
+reported 11,819 MW between two hours near 29,900. No grid sheds and recovers 60 percent of
+its load in two hours, so it is flagged as a fault rather than written up as a blackout.
+
+All 30 briefs pass the citation check. Two anomalies have no candidate cause and are
+reported as such.
 
 ## Metrics
 
-Forecasts are judged three ways, and all three are reported together.
+The band must be trustworthy before an hour outside it means anything, so it is judged
+three ways, reported together.
 
-MASE measures point accuracy against a seasonal naive forecast on the same data. Below 1.0
-means the model beat that baseline.
+MASE is point accuracy against a seasonal naive forecast; below 1.0 beats it. WQL scores
+the full predicted range. Coverage and width are always a pair, since any forecast can hit
+a claimed 80 percent interval by predicting a very wide range.
 
-WQL scores the full range of predicted outcomes rather than a single best guess.
-
-Coverage and width are always reported as a pair. Any forecast can hit its claimed 80
-percent interval by predicting a very wide range, so neither number means much alone.
-
-## Results
-
-Over 702 rolling test windows per operator, the model cut forecast error against the best
-statistical baseline by 43 percent in California, 29 percent in Utah and 26 percent in
-Texas.
-
-Interval accuracy is weaker and is reported as such. Intervals claiming 80 percent of
-demand held 77 to 80 percent, so they are overconfident.
-
-Against each operator's own day-ahead forecast the result splits: Texas forecasts its
-demand better than this project does, Utah does not, and California is excluded.
+Over 702 windows per market it cut error 43, 29 and 26 percent against the best baseline.
+Its 80 percent bands held 77 to 80 percent.
 
 ## Data sources
 
@@ -66,16 +64,15 @@ src/bellwether/
   ingest/      EIA and NOAA API clients
   storage/     Schema, loading, export
   forecast/    Baselines and foundation models
-  eval/        Metrics, backtest, ablations
+  eval/        Anomaly detection, metrics, backtest
   explain/     Evidence and written briefs
 dashboard/     Findings walkthrough
 scripts/       Analysis runs and export
 docs/          Results and source notes
-tests/         504 tests, Python 3.11 and 3.12
+tests/         508 tests, Python 3.11 and 3.12
 ```
 
-Baselines and foundation models share one interface, so the harness cannot tell them
-apart.
+Evidence is computed in Python, so no explanation can introduce a number the data lacks.
 
 ## License
 
