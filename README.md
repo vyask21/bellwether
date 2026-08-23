@@ -68,7 +68,7 @@ src/bellwether/
   explain/     Evidence and written briefs
 dashboard/     Findings walkthrough
 scripts/       Analysis runs and export
-docs/          Results and source notes
+docs/          Results and compliance note
 tests/         508 tests, Python 3.11 and 3.12
 ```
 

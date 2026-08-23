@@ -46,3 +46,12 @@ Thumbs.db
 # public repo. Never committed here: it is a build output, and its whole point is that its
 # contents are chosen explicitly rather than inherited.
 .space/
+
+# Long-form notes: kept on disk, not published. The state file is a working log written
+# for whoever resumes the project, and the rest is narrative rather than interface.
+# docs/EIA_COMPLIANCE.md and docs/*.json stay tracked: a test reads the first and the
+# dashboard reads the rest, so removing them breaks CI and the published Space.
+docs/STATE.md
+docs/RESULTS.md
+docs/DATA_SOURCES.md
+docs/COMPANION_MCP_SERVER.md
