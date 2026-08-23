@@ -46,6 +46,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The default shallow clone cannot rebase, and the commit step needs to.
+          # This repository's history is small enough that a full clone is free.
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -119,15 +123,21 @@ jobs:
             echo "Nothing changed: no new observations and no new forecasts." >> "$GITHUB_STEP_SUMMARY"
           else
             git commit -m "Refresh: top up observations and re-export the snapshot"
+            # Rebase before pushing. The branch this job checked out can be behind main by
+            # the time it finishes: a re-run replays the commit it was originally
+            # dispatched against, and a human push during a run leaves the same gap. A
+            # plain push is rejected as a non-fast-forward at the very last step, which
+            # throws away every minute of forecasting the job just did.
+            git fetch origin main
+            git rebase origin/main
             git push
             echo "Committed a refreshed store." >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Publish to the Space
-        # Skipped unless an HF_TOKEN secret exists. The credential this project has used so
-        # far is an interactive OAuth session that expires 2026-09-02, which a runner
-        # cannot hold; publishing needs a Write token minted for it. Until one is set the
-        # repository refreshes and the Space stays where it was, which is a visible gap
-        # rather than a silent one.
+        # Skipped unless an HF_TOKEN secret exists. Set 2026-08-23 to a Write token minted
+        # for this repository, which replaced an interactive OAuth session that no runner
+        # could hold. Without the secret the repository refreshes and the Space stays where
+        # it was, which is a visible gap rather than a silent one.
         if: ${{ env.HF_TOKEN != '' }}
         run: python scripts/deploy_space.py --push
