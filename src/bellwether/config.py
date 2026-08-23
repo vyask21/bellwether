@@ -30,7 +30,7 @@ class Settings(BaseSettings):
         default="(bellwether, contact-unset@example.com)",
         description="NWS requires a User-Agent identifying the app and a contact address.",
     )
-    anthropic_api_key: str = Field(default="", description="Used by the explanation layer only.")
+    llm_api_key: str = Field(default="", description="Used by the optional model brief only.")
 
     duckdb_path: Path = Field(default=DATA_DIR / "bellwether.duckdb")
 

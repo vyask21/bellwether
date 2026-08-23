@@ -201,7 +201,7 @@ class TestPrompt:
 
 
 class _StubClient:
-    """Stands in for `anthropic.Anthropic`, returning scripted payloads."""
+    """Stands in for a chat completion client, returning scripted payloads."""
 
     def __init__(self, payloads: list[dict], stop_reason: str = "end_turn") -> None:
         self._payloads = list(payloads)
@@ -234,7 +234,7 @@ class TestGeneration:
 
     def test_a_verified_brief_is_returned(self):
         client = _StubClient([self._payload("Demand ran 26 hours above the band.")])
-        brief = generate_brief(_context(), client)
+        brief = generate_brief(_context(), client, "test-model")
 
         assert brief.verification.ok
         assert "26 hours" in brief.body
@@ -246,7 +246,7 @@ class TestGeneration:
                 self._payload("Demand ran 26 hours above the band."),
             ]
         )
-        brief = generate_brief(_context(), client)
+        brief = generate_brief(_context(), client, "test-model")
 
         assert brief.verification.ok
         assert "45,000" in client.prompts[1], "the retry should name what was rejected"
@@ -256,14 +256,14 @@ class TestGeneration:
         client = _StubClient([self._payload("Cost 45,000 MWh."), self._payload("Cost 91,000 MWh.")])
 
         with pytest.raises(ValueError, match="cited numbers not present"):
-            generate_brief(_context(), client)
+            generate_brief(_context(), client, "test-model")
 
     def test_a_refusal_is_surfaced_rather_than_indexed_into(self):
         """Safety classifiers return empty or partial content; indexing it would crash."""
         client = _StubClient([self._payload("x")], stop_reason="refusal")
 
         with pytest.raises(RuntimeError, match="declined"):
-            generate_brief(_context(), client)
+            generate_brief(_context(), client, "test-model")
 
 
 class TestDisqualification:

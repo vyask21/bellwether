@@ -9,8 +9,8 @@ are none. That takes domain judgement rather than fluency, and judgement is chea
 encode than to verify.
 
 `generate_brief` is the model path, kept for whoever wants better prose later. **It has
-never been run against the live API** and needs an `anthropic` client passed in; the
-package is not a dependency of this project. Its tests exercise it through a stub.
+never been run against a live API.** The caller supplies both the client and the model
+name, so no provider is named or depended on here. Its tests exercise it through a stub.
 
 `verify_brief` is what makes either honest. Every numeric token in a brief must trace to a
 value the context supplied, exactly or as a correct rounding. Anything else is rejected
@@ -34,8 +34,6 @@ import pandas as pd
 
 from bellwether.eval.breaches import DEFAULT_LOWER, DEFAULT_UPPER, BreachEpisode
 from bellwether.explain.evidence import Evidence
-
-MODEL = "claude-opus-5"
 
 # Rounding depths a citation may use. A brief written by a person rounds: 12,384 MW becomes
 # "about 12,400 MW". That stays traceable, so it is allowed, and anything outside this
@@ -416,7 +414,7 @@ class Brief:
         return f"{self.headline}\n\n{self.body}"
 
 
-def generate_brief(context: BriefContext, client: Any, max_attempts: int = 2) -> Brief:
+def generate_brief(context: BriefContext, client: Any, model: str, max_attempts: int = 2) -> Brief:
     """Ask the model for a brief and verify it before returning.
 
     A brief that cites an unverifiable number is retried once with the failure named, then
@@ -424,15 +422,15 @@ def generate_brief(context: BriefContext, client: Any, max_attempts: int = 2) ->
     decision on whoever reads the log, and the whole point of the constraint is that
     nobody has to.
 
-    `client` is an `anthropic.Anthropic`. It is a parameter rather than a module global so
-    the verification path can be exercised without one.
+    `client` and `model` are parameters rather than module globals, so this package names
+    no provider and the verification path can be exercised without either.
     """
     prompt = render_prompt(context)
     last: Verification | None = None
 
     for _attempt in range(max_attempts):
         message = client.messages.create(
-            model=MODEL,
+            model=model,
             max_tokens=16000,
             system=SYSTEM_PROMPT,
             output_config={"format": {"type": "json_schema", "schema": BRIEF_SCHEMA}},
