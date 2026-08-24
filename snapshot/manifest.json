@@ -4,7 +4,7 @@
     "observations_eia": "Source: U.S. Energy Information Administration (retrieved Aug 2026)",
     "observations_noaa": "Source: NOAA National Centers for Environmental Information, Integrated Surface Database (ISD) (retrieved Aug 2026)"
   },
-  "generated": "2026-08-23",
+  "generated": "2026-08-24",
   "horizon_hours": 24,
   "markets": {
     "CISO": {
@@ -15,11 +15,11 @@
         "scale"
       ],
       "first_period": "2024-07-31 00:00:00",
-      "forecast_rows": 63840,
+      "forecast_rows": 63936,
       "hours_with_temperature": 9416,
-      "last_period": "2026-08-23 04:00:00",
-      "observed_hours": 18077,
-      "scored_origins": 665,
+      "last_period": "2026-08-24 09:00:00",
+      "observed_hours": 18106,
+      "scored_origins": 666,
       "series_id": "CISO:D",
       "timezone": "America/Los_Angeles"
     },
@@ -31,11 +31,11 @@
         "scale"
       ],
       "first_period": "2024-07-31 00:00:00",
-      "forecast_rows": 63840,
+      "forecast_rows": 63936,
       "hours_with_temperature": 9414,
-      "last_period": "2026-08-23 04:00:00",
-      "observed_hours": 18077,
-      "scored_origins": 665,
+      "last_period": "2026-08-24 09:00:00",
+      "observed_hours": 18106,
+      "scored_origins": 666,
       "series_id": "ERCO:D",
       "timezone": "America/Chicago"
     },
@@ -47,11 +47,11 @@
         "scale"
       ],
       "first_period": "2024-07-31 01:00:00",
-      "forecast_rows": 63840,
+      "forecast_rows": 63936,
       "hours_with_temperature": 9414,
-      "last_period": "2026-08-23 04:00:00",
-      "observed_hours": 18076,
-      "scored_origins": 665,
+      "last_period": "2026-08-24 09:00:00",
+      "observed_hours": 18105,
+      "scored_origins": 666,
       "series_id": "PACE:D",
       "timezone": "America/Denver"
     }
