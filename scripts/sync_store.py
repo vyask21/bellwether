@@ -71,7 +71,7 @@ def _count(path: Path) -> int:
     """Row count straight from the file, so the printed figure describes what was written."""
     import duckdb
 
-    return int(duckdb.sql(f"SELECT count(*) FROM read_parquet('{path.as_posix()}')").fetchone()[0])
+    return int(duckdb.sql(f"SELECT count(*) FROM read_parquet('{path.as_posix()}')").fetchall()[0][0])
 
 
 if __name__ == "__main__":
